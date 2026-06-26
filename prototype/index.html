@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Subvenciones RAG MVP</title>
+    <link rel="stylesheet" href="./styles.css?v=20260626-source-colors" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacion principal">
+        <div class="brand">
+          <div class="brand-mark">SR</div>
+          <div>
+            <strong>Subvenciones RAG</strong>
+            <span>Multi-entidad</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-screen="dashboard">
+            <i data-lucide="layout-dashboard"></i><span>Panel</span>
+          </button>
+          <button class="nav-item" data-screen="opportunities">
+            <i data-lucide="search"></i><span>Oportunidades</span>
+          </button>
+          <button class="nav-item" data-screen="entity">
+            <i data-lucide="building-2"></i><span>Entidad</span>
+          </button>
+          <button class="nav-item" data-screen="governance">
+            <i data-lucide="shield-check"></i><span>Gobernanza</span>
+          </button>
+          <button class="nav-item" data-screen="agents">
+            <i data-lucide="bot"></i><span>Agentes</span>
+          </button>
+          <button class="nav-item" data-screen="workspace">
+            <i data-lucide="file-pen-line"></i><span>Candidatura</span>
+          </button>
+          <button class="nav-item" data-screen="audit">
+            <i data-lucide="history"></i><span>Auditoria</span>
+          </button>
+          <button class="nav-item" data-screen="platform">
+            <i data-lucide="sliders-horizontal"></i><span>Plataforma</span>
+          </button>
+          <button class="nav-item" data-screen="operations">
+            <i data-lucide="activity"></i><span>Operaciones</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-note">
+          <span class="status-dot"></span>
+          <div>
+            <strong>Modo prototipo</strong>
+            <span>Datos mock, sin backend</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Cockpit de inteligencia de subvenciones</p>
+            <h1 id="screen-title">Panel de oportunidades</h1>
+          </div>
+          <div class="top-actions">
+            <button class="icon-button" title="Simular refresco de fuentes" id="refresh-button">
+              <i data-lucide="refresh-cw"></i>
+            </button>
+            <button class="primary-action">
+              <i data-lucide="plus"></i>
+              Nueva busqueda
+            </button>
+          </div>
+        </header>
+
+        <section class="screen is-visible" id="dashboard" aria-labelledby="screen-title">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Convocatorias candidatas</span>
+              <strong>18</strong>
+              <small>5 con plazo critico</small>
+            </article>
+            <article class="metric">
+              <span>Encaje alto</span>
+              <strong>6</strong>
+              <small>Con evidencia completa</small>
+            </article>
+            <article class="metric">
+              <span>Riesgo de datos</span>
+              <strong>2</strong>
+              <small>Requieren revision</small>
+            </article>
+            <article class="metric">
+              <span>Fuentes activas</span>
+              <strong>7</strong>
+              <small>BDNS, GVA, LABORA...</small>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel focus-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Prioridad hoy</p>
+                  <h2>Linea de insercion sociolaboral con plazo cercano</h2>
+                </div>
+                <span class="badge urgency">Cierra en 2 dias</span>
+              </div>
+              <p class="lead">
+                Encaja por territorio, colectivo y tipo de actividad. Falta confirmar cofinanciacion y documentacion laboral.
+              </p>
+              <div class="evidence-row">
+                <span><i data-lucide="map-pin"></i> Comunitat Valenciana</span>
+                <span><i data-lucide="users"></i> Insercion laboral</span>
+                <span><i data-lucide="link"></i> 4 evidencias</span>
+              </div>
+              <div class="button-row">
+                <button class="primary-action" data-jump="opportunities">Abrir analisis</button>
+                <button class="ghost-action" data-jump="workspace">Preparar checklist</button>
+              </div>
+            </article>
+
+            <article class="panel source-map-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Mapa de fuentes</p>
+                  <h2>Cobertura del radar</h2>
+                </div>
+                <button class="text-action" data-jump="governance">Gestionar</button>
+              </div>
+              <div class="source-map" id="source-map" aria-label="Mapa visual de fuentes conectadas"></div>
+            </article>
+          </div>
+
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Alertas recientes</h2>
+                <button class="text-action">Ver todas</button>
+              </div>
+              <div id="alerts-list" class="stack-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Actividad agentica</h2>
+                <button class="text-action" data-jump="agents">Agentes</button>
+              </div>
+              <div id="agent-runs-small" class="stack-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="opportunities" aria-labelledby="screen-title">
+          <div class="workbench">
+            <div class="panel list-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Ranking explicable</p>
+                  <h2>Radar publico BDNS</h2>
+                </div>
+                <div class="segmented">
+                  <button class="is-selected" data-filter="all">Todas</button>
+                  <button data-filter="critical">Criticas</button>
+                  <button data-filter="private">Privadas</button>
+                </div>
+              </div>
+              <div id="opportunity-list" class="opportunity-list"></div>
+            </div>
+
+            <article class="panel detail-panel" id="opportunity-detail"></article>
+          </div>
+        </section>
+
+        <section class="screen" id="entity" aria-labelledby="screen-title">
+          <div class="two-column uneven">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Piloto multi-entidad</p>
+                  <h2>Novaterra (ejemplo editable)</h2>
+                </div>
+                <span class="badge warning">Pendiente de validacion</span>
+              </div>
+              <div class="profile-block">
+                <div><span>Forma juridica</span><strong>Fundacion / entidad social</strong></div>
+                <div><span>Territorio</span><strong>Comunitat Valenciana</strong></div>
+                <div><span>Colectivos</span><strong>Personas en vulnerabilidad, jovenes, empleo</strong></div>
+                <div><span>Programas</span><strong>Insercion, formacion, acompanamiento</strong></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Estado de alta</h2>
+              </div>
+              <div class="readiness">
+                <div><span>Web publica</span><strong>Permiso pendiente</strong></div>
+                <div><span>Hechos internos</span><strong>Sin aprobar</strong></div>
+                <div><span>Datos personales</span><strong>No solicitados</strong></div>
+              </div>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <h2>Hechos sugeridos para revisar</h2>
+              <button class="ghost-action">Revisar y aprobar</button>
+            </div>
+            <div id="facts-list" class="fact-grid"></div>
+          </article>
+        </section>
+
+        <section class="screen" id="governance" aria-labelledby="screen-title">
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Control por rol</p>
+                <h2>Mapa de fuentes</h2>
+              </div>
+              <button class="ghost-action">Solicitar fuente</button>
+            </div>
+            <div id="source-control-list" class="source-control-list"></div>
+          </article>
+
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Politica de uso</p>
+                  <h2>Clasificacion de datos</h2>
+                </div>
+              </div>
+              <div id="governance-table" class="governance-table"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Cola de revision</h2>
+                <span class="badge warning">2 pendientes</span>
+              </div>
+              <div id="review-queue" class="stack-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="agents" aria-labelledby="screen-title">
+          <div class="agent-grid" id="agent-grid"></div>
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Canales preparados</h2>
+              </div>
+              <div class="channel-list">
+                <div><i data-lucide="message-square"></i><strong>Teams</strong><span>Alertas y consultas internas</span></div>
+                <div><i data-lucide="message-circle"></i><strong>WhatsApp</strong><span>Respuestas breves y deep links</span></div>
+                <div><i data-lucide="mail"></i><strong>Email</strong><span>Resumen semanal y seguimiento</span></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Ultimas ejecuciones</h2>
+              </div>
+              <div id="agent-runs" class="stack-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="workspace" aria-labelledby="screen-title">
+          <div class="workbench">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Candidatura en preparacion</p>
+                  <h2>Programa de empleo inclusivo 2026</h2>
+                </div>
+                <span class="badge review">Revision humana</span>
+              </div>
+              <div id="checklist" class="checklist"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Borrador de propuesta</h2>
+                <button class="ghost-action">Exportar borrador Word</button>
+              </div>
+              <div id="proposal-outline" class="proposal-outline"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="audit" aria-labelledby="screen-title">
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Trazabilidad</p>
+                <h2>Eventos del piloto</h2>
+              </div>
+              <button class="ghost-action">Exportar auditoria</button>
+            </div>
+            <div id="audit-timeline" class="timeline"></div>
+          </article>
+        </section>
+
+        <section class="screen" id="platform" aria-labelledby="screen-title">
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">Superadmin</p><h2>Alta de entidades</h2></div>
+                <span class="badge review">OAuth + allowlist</span>
+              </div>
+              <div id="tenant-list" class="stack-list"></div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">Vectorizacion</p><h2>Campanas de plataforma</h2></div>
+                <button class="ghost-action">Nueva campana</button>
+              </div>
+              <div id="platform-campaigns" class="stack-list"></div>
+            </article>
+          </div>
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Separacion de datos</p><h2>Modelo operativo</h2></div>
+              <span class="badge safe">Tenant aislado</span>
+            </div>
+            <div class="source-control-row">
+              <div><strong>Fuentes publicas</strong><span>Indexadas por plataforma y reutilizables por todas las entidades.</span></div>
+              <div><strong>Fuentes privadas</strong><span>Vectorizadas por tenant, con permisos y auditoria propios.</span></div>
+              <div><strong>Marca entidad</strong><span>Logo, color, perfil y motivaciones desde tenant config.</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="screen" id="operations" aria-labelledby="screen-title">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Ingestas 24h</span>
+              <strong>42</strong>
+              <small>3 con advertencias</small>
+            </article>
+            <article class="metric">
+              <span>Cola vectorizacion</span>
+              <strong>128</strong>
+              <small>Tiempo estimado 11 min</small>
+            </article>
+            <article class="metric">
+              <span>Errores fuentes</span>
+              <strong>2</strong>
+              <small>DOGV/BOP degradado</small>
+            </article>
+            <article class="metric">
+              <span>Coste IA hoy</span>
+              <strong>8,40</strong>
+              <small>EUR estimado</small>
+            </article>
+          </div>
+
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Jobs</p>
+                  <h2>Estado de ingesta y vectorizacion</h2>
+                </div>
+                <span class="badge warning">2 requieren atencion</span>
+              </div>
+              <div id="operations-jobs" class="stack-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Salud</p>
+                  <h2>Fuentes y agentes</h2>
+                </div>
+              </div>
+              <div id="operations-health" class="stack-list"></div>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Capacidad</p>
+                <h2>Lectura de carga</h2>
+              </div>
+            </div>
+            <div class="capacity-grid">
+              <div><span>API p95</span><strong>420 ms</strong><progress value="42" max="100"></progress></div>
+              <div><span>Worker p95</span><strong>2,8 s/doc</strong><progress value="58" max="100"></progress></div>
+              <div><span>Blob egress</span><strong>1,2 GB</strong><progress value="24" max="100"></progress></div>
+              <div><span>Errores 5xx</span><strong>0,3%</strong><progress value="12" max="100"></progress></div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./mock-data.js?v=20260626-action-focus"></script>
+    <script src="./radar-data.js?v=20260626-action-focus"></script>
+    <script src="./app.js?v=20260626-action-focus"></script>
+    <script src="./ux-actions.js?v=20260626-action-focus"></script>
+    <script src="./opportunity-actions.js?v=20260626-modal-filters"></script>
+  </body>
+</html>

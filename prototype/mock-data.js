@@ -1,0 +1,163 @@
+window.MOCK = {
+  opportunities: [
+    {
+      id: "labora-empleo-2026",
+      title: "Programa de empleo inclusivo 2026",
+      source: "LABORA / GVA",
+      territory: "Comunitat Valenciana",
+      deadline: "25/06/2026",
+      deadlineStatus: "open",
+      deadlineConfidence: "Alta",
+      score: 88,
+      amount: "Hasta 120.000 EUR",
+      theme: "Insercion sociolaboral",
+      fit: [
+        "El territorio coincide con la actuacion principal de la entidad.",
+        "El objeto subvencionable menciona itinerarios, formacion y acompanamiento.",
+        "El colectivo objetivo encaja con personas en situacion de vulnerabilidad."
+      ],
+      risks: [
+        "Confirmar si exige cofinanciacion minima.",
+        "Revisar limites de gastos de personal y costes indirectos."
+      ],
+      evidence: [
+        "Extracto oficial: actuaciones de mejora de empleabilidad para colectivos vulnerables.",
+        "Bases: entidades sin animo de lucro con implantacion territorial.",
+        "Plazo: solicitud abierta hasta fecha indicada en convocatoria."
+      ],
+      internalFacts: ["Actuacion CV", "Programas de empleo", "Acompanamiento individual"]
+    },
+    {
+      id: "irpf-social-2026",
+      title: "Subvenciones con cargo al 0,7% IRPF - programas sociales",
+      source: "Ministerio Derechos Sociales",
+      territory: "Estatal",
+      deadline: "25/06/2026",
+      deadlineStatus: "open",
+      deadlineConfidence: "Alta",
+      score: 81,
+      amount: "Segun linea",
+      theme: "Inclusion social",
+      fit: [
+        "La entidad tiene experiencia en inclusion y empleo.",
+        "El ambito estatal permite proyectos con impacto territorial coordinado."
+      ],
+      risks: [
+        "Requiere ajustar el proyecto a una linea concreta.",
+        "Alta competencia y documentacion administrativa extensa."
+      ],
+      evidence: [
+        "Portal ministerial: convocatoria 2026 abierta.",
+        "Objeto: programas de interes general con fines sociales."
+      ],
+      internalFacts: ["Trayectoria social", "Red territorial"]
+    },
+    {
+      id: "fundacion-caixa-accion-social",
+      title: "Convocatoria social territorial",
+      source: "Fundacion privada",
+      territory: "Comunitat Valenciana",
+      deadline: "Plazo por confirmar",
+      deadlineStatus: "uncertain",
+      deadlineConfidence: "Media",
+      score: 73,
+      amount: "Hasta 50.000 EUR",
+      theme: "Accion social",
+      fit: [
+        "Buena afinidad tematica con inclusion y acompanamiento.",
+        "Financiador privado compatible con innovacion social."
+      ],
+      risks: [
+        "La fecha final debe verificarse en la pagina del financiador.",
+        "Puede exigir memoria economica especifica."
+      ],
+      evidence: [
+        "Historico de convocatorias territoriales para entidades sociales.",
+        "Bases privadas pendientes de descarga en el prototipo."
+      ],
+      internalFacts: ["Proyectos acompanamiento", "Indicadores impacto"]
+    }
+  ],
+  alerts: [
+    { type: "deadline", title: "IRPF estatal cierra esta semana", detail: "Faltan 2 documentos administrativos por confirmar." },
+    { type: "risk", title: "Dato interno pendiente de aprobar", detail: "Un fragmento de memoria incluye datos personales indirectos." },
+    { type: "source", title: "BDNS refrescada", detail: "12 nuevas convocatorias normalizadas en el radar." }
+  ],
+  sources: [
+    { name: "BDNS", kind: "Publica oficial", scope: "Plataforma", status: "Activa", health: "healthy", priority: 95, control: "Gestionada por plataforma" },
+    { name: "GVA", kind: "Portal autonomico", scope: "Tenant", status: "Activa", health: "healthy", priority: 82, control: "Admin entidad" },
+    { name: "LABORA", kind: "Empleo", scope: "Tenant", status: "Activa", health: "healthy", priority: 88, control: "Admin entidad" },
+    { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Activa con avisos", health: "degraded", priority: 74, control: "Lectura + alertas" },
+    { name: "Drive entidad demo", kind: "Privativa", scope: "Tenant privado", status: "Pendiente", health: "unknown", priority: 90, control: "Requiere aprobacion" },
+    { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "Bloqueada", health: "blocked", priority: 0, control: "No indexar" }
+  ],
+  facts: [
+    { label: "Actuacion CV", class: "Sugerido", text: "Dato propuesto para que la entidad lo confirme antes de usarlo en matching." },
+    { label: "Programas de empleo", class: "Sin aprobar", text: "Puede venir de entrevista guiada, web publica autorizada o documentos seleccionados." },
+    { label: "Acompanamiento individual", class: "Sin aprobar", text: "No se usa en borradores hasta que un admin de entidad lo apruebe." },
+    { label: "Casos personales", class: "Bloqueado", text: "Historias identificables de beneficiarios excluidas del MVP." }
+  ],
+  governance: [
+    { class: "Publico", use: "Matching y redaccion", policy: "Permitido", tone: "safe" },
+    { class: "Interno aprobado", use: "Matching y borradores", policy: "Minimizar contexto", tone: "review" },
+    { class: "Personal", use: "Solo requisitos formales", policy: "Anonimizar", tone: "warning" },
+    { class: "Sensible", use: "No requerido", policy: "Bloqueado", tone: "danger" }
+  ],
+  reviewQueue: [
+    { title: "Memoria 2025 - parrafo de impacto", detail: "Puede contener datos personales indirectos. Requiere anonimizar.", state: "Pendiente" },
+    { title: "Presupuesto base de programa", detail: "Uso interno permitido para rangos agregados.", state: "Aprobar" }
+  ],
+  agents: [
+    { name: "Explorer Agent", icon: "radar", purpose: "Localiza convocatorias y detecta novedades.", access: "Fuentes publicas", status: "Listo" },
+    { name: "Match Agent", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + hechos aprobados", status: "Listo" },
+    { name: "Governance Agent", icon: "shield-check", purpose: "Clasifica datos y bloquea usos inseguros.", access: "Metadatos y snippets", status: "Revision" },
+    { name: "Documentary Agent", icon: "file-search", purpose: "Extrae requisitos, anexos y checklist.", access: "Bases y PDFs", status: "Listo" },
+    { name: "Draft Agent", icon: "pen-tool", purpose: "Prepara esquemas y borradores revisables.", access: "Evidencia + hechos aprobados", status: "Controlado" },
+    { name: "Monitor Agent", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
+  ],
+  runs: [
+    { agent: "Explorer Agent", detail: "Refresco BDNS/GVA simulado", time: "Hace 18 min" },
+    { agent: "Match Agent", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
+    { agent: "Governance Agent", detail: "Bloqueo snippet sensible", time: "Hace 9 min" }
+  ],
+  checklist: [
+    { item: "Confirmar beneficiario elegible", state: "done", action: "Ver evidencia" },
+    { item: "Verificar cofinanciacion", state: "review", action: "Verificar" },
+    { item: "Preparar memoria tecnica", state: "todo", action: "Preparar Word" },
+    { item: "Anexar certificados y poderes", state: "todo", action: "Anexar" },
+    { item: "Revisar limite de gastos de personal", state: "review", action: "Verificar" }
+  ],
+  outline: [
+    { title: "Resumen ejecutivo", text: "Proyecto de itinerarios de empleo inclusivo con formacion, acompanamiento y seguimiento." },
+    { title: "Justificacion", text: "Necesidad territorial vinculada a empleabilidad de colectivos vulnerables y barreras de acceso." },
+    { title: "Actividades", text: "Diagnostico, talleres formativos, intermediacion, tutorizacion y evaluacion." },
+    { title: "Indicadores", text: "Participantes atendidos, finalizacion de itinerarios, inserciones y continuidad." }
+  ],
+  audit: [
+    { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion sin datos privados.", info: "Evento demo basado en el ultimo snapshot BDNS cargado en el prototipo. Sirve para ensenar que una fuente publica se ha refrescado sin usar informacion de la entidad." },
+    { event: "Encaje recalculado", actor: "Agente de encaje", time: "12:08", detail: "Uso de 3 hechos internos aprobados.", info: "Evento simulado: todavia no hay motor RAG real. Muestra como quedaria trazado el uso de hechos internos aprobados cuando exista matching automatico." },
+    { event: "Fragmento bloqueado", actor: "Gobernanza", time: "12:12", detail: "Posible dato personal indirecto.", info: "Evento simulado de seguridad: indica que un texto no deberia usarse para matching ni borradores hasta que una persona lo revise o anonimice." },
+    { event: "Checklist generado", actor: "Documentacion", time: "12:18", detail: "Pendiente de revision humana.", info: "Evento simulado: representa la generacion de tareas de candidatura a partir de bases y evidencias. No equivale a una solicitud presentada." }
+  ],
+  operationsJobs: [
+    { title: "Carpeta privada demo", detail: "Leidos 4 documentos aprobados, 1 bloqueado por privacidad, 0 errores", state: "Completado" },
+    { title: "Boletines DOGV/BOP", detail: "2 convocatorias tienen plazo relativo y necesitan revision humana", state: "Atencion" },
+    { title: "Preparacion de textos privados", detail: "128 fragmentos esperando revision antes de generar embeddings", state: "En cola" },
+    { title: "Conservacion de originales", detail: "12 documentos guardados con huella para poder demostrar procedencia", state: "OK" }
+  ],
+  operationsHealth: [
+    { title: "Radar publico", detail: "Responde con normalidad; 0 errores en 24h", state: "OK" },
+    { title: "Encaje de oportunidades", detail: "3 recomendaciones marcadas con baja confianza para revisar", state: "OK" },
+    { title: "BDNS", detail: "Ultima lectura publica disponible en el prototipo", state: "OK" },
+    { title: "Microsoft 365 / SharePoint", detail: "Pendiente de conectar credenciales de la entidad", state: "Pendiente" }
+  ],
+  tenants: [
+    { title: "Entidad demo", detail: "tenant-demo - onboarding - logo pendiente", state: "Onboarding" },
+    { title: "Entidad social CV", detail: "tenant-social-cv - activa - 3 fuentes privadas", state: "Activa" }
+  ],
+  platformCampaigns: [
+    { title: "BDNS/SNPSAP", detail: "Campana publica: buscar cambios, guardar evidencias y preparar textos reutilizables", state: "Activa" },
+    { title: "DOGV/BOP", detail: "Campana publica con avisos: 2 plazos relativos requieren revision", state: "Atencion" },
+    { title: "Fundaciones privadas", detail: "Campana editorial: fuentes privadas curadas manualmente antes de indexar", state: "Pendiente" }
+  ]
+};

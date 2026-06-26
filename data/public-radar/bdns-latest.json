@@ -1,0 +1,2287 @@
+{
+  "generatedAt": "2026-06-24T19:11:00.825Z",
+  "source": "BDNS/SNPSAP",
+  "apiBase": "https://www.infosubvenciones.es/bdnstrans/api",
+  "pages": 1,
+  "pageSize": 20,
+  "count": 20,
+  "opportunities": [
+    {
+      "id": "bdns-915236",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "ACUERDO DE LA JUNTA DE GOBIERNO LOCAL DEL AYUNTAMIENTO DE TOLEDO POR EL QUE SE APRUEBA LA CONVOCATORIA DE SUBVENCIONES PARA PROYECTOS DE EMERGENCIA Y ACCIÓN HUMANITARIA 2026.",
+      "organism": "LOCAL / TOLEDO / AYUNTAMIENTO DE TOLEDO",
+      "territory": "ES425 - Toledo",
+      "sector": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Servicios Sociales y Promoción Social",
+      "eligibleActivities": [],
+      "budgetTotal": 58000,
+      "amount": "58.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "QUINCE DÍAS DESDE LA PUBLICACIÓN DEL EXTRACTO DE LA CONVOCATORIA EN EL BOP DE TOLEDO.",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915236",
+      "basesUrl": "https://www.toledo.es/toledo-abierto/transparencia-economico-financiera-contratacion-publica-convenios-y-subvenciones/subvenciones-y-ayudas-publicas/",
+      "theme": "Servicios Sociales y Promoción Social",
+      "score": 73,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915236.",
+        "Territorio detectado: ES425 - Toledo.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915236: ACUERDO DE LA JUNTA DE GOBIERNO LOCAL DEL AYUNTAMIENTO DE TOLEDO POR EL QUE SE APRUEBA LA CONVOCATORIA DE SUBVENCIONES PARA PROYECTOS DE EMERGENCIA Y ACCIÓN HUMANITARIA 2026.",
+        "Finalidad: Servicios Sociales y Promoción Social",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: QUINCE DÍAS DESDE LA PUBLICACIÓN DEL EXTRACTO DE LA CONVOCATORIA EN EL BOP DE TOLEDO."
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116797,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "TOLEDO",
+          "nivel3": "AYUNTAMIENTO DE TOLEDO"
+        },
+        "sedeElectronica": "https://www.toledo.es/toledo-abierto/transparencia-economico-financiera-contratacion-publica-convenios-y-subvenciones/subvenciones-y-ayudas-publicas/",
+        "codigoBDNS": "915236",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 58000,
+        "mrr": false,
+        "descripcion": "ACUERDO DE LA JUNTA DE GOBIERNO LOCAL DEL AYUNTAMIENTO DE TOLEDO POR EL QUE SE APRUEBA LA CONVOCATORIA DE SUBVENCIONES PARA PROYECTOS DE EMERGENCIA Y ACCIÓN HUMANITARIA 2026.",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+            "codigo": "R"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES425 - Toledo"
+          }
+        ],
+        "descripcionFinalidad": "Servicios Sociales y Promoción Social",
+        "descripcionBasesReguladoras": "BASES GENERALES REGULADORAS DE SUBVENCIONES DEL AYUNTAMIENTO DE TOLEDO2026.\nBASES DE EJECUCIÓN DEL PRESUPUESTO MUNICIPAL 2026.",
+        "urlBasesReguladoras": "https://www.toledo.es/toledo-abierto/transparencia-economico-financiera-contratacion-publica-convenios-y-subvenciones/subvenciones-y-ayudas-publicas/",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "AL DIA SIGUIENTE DE LA PUBLICACIÓN DEL EXTRACTO DE LA CONVOCATORIA EN EL BOP DE TOLEDO.",
+        "textFin": "QUINCE DÍAS DESDE LA PUBLICACIÓN DEL EXTRACTO DE LA CONVOCATORIA EN EL BOP DE TOLEDO.",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481583,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "EXTRACTO DEL ACUERDO.pdf",
+            "long": 195631,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915227",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "SUBVENCIONES ASOCIACIONES DEPORTIVAS AYUNTAMIENTO DE TARAZONA 2026",
+      "organism": "LOCAL / TARAZONA / AYUNTAMIENTO DE TARAZONA",
+      "territory": "ES243 - Zaragoza",
+      "sector": "ACTIVIDADES ARTÍSTICAS, DEPORTIVAS Y DE ENTRETENIMIENTO",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Cultura",
+      "eligibleActivities": [],
+      "budgetTotal": 37000,
+      "amount": "37.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "15 días hábiles a contar desde del día siguiente de la publicación de la convocatoria en el BOPZ",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915227",
+      "basesUrl": "https://tarazona.sedelectronica.es/transparency/62dbf971-f50a-408a-a1aa-ab5d0e694255/",
+      "theme": "Cultura",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915227.",
+        "Territorio detectado: ES243 - Zaragoza.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915227: SUBVENCIONES ASOCIACIONES DEPORTIVAS AYUNTAMIENTO DE TARAZONA 2026",
+        "Finalidad: Cultura",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: 15 días hábiles a contar desde del día siguiente de la publicación de la convocatoria en el BOPZ"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116788,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "TARAZONA",
+          "nivel3": "AYUNTAMIENTO DE TARAZONA"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915227",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 37000,
+        "mrr": false,
+        "descripcion": "SUBVENCIONES ASOCIACIONES DEPORTIVAS AYUNTAMIENTO DE TARAZONA 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES ARTÍSTICAS, DEPORTIVAS Y DE ENTRETENIMIENTO",
+            "codigo": "S"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES243 - Zaragoza"
+          }
+        ],
+        "descripcionFinalidad": "Cultura",
+        "descripcionBasesReguladoras": "SUBVENCIONES ASOCIACIONES DEPORTIVAS 2026",
+        "urlBasesReguladoras": "https://tarazona.sedelectronica.es/transparency/62dbf971-f50a-408a-a1aa-ab5d0e694255/",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "15 días hábiles a contar desde del día siguiente de la publicación de la convocatoria en el BOPZ",
+        "textFin": "15 días hábiles a contar desde del día siguiente de la publicación de la convocatoria en el BOPZ",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481551,
+            "descripcion": "Anexos",
+            "nombreFic": "Anexos.pdf",
+            "long": 133479,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481570,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "CONVOCATORIA Diligenciada ASOCIACIONES DEPORTIVAS 2025.pdf",
+            "long": 520662,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915225",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "CONVOCATORIA SUBVENCIONES A ENTIDADES CULTURALES Y DEPORTIVAS EN REGIMEN DE CONCURRENCIA COMPETITIVA  AÑO 2026",
+      "organism": "LOCAL / SALAS / AYUNTAMIENTO DE SALAS",
+      "territory": "ES120 - Asturias",
+      "sector": "ACTIVIDADES ARTÍSTICAS, DEPORTIVAS Y DE ENTRETENIMIENTO",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Cultura",
+      "eligibleActivities": [],
+      "budgetTotal": 17000,
+      "amount": "17.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "DIEZ DIAS NATARURALES A PARTIR DEL SIGUIENTE A LA PUBLICACION EN BOPA",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915225",
+      "basesUrl": "https://miprincipado.asturias.es/bopa/2026/06/23/2026-05108.pdf",
+      "theme": "Cultura",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915225.",
+        "Territorio detectado: ES120 - Asturias.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915225: CONVOCATORIA SUBVENCIONES A ENTIDADES CULTURALES Y DEPORTIVAS EN REGIMEN DE CONCURRENCIA COMPETITIVA  AÑO 2026",
+        "Finalidad: Cultura",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: DIEZ DIAS NATARURALES A PARTIR DEL SIGUIENTE A LA PUBLICACION EN BOPA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116786,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "SALAS",
+          "nivel3": "AYUNTAMIENTO DE SALAS"
+        },
+        "sedeElectronica": "https://ayto-salas.sedelectronica.es",
+        "codigoBDNS": "915225",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 17000,
+        "mrr": false,
+        "descripcion": "CONVOCATORIA SUBVENCIONES A ENTIDADES CULTURALES Y DEPORTIVAS EN REGIMEN DE CONCURRENCIA COMPETITIVA  AÑO 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES ARTÍSTICAS, DEPORTIVAS Y DE ENTRETENIMIENTO",
+            "codigo": "S"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES120 - Asturias"
+          }
+        ],
+        "descripcionFinalidad": "Cultura",
+        "descripcionBasesReguladoras": "BASES Y CONVOCATORIA SUBVENCIONES A ENTIDADES CULTURALES Y DEPORTIVAS EN REGIMEN DE CONCURRENCIA COMPETITIVA AÑO 2026",
+        "urlBasesReguladoras": "https://miprincipado.asturias.es/bopa/2026/06/23/2026-05108.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "A PARTIR PUBLICACION BOPA CONVOCATORIA ",
+        "textFin": "DIEZ DIAS NATARURALES A PARTIR DEL SIGUIENTE A LA PUBLICACION EN BOPA",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481563,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "DECRETO 2026-0451 [DECRETO APROBANDO BASES REGULADORAS CONCURRENCIA Y CONVOCATORIA AÑO 2026].pdf",
+            "long": 4085007,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915221",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Acuerdo del Consejo Ejecutivo de 14.04.2025, relativo a las bases de las ayudas de minimis del Consejo Insular de Menorca al tejido productivo, cooperativo, comercial y determinadas empresas de servicios de Menorca y convocatoria 2025",
+      "organism": "LOCAL / CONSEJO INSULAR DE MENORCA / CONSELL INSULAR DE MENORCA",
+      "territory": "ES533 - Menorca",
+      "sector": "ACTIVIDADES DE EDICIÓN, RADIODIFUSIÓN Y PRODUCCIÓN Y DISTRIBUCIÓN DE CONTENIDOS, ACTIVIDADES PROFESIONALES, CIENTÍFICAS Y TÉCNICAS, Otra educación",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras Prestaciones económicas",
+      "eligibleActivities": [],
+      "budgetTotal": 1500000,
+      "amount": "1.500.000 EUR presupuesto",
+      "deadlineStart": "2025-05-09",
+      "deadlineEnd": "2025-07-30",
+      "deadline": "2025-07-30",
+      "deadlineStatus": "closed",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915221",
+      "basesUrl": "https://www.caib.es/eboibfront/es/2025/12093/700294/acuerdo-del-consejo-ejecutivo-en-sesion-de-caracte",
+      "theme": "Otras Prestaciones económicas",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915221.",
+        "Territorio detectado: ES533 - Menorca.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915221: Acuerdo del Consejo Ejecutivo de 14.04.2025, relativo a las bases de las ayudas de minimis del Consejo Insular de Menorca al tejido productivo, cooperativo, comercial y determinadas empresas de servicios de Menorca y convocatoria 2025",
+        "Finalidad: Otras Prestaciones económicas",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116782,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "CONSEJO INSULAR DE MENORCA",
+          "nivel3": "CONSELL INSULAR DE MENORCA"
+        },
+        "sedeElectronica": "www.cime.es",
+        "codigoBDNS": "915221",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 1500000,
+        "mrr": false,
+        "descripcion": "Acuerdo del Consejo Ejecutivo de 14.04.2025, relativo a las bases de las ayudas de minimis del Consejo Insular de Menorca al tejido productivo, cooperativo, comercial y determinadas empresas de servicios de Menorca y convocatoria 2025",
+        "descripcionLeng": "Acord del Consell Executiu de 14.04.2025, relatiu a les bases dels ajuts de minimis del Consell Insular de Menorca al teixit productiu, cooperatiu, comercial i determinades empreses de serveis de Menorca y convocatoria 2025",
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES DE EDICIÓN, RADIODIFUSIÓN Y PRODUCCIÓN Y DISTRIBUCIÓN DE CONTENIDOS",
+            "codigo": "J"
+          },
+          {
+            "descripcion": "ACTIVIDADES PROFESIONALES, CIENTÍFICAS Y TÉCNICAS",
+            "codigo": "N"
+          },
+          {
+            "descripcion": "Otra educación",
+            "codigo": "85.5"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES533 - Menorca"
+          }
+        ],
+        "descripcionFinalidad": "Otras Prestaciones económicas",
+        "descripcionBasesReguladoras": "Bases que rigen la convocatoria de ayudas de minimis del Consejo Insular de Menorca al tejido productivo, cooperativo, comercial y determinadas empresas de servicios de Menorca",
+        "urlBasesReguladoras": "https://www.caib.es/eboibfront/es/2025/12093/700294/acuerdo-del-consejo-ejecutivo-en-sesion-de-caracte",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": "2025-05-09",
+        "fechaFinSolicitud": "2025-07-30",
+        "textInicio": "A partir del día siguiente de haberse publicado la convocatoria en el BOIB.",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481554,
+            "descripcion": "Documento de la convocatoria en lengua cooficial",
+            "nombreFic": "ANUNCI_AJUTS TEIXIT PRODUCTIU_Firmado.pdf",
+            "long": 511876,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481553,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "ANUNCIO_AJUTS TEIXIT PRODUCTIU_CASTELLA_Firmado.pdf",
+            "long": 514811,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [
+          {
+            "numAnuncio": 215507,
+            "titulo": "Convocatoria a regularizar",
+            "tituloLeng": null,
+            "texto": "Convocatoria a regularizar",
+            "textoLeng": null,
+            "url": "https://www.caib.es/eboibfront/es/2025/12093/700295/extracto-del-acuerdo-del-consejo-ejecutivo-en-sesi",
+            "cve": null,
+            "desDiarioOficial": "BOIB. B.O. DE LAS ISLAS BALEARES",
+            "datPublicacion": "2025-05-08"
+          }
+        ],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915220",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Orden de 24 de junio de 2026, por la que se conviocan Subvenciones a EE Privadas para la realización de actuaciones de interés general para atender fines sociales con cargo a 0,7% del IRPF, 2026-Linea 2 Inversión Obras",
+      "organism": "AUTONOMICA / ANDALUCÍA / CONSEJERÍA DE INCLUSIÓN SOCIAL, JUVENTUD, FAMILIAS E IGUALDAD",
+      "territory": "ES61 - ANDALUCIA",
+      "sector": "Otras actividades de servicios sociales sin alojamiento",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Servicios Sociales y Promoción Social",
+      "eligibleActivities": [],
+      "budgetTotal": 10248812.46,
+      "amount": "10.248.812,46 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": "2026-07-31",
+      "deadline": "2026-07-31",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915220",
+      "basesUrl": "https://juntadeandalucia.es/eboja/2024/137/BOJA24-137-00128-48028-01_00304978.pdf",
+      "theme": "Servicios Sociales y Promoción Social",
+      "score": 71,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915220.",
+        "Territorio detectado: ES61 - ANDALUCIA.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915220: Orden de 24 de junio de 2026, por la que se conviocan Subvenciones a EE Privadas para la realización de actuaciones de interés general para atender fines sociales con cargo a 0,7% del IRPF, 2026-Linea 2 Inversión Obras",
+        "Finalidad: Servicios Sociales y Promoción Social",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116781,
+        "organo": {
+          "nivel1": "AUTONOMICA",
+          "nivel2": "ANDALUCÍA",
+          "nivel3": "CONSEJERÍA DE INCLUSIÓN SOCIAL, JUVENTUD, FAMILIAS E IGUALDAD"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915220",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 10248812.46,
+        "mrr": false,
+        "descripcion": "Orden de 24 de junio de 2026, por la que se conviocan Subvenciones a EE Privadas para la realización de actuaciones de interés general para atender fines sociales con cargo a 0,7% del IRPF, 2026-Linea 2 Inversión Obras",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Otras actividades de servicios sociales sin alojamiento",
+            "codigo": "88.9"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES61 - ANDALUCIA"
+          }
+        ],
+        "descripcionFinalidad": "Servicios Sociales y Promoción Social",
+        "descripcionBasesReguladoras": "Orden de 10 de julio de 2024,por la que se aprueban las b.r. para la conc. de sub.en rég.de conc.comp. destinadas a entid. privad. para realizac.de actuac. de interés gral.para atender fines sociales con cargo a la asignación tributaria del 0,7% del IRPF",
+        "urlBasesReguladoras": "https://juntadeandalucia.es/eboja/2024/137/BOJA24-137-00128-48028-01_00304978.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": "2026-07-31",
+        "textInicio": "Desde el día siguiente publicación Extracto",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481561,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "TextoConvocatoria.pdf",
+            "long": 748843,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915218",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "AYUDAS MERCADOS Y GALERÍAS COMERCIALES 2026",
+      "organism": "AUTONOMICA / COMUNIDAD DE MADRID / CONSEJERÍA ECONOMÍA, HACIENDA Y EMPLEO",
+      "territory": "ES30 - COMUNIDAD DE MADRID",
+      "sector": "Intermediarios del comercio al por mayor",
+      "beneficiaryTypes": [
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Comercio, Turismo y Pymes",
+      "eligibleActivities": [],
+      "budgetTotal": 330000,
+      "amount": "330.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "15 DÍAS HÁBILES CONTADOS A PARTIR DEL SIGUIENTE A PUBLICACIÓN DEL EXTRACTO  CONVOCATORIA EN BOCM",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915218",
+      "basesUrl": "https://www.bocm.es/boletin/CM_Orden_BOCM/2025/08/14/BOCM-20250814-8.PDF",
+      "theme": "Comercio, Turismo y Pymes",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915218.",
+        "Territorio detectado: ES30 - COMUNIDAD DE MADRID.",
+        "Tipo de beneficiario: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915218: AYUDAS MERCADOS Y GALERÍAS COMERCIALES 2026",
+        "Finalidad: Comercio, Turismo y Pymes",
+        "Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: 15 DÍAS HÁBILES CONTADOS A PARTIR DEL SIGUIENTE A PUBLICACIÓN DEL EXTRACTO  CONVOCATORIA EN BOCM"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116779,
+        "organo": {
+          "nivel1": "AUTONOMICA",
+          "nivel2": "COMUNIDAD DE MADRID",
+          "nivel3": "CONSEJERÍA ECONOMÍA, HACIENDA Y EMPLEO"
+        },
+        "sedeElectronica": "https://www.comunidad.madrid/",
+        "codigoBDNS": "915218",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 330000,
+        "mrr": false,
+        "descripcion": "AYUDAS MERCADOS Y GALERÍAS COMERCIALES 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Intermediarios del comercio al por mayor",
+            "codigo": "46.1"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES30 - COMUNIDAD DE MADRID"
+          }
+        ],
+        "descripcionFinalidad": "Comercio, Turismo y Pymes",
+        "descripcionBasesReguladoras": "BR AYUDAS MERCADOS Y GALERÍAS COMERCIALES 2025",
+        "urlBasesReguladoras": "https://www.bocm.es/boletin/CM_Orden_BOCM/2025/08/14/BOCM-20250814-8.PDF",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "A PARTIR DEL DÍA SIGUIENTE AL DE LA PUBLICACIÓN DEL EXTRACTO DE LA CONVOCATORIA EN EL BOCM",
+        "textFin": "15 DÍAS HÁBILES CONTADOS A PARTIR DEL SIGUIENTE A PUBLICACIÓN DEL EXTRACTO  CONVOCATORIA EN BOCM",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": {
+          "descripcion": "REG (UE) 2023/2831 de minimis, General",
+          "orden": null
+        },
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481559,
+            "descripcion": "Otros documentos  Otros documentos PUBLIC. MODIF. BASES",
+            "nombreFic": "Otros documentos  Otros documentos PUBLIC. MODIF. BASES.pdf",
+            "long": 149718,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481558,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "Texto Convocatoria BDNS  Texto Convocatoria BDNS ORDEN ANONIMIZADA.pdf",
+            "long": 152072,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915211",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Convocatoria de las subvenciones \"Tenerife Joven en Acción - Impulso a Iniciativas Juveniles de Empresas, Asociaciones y Agrupaciones 2026”",
+      "organism": "LOCAL / CABILDO INSULAR DE TENERIFE / CABILDO INSULAR DE TENERIFE",
+      "territory": "ES709 - Tenerife",
+      "sector": "Otras actividades asociativas",
+      "beneficiaryTypes": [
+        "GRAN EMPRESA",
+        "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras actuaciones de carácter económico",
+      "eligibleActivities": [],
+      "budgetTotal": 150000,
+      "amount": "150.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "Plazo no estructurado",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Media",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915211",
+      "basesUrl": "Pendiente de publicación",
+      "theme": "Otras actuaciones de carácter económico",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915211.",
+        "Territorio detectado: ES709 - Tenerife.",
+        "Tipo de beneficiario: GRAN EMPRESA; PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA; PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA; PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915211: Convocatoria de las subvenciones \"Tenerife Joven en Acción - Impulso a Iniciativas Juveniles de Empresas, Asociaciones y Agrupaciones 2026”",
+        "Finalidad: Otras actuaciones de carácter económico",
+        "Beneficiarios: GRAN EMPRESA; PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA; PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA; PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116772,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "CABILDO INSULAR DE TENERIFE",
+          "nivel3": "CABILDO INSULAR DE TENERIFE"
+        },
+        "sedeElectronica": "https://sede.tenerife.es",
+        "codigoBDNS": "915211",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 150000,
+        "mrr": false,
+        "descripcion": "Convocatoria de las subvenciones \"Tenerife Joven en Acción - Impulso a Iniciativas Juveniles de Empresas, Asociaciones y Agrupaciones 2026”",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "GRAN EMPRESA"
+          },
+          {
+            "descripcion": "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          },
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          },
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Otras actividades asociativas",
+            "codigo": "94.9"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES709 - Tenerife"
+          }
+        ],
+        "descripcionFinalidad": "Otras actuaciones de carácter económico",
+        "descripcionBasesReguladoras": "Bases y convocatoria de las subvenciones \"Tenerife Joven en Acción - Impulso a Iniciativas Juveniles de Empresas, Asociaciones y Agrupaciones 2026”",
+        "urlBasesReguladoras": "Pendiente de publicación",
+        "sePublicaDiarioOficial": true,
+        "abierto": true,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "10 días hábiles a contar desde el siguiente a la publicación en el BOP S/C",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481515,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "AC0000027982 Aprobación de las bases y de la convocatoria de las subvenciones Tenerife Joven en Acción.pdf",
+            "long": 1294060,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481516,
+            "descripcion": "Anexo I",
+            "nombreFic": "Anexo I.pdf",
+            "long": 399071,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481520,
+            "descripcion": "Documento contable",
+            "nombreFic": "A_2026005268_SUBVENCION_TENERIFE_JOVEN_EN_ACCION_.pdf",
+            "long": 58814,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481517,
+            "descripcion": "Anexo II",
+            "nombreFic": "Anexo II.pdf",
+            "long": 323969,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481519,
+            "descripcion": "Línea de la subvención 2026-000931",
+            "nombreFic": "18-05-26_Subvenc_Transf_concedida_.pdf",
+            "long": 59397,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481518,
+            "descripcion": "Anexo III",
+            "nombreFic": "Anexo III.pdf",
+            "long": 645130,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915210",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Convocatoria  de subvenciones a clubes, sociedades anónimas deportivas de máximo nivel de la provincia de Burgos y delegaciones provinciales de Burgos de las distintas federaciones durante la temporada 2025/26 o 2026",
+      "organism": "LOCAL / DIPUTACIÓN PROV. DE BURGOS / INSTITUTO PARA EL DEPORTE Y JUVENTUD",
+      "territory": "ES412 - Burgos",
+      "sector": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Comercio, Turismo y Pymes",
+      "eligibleActivities": [],
+      "budgetTotal": 400000,
+      "amount": "400.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "veinte días naturales a contar desde el día siguiente al de la publicación en BOP",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915210",
+      "basesUrl": "www.burgos.es",
+      "theme": "Comercio, Turismo y Pymes",
+      "score": 65,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915210.",
+        "Territorio detectado: ES412 - Burgos.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915210: Convocatoria  de subvenciones a clubes, sociedades anónimas deportivas de máximo nivel de la provincia de Burgos y delegaciones provinciales de Burgos de las distintas federaciones durante la temporada 2025/26 o 2026",
+        "Finalidad: Comercio, Turismo y Pymes",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: veinte días naturales a contar desde el día siguiente al de la publicación en BOP"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116771,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "DIPUTACIÓN PROV. DE BURGOS",
+          "nivel3": "INSTITUTO PARA EL DEPORTE Y JUVENTUD"
+        },
+        "sedeElectronica": "https://registro.diputaciondeburgos.es/",
+        "codigoBDNS": "915210",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 400000,
+        "mrr": false,
+        "descripcion": "Convocatoria  de subvenciones a clubes, sociedades anónimas deportivas de máximo nivel de la provincia de Burgos y delegaciones provinciales de Burgos de las distintas federaciones durante la temporada 2025/26 o 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+            "codigo": "R"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES412 - Burgos"
+          }
+        ],
+        "descripcionFinalidad": "Comercio, Turismo y Pymes",
+        "descripcionBasesReguladoras": "Nueva Ordenanza General y Reguladora de Subvenciones de la Diputación Provincial de Burgos (BOP 6 de abril de 2006).",
+        "urlBasesReguladoras": "www.burgos.es",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "al día siguiente  de su publicación en el BOPBUR",
+        "textFin": "veinte días naturales a contar desde el día siguiente al de la publicación en BOP",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481540,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "Bases Clubes 2026.pdf",
+            "long": 262261,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915209",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Orden de 24 de junio de 2026, pro la que se convocan subvenciones con cargo al 0,7% IRPF e Impuesto de Sociedades. LINEA 1 Programas de ámbito supraprovincial",
+      "organism": "AUTONOMICA / ANDALUCÍA / CONSEJERÍA DE INCLUSIÓN SOCIAL, JUVENTUD, FAMILIAS E IGUALDAD",
+      "territory": "ES61 - ANDALUCIA",
+      "sector": "Otras actividades de servicios sociales sin alojamiento",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Servicios Sociales y Promoción Social",
+      "eligibleActivities": [],
+      "budgetTotal": 39237656,
+      "amount": "39.237.656 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": "2026-07-31",
+      "deadline": "2026-07-31",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915209",
+      "basesUrl": "https://juntadeandalucia.es/eboja/2024/137/BOJA24-137-00128-48028-01_00304978.pdf",
+      "theme": "Servicios Sociales y Promoción Social",
+      "score": 71,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915209.",
+        "Territorio detectado: ES61 - ANDALUCIA.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915209: Orden de 24 de junio de 2026, pro la que se convocan subvenciones con cargo al 0,7% IRPF e Impuesto de Sociedades. LINEA 1 Programas de ámbito supraprovincial",
+        "Finalidad: Servicios Sociales y Promoción Social",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116770,
+        "organo": {
+          "nivel1": "AUTONOMICA",
+          "nivel2": "ANDALUCÍA",
+          "nivel3": "CONSEJERÍA DE INCLUSIÓN SOCIAL, JUVENTUD, FAMILIAS E IGUALDAD"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915209",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 39237656,
+        "mrr": false,
+        "descripcion": "Orden de 24 de junio de 2026, pro la que se convocan subvenciones con cargo al 0,7% IRPF e Impuesto de Sociedades. LINEA 1 Programas de ámbito supraprovincial",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Otras actividades de servicios sociales sin alojamiento",
+            "codigo": "88.9"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES61 - ANDALUCIA"
+          }
+        ],
+        "descripcionFinalidad": "Servicios Sociales y Promoción Social",
+        "descripcionBasesReguladoras": "Orden de 10 de julio de 2024,por la que se aprueban las b.r. para la conc. de sub.en rég.de conc.comp. destinadas a entid. privad. para realizac.de actuac. de interés gral.para atender fines sociales con cargo a la asignación tributaria del 0,7% del IRPF",
+        "urlBasesReguladoras": "https://juntadeandalucia.es/eboja/2024/137/BOJA24-137-00128-48028-01_00304978.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": "2026-07-31",
+        "textInicio": "Desde el día siguiente publicación Extracto",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481546,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "TextoConvocatoria.pdf",
+            "long": 748843,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915204",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+      "organism": "ESTADO / MINISTERIO DE AGRICULTURA, PESCA Y ALIMENTACIÓN / SUBSECRETARÍA DE AGRICULTURA, PESCA Y ALIMENTACIÓN",
+      "territory": "ES - ESPAÑA ",
+      "sector": "AGRICULTURA, GANADERÍA, SILVICULTURA Y PESCA",
+      "beneficiaryTypes": [
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Agricultura, Pesca y Alimentación",
+      "eligibleActivities": [],
+      "budgetTotal": 10996845.8,
+      "amount": "10.996.845,8 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": "2028-09-30",
+      "deadline": "2028-09-30",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915204",
+      "basesUrl": "https://www.boe.es/buscar/pdf/2022/BOE-A-2022-4136-consolidado.pdf",
+      "theme": "Agricultura, Pesca y Alimentación",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915204.",
+        "Territorio detectado: ES - ESPAÑA .",
+        "Tipo de beneficiario: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915204: Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+        "Finalidad: Agricultura, Pesca y Alimentación",
+        "Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116765,
+        "organo": {
+          "nivel1": "ESTADO",
+          "nivel2": "MINISTERIO DE AGRICULTURA, PESCA Y ALIMENTACIÓN",
+          "nivel3": "SUBSECRETARÍA DE AGRICULTURA, PESCA Y ALIMENTACIÓN"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915204",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concesión directa - canónica",
+        "presupuestoTotal": 10996845.8,
+        "mrr": false,
+        "descripcion": "Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "AGRICULTURA, GANADERÍA, SILVICULTURA Y PESCA",
+            "codigo": "A"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES - ESPAÑA "
+          }
+        ],
+        "descripcionFinalidad": "Agricultura, Pesca y Alimentación",
+        "descripcionBasesReguladoras": "Subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, de bonificación del principal de operaciones de financiación formalizadas por operadores del sector agroalimentario y pesquero.",
+        "urlBasesReguladoras": "https://www.boe.es/buscar/pdf/2022/BOE-A-2022-4136-consolidado.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": "2028-09-30",
+        "textInicio": "A partir del día siguiente de publicación del extracto en el BOE",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": {
+          "descripcion": "REG (UE) 2023/2831 de minimis, General",
+          "orden": null
+        },
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481532,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "20260622 Convocatoria ICO MAPA SAECA - ORIENTE MEDIO VFin.pdf",
+            "long": 425983,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915199",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+      "organism": "ESTADO / MINISTERIO DE AGRICULTURA, PESCA Y ALIMENTACIÓN / SUBSECRETARÍA DE AGRICULTURA, PESCA Y ALIMENTACIÓN",
+      "territory": "ES - ESPAÑA ",
+      "sector": "AGRICULTURA, GANADERÍA, SILVICULTURA Y PESCA",
+      "beneficiaryTypes": [
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Acceso a la vivienda y fomento de la edificación",
+      "eligibleActivities": [],
+      "budgetTotal": 10996845.8,
+      "amount": "10.996.845,8 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": "2028-09-30",
+      "deadline": "2028-09-30",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915199",
+      "basesUrl": "https://www.boe.es/buscar/pdf/2022/BOE-A-2022-4136-consolidado.pdf",
+      "theme": "Acceso a la vivienda y fomento de la edificación",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915199.",
+        "Territorio detectado: ES - ESPAÑA .",
+        "Tipo de beneficiario: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915199: Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+        "Finalidad: Acceso a la vivienda y fomento de la edificación",
+        "Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116760,
+        "organo": {
+          "nivel1": "ESTADO",
+          "nivel2": "MINISTERIO DE AGRICULTURA, PESCA Y ALIMENTACIÓN",
+          "nivel3": "SUBSECRETARÍA DE AGRICULTURA, PESCA Y ALIMENTACIÓN"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915199",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concesión directa - canónica",
+        "presupuestoTotal": 10996845.8,
+        "mrr": false,
+        "descripcion": "Orden de XX de XXX de 2026, del MAPA, por la que se convocan las subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, destinadas la subvención del principal de créditos a titulares de explotaciones agrarias (Oriente Medio).",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "AGRICULTURA, GANADERÍA, SILVICULTURA Y PESCA",
+            "codigo": "A"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES - ESPAÑA "
+          }
+        ],
+        "descripcionFinalidad": "Acceso a la vivienda y fomento de la edificación",
+        "descripcionBasesReguladoras": "Subvenciones del artículo 6 del Real Decreto-ley 4/2022, de 15 de marzo, de bonificación del principal de operaciones de financiación formalizadas por operadores del sector agroalimentario y pesquero.",
+        "urlBasesReguladoras": "https://www.boe.es/buscar/pdf/2022/BOE-A-2022-4136-consolidado.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": "2028-09-30",
+        "textInicio": "A partir del día siguiente de publicación del extracto en el BOE",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": {
+          "descripcion": "REG (UE) 717/2014 de minimis, Pesca y acuicultura",
+          "orden": null
+        },
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481522,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "20260622 Convocatoria ICO MAPA SAECA - ORIENTE MEDIO VFin.pdf",
+            "long": 425983,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915196",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "AYUDAS ECONÓMICAS ORGANIZACION ACTIVIDADES DEPORTIVAS CARACTER NACIONAL - 2º SE,ESTRE 2026",
+      "organism": "LOCAL / ZARAGOZA / ZARAGOZA DEPORTE, S.A.",
+      "territory": "ES - ESPAÑA ",
+      "sector": "Actividades deportivas",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras Prestaciones económicas",
+      "eligibleActivities": [],
+      "budgetTotal": 30000,
+      "amount": "30.000 EUR presupuesto",
+      "deadlineStart": "2026-07-03",
+      "deadlineEnd": "2026-07-10",
+      "deadline": "2026-07-10",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915196",
+      "basesUrl": "http://bop.dpz.es/BOPZ/UploadServlet?ruta=Boletines\\2016\\236\\bop.pdf",
+      "theme": "Otras Prestaciones económicas",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915196.",
+        "Territorio detectado: ES - ESPAÑA .",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915196: AYUDAS ECONÓMICAS ORGANIZACION ACTIVIDADES DEPORTIVAS CARACTER NACIONAL - 2º SE,ESTRE 2026",
+        "Finalidad: Otras Prestaciones económicas",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116757,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "ZARAGOZA",
+          "nivel3": "ZARAGOZA DEPORTE, S.A."
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915196",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 30000,
+        "mrr": false,
+        "descripcion": "AYUDAS ECONÓMICAS ORGANIZACION ACTIVIDADES DEPORTIVAS CARACTER NACIONAL - 2º SE,ESTRE 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Actividades deportivas",
+            "codigo": "93.1"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES - ESPAÑA "
+          }
+        ],
+        "descripcionFinalidad": "Otras Prestaciones económicas",
+        "descripcionBasesReguladoras": "Ordenanza General Municipal de Subvenciones",
+        "urlBasesReguladoras": "http://bop.dpz.es/BOPZ/UploadServlet?ruta=Boletines\\2016\\236\\bop.pdf",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": "2026-07-03",
+        "fechaFinSolicitud": "2026-07-10",
+        "textInicio": null,
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481513,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "1702_textoConvocatoria.pdf",
+            "long": 288458,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915195",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Convocatoria de tramitación anticipada de Subvenciones de la Diputación Provincial de Huelva para personas jurídicas sin ánimo de lucro del ámbito de la Prevención Social de la provincia de Huelva “La Diputación Previene 2026”",
+      "organism": "LOCAL / DIPUTACIÓN PROV. DE HUELVA / DIPUTACIÓN PROVINCIAL DE HUELVA",
+      "territory": "ES615 - Huelva",
+      "sector": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Servicios Sociales y Promoción Social",
+      "eligibleActivities": [],
+      "budgetTotal": 147500,
+      "amount": "147.500 EUR presupuesto",
+      "deadlineStart": "2026-06-26",
+      "deadlineEnd": "2026-07-27",
+      "deadline": "2026-07-27",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915195",
+      "basesUrl": "http://s2.diphuelva.es/portalweb/bop/boletines/20160718-1.pdf#page=3",
+      "theme": "Servicios Sociales y Promoción Social",
+      "score": 71,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915195.",
+        "Territorio detectado: ES615 - Huelva.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915195: Convocatoria de tramitación anticipada de Subvenciones de la Diputación Provincial de Huelva para personas jurídicas sin ánimo de lucro del ámbito de la Prevención Social de la provincia de Huelva “La Diputación Previene 2026”",
+        "Finalidad: Servicios Sociales y Promoción Social",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: 20 días hábiles después"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116756,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "DIPUTACIÓN PROV. DE HUELVA",
+          "nivel3": "DIPUTACIÓN PROVINCIAL DE HUELVA"
+        },
+        "sedeElectronica": "https://sede.diphuelva.es/opencms/opencms/sede/index.html",
+        "codigoBDNS": "915195",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 147500,
+        "mrr": false,
+        "descripcion": "Convocatoria de tramitación anticipada de Subvenciones de la Diputación Provincial de Huelva para personas jurídicas sin ánimo de lucro del ámbito de la Prevención Social de la provincia de Huelva “La Diputación Previene 2026”",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+            "codigo": "R"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES615 - Huelva"
+          }
+        ],
+        "descripcionFinalidad": "Servicios Sociales y Promoción Social",
+        "descripcionBasesReguladoras": "Ordenanza General de subvenciones de la Diputación Provincial de Huelva (BOP n.º 136 de 18 de julio de 2016)",
+        "urlBasesReguladoras": "http://s2.diphuelva.es/portalweb/bop/boletines/20160718-1.pdf#page=3",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": "2026-06-26",
+        "fechaFinSolicitud": "2026-07-27",
+        "textInicio": "Al día siguiente de la publicación del extracto de la convocatoria en el BOP",
+        "textFin": "20 días hábiles después",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481505,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "3.1.CONVO_PREVIENE 2026_borrador_US130526.dfn.fda.pdf",
+            "long": 562222,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481504,
+            "descripcion": "ANEXO VII  FORMULARIO DE AUTORIZACIÓN/OPOSICIÓN A LA VERIFICACIÓN DE DATOS MEDIANTE EL USO DE SISTEMAS DE INTERMEDIACIÓN",
+            "nombreFic": "ANEXO VII. FORMULARIO INTERMEDIACIÓN.pdf",
+            "long": 151642,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481502,
+            "descripcion": "RESOLUCIÓN APROBACIÓN_Convocatoria de tramitación anticipada de Subvenciones de la Diputación Provincial de Huelva para personas jurídicas sin ánimo de lucro del ámbito de la Prevención Social de la provincia de Huelva “La Diputación Previene 2026”",
+            "nombreFic": "resolucion_1895_2026_APROBACION CONVOCATORIA_DIPUTACION PREVIENE 2026.pdf",
+            "long": 97857,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915191",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "BASES REGULADORAS DE LAS AYUDAS PARA SUMINISTRO MINIMOS VITALES DEL AYUNTAMIENTO DE FUENTE DEL MAESTRE PARA EL AÑO 2026",
+      "organism": "LOCAL / FUENTE DEL MAESTRE / AYUNTAMIENTO DE FUENTE DEL MAESTRE",
+      "territory": "ES431 - Badajoz",
+      "sector": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+      "beneficiaryTypes": [
+        "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Servicios Sociales y Promoción Social",
+      "eligibleActivities": [],
+      "budgetTotal": 32586.16,
+      "amount": "32.586,16 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "20/12/2026",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915191",
+      "basesUrl": "https://www.fuentedelmaestre.es/",
+      "theme": "Servicios Sociales y Promoción Social",
+      "score": 65,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915191.",
+        "Territorio detectado: ES431 - Badajoz.",
+        "Tipo de beneficiario: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915191: BASES REGULADORAS DE LAS AYUDAS PARA SUMINISTRO MINIMOS VITALES DEL AYUNTAMIENTO DE FUENTE DEL MAESTRE PARA EL AÑO 2026",
+        "Finalidad: Servicios Sociales y Promoción Social",
+        "Beneficiarios: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: 20/12/2026"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116752,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "FUENTE DEL MAESTRE",
+          "nivel3": "AYUNTAMIENTO DE FUENTE DEL MAESTRE"
+        },
+        "sedeElectronica": "https://www.fuentedelmaestre.es/",
+        "codigoBDNS": "915191",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concesión directa - canónica",
+        "presupuestoTotal": 32586.16,
+        "mrr": false,
+        "descripcion": "BASES REGULADORAS DE LAS AYUDAS PARA SUMINISTRO MINIMOS VITALES DEL AYUNTAMIENTO DE FUENTE DEL MAESTRE PARA EL AÑO 2026",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES SANITARIAS Y DE SERVICIOS SOCIALES",
+            "codigo": "R"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES431 - Badajoz"
+          }
+        ],
+        "descripcionFinalidad": "Servicios Sociales y Promoción Social",
+        "descripcionBasesReguladoras": "BASES REGULADORAS DE LAS AYUDAS PARA SUMINISTRO MINIMOS VITALES DEL AYUNTAMIENTO DE FUENTE DEL MAESTRE PARA EL AÑO 2026",
+        "urlBasesReguladoras": "https://www.fuentedelmaestre.es/",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "Desde el día siguiente a la publicación del extracto de estas bases en el BOP de Badajoz",
+        "textFin": "20/12/2026",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481497,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "BASES REGULADORAS DE LAS AYUDAS PARA SUMINISTROS MÍNIMOS VITALES 2026.pdf",
+            "long": 496124,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481501,
+            "descripcion": "Certificado de aprobación",
+            "nombreFic": "Certificado de Acuerdo JGL.pdf",
+            "long": 331295,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915189",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Decreto de 23 de junio de 2026 de la Delegada del Área de Gobierno de Economía, Innovación y Hacienda por el que se aprueba la convocatoria pública para la concesión de subvenciones a personas afiliadas al Régimen Especial de Trabajadores por Cuenta Propi",
+      "organism": "LOCAL / MADRID / ÁREA DE GOBIERNO DE ECONOMÍA, INNOVACIÓN Y HACIENDA",
+      "territory": "ES300 - Madrid",
+      "sector": "OTROS SERVICIOS",
+      "beneficiaryTypes": [
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras actuaciones de carácter económico",
+      "eligibleActivities": [],
+      "budgetTotal": 2000000,
+      "amount": "2.000.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "VEINTE DÍAS NATURALES DESDE EL DÍA SIGUIENTE A LA FECHA DE PUBLICACIÓN EN EL BOCM",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915189",
+      "basesUrl": "https://www.bocm.es/boletin/CM_Orden_BOCM/2013/11/22/BOCM-20131122-34.PDF",
+      "theme": "Otras actuaciones de carácter económico",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915189.",
+        "Territorio detectado: ES300 - Madrid.",
+        "Tipo de beneficiario: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915189: Decreto de 23 de junio de 2026 de la Delegada del Área de Gobierno de Economía, Innovación y Hacienda por el que se aprueba la convocatoria pública para la concesión de subvenciones a personas afiliadas al Régimen Especial de Trabajadores por Cuenta Propi",
+        "Finalidad: Otras actuaciones de carácter económico",
+        "Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: VEINTE DÍAS NATURALES DESDE EL DÍA SIGUIENTE A LA FECHA DE PUBLICACIÓN EN EL BOCM"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116750,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "MADRID",
+          "nivel3": "ÁREA DE GOBIERNO DE ECONOMÍA, INNOVACIÓN Y HACIENDA"
+        },
+        "sedeElectronica": "https://sede.madrid.es/portal/site/tramites/menuitem.c61bb691882ed9d32e202e2084f1a5a0/?vgnextoid=5a9d5d53be9a0210VgnVCM100000171f5a0aRCRD&vgnextchannel=5a9d5d53be9a0210VgnVCM100000171f5a0aRCRD&vgnextfmt=default",
+        "codigoBDNS": "915189",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 2000000,
+        "mrr": false,
+        "descripcion": "Decreto de 23 de junio de 2026 de la Delegada del Área de Gobierno de Economía, Innovación y Hacienda por el que se aprueba la convocatoria pública para la concesión de subvenciones a personas afiliadas al Régimen Especial de Trabajadores por Cuenta Propi",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "OTROS SERVICIOS",
+            "codigo": "T"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES300 - Madrid"
+          }
+        ],
+        "descripcionFinalidad": "Otras actuaciones de carácter económico",
+        "descripcionBasesReguladoras": "ORDENANZA BBRR GENERALES PARA CONCESIÓN SUBVENCIONES POR AYTO MADRID Y OP",
+        "urlBasesReguladoras": "https://www.bocm.es/boletin/CM_Orden_BOCM/2013/11/22/BOCM-20131122-34.PDF",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "DESDE EL DÍA SIGUIENTE A LA PUBLICACIÓN DE LA CONVOCATORIA EN EL BOCM",
+        "textFin": "VEINTE DÍAS NATURALES DESDE EL DÍA SIGUIENTE A LA FECHA DE PUBLICACIÓN EN EL BOCM",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": {
+          "descripcion": "REG (UE) 2023/2831 de minimis, General",
+          "orden": null
+        },
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481494,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "BASES DE LA CONVOCATORIA SUBV. AUTÓNOMOS 2026.PDF",
+            "long": 441128,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915185",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "AYUDAS PROYECTOS DE INVESTIGACIÓN CIENTÍFICA Y TRANSFERENCIA DE TECNOLOGÍA, COFINANCIADAS POR EL FEDER (2027-2030",
+      "organism": "AUTONOMICA / CASTILLA-LA MANCHA / AGENCIA DE INVESTIGACIÓN E INNOVACIÓN DE CASTILLA-LA MANCHA",
+      "territory": "ES42 - CASTILLA LA MANCHA",
+      "sector": "ACTIVIDADES PROFESIONALES, CIENTÍFICAS Y TÉCNICAS",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Investigación, desarrollo e innovación",
+      "eligibleActivities": [],
+      "budgetTotal": 10000000,
+      "amount": "10.000.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "El día veinte hábil  a contar desde el día siguiente a  la publicación de la Resolución en el DOCM",
+      "deadlineStatus": "uncertain",
+      "deadlineConfidence": "Baja",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915185",
+      "basesUrl": "http://docm.jccm.es/docm/eli/es-cm/o/2022/12/22/247",
+      "theme": "Investigación, desarrollo e innovación",
+      "score": 49,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915185.",
+        "Territorio detectado: ES42 - CASTILLA LA MANCHA.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915185: AYUDAS PROYECTOS DE INVESTIGACIÓN CIENTÍFICA Y TRANSFERENCIA DE TECNOLOGÍA, COFINANCIADAS POR EL FEDER (2027-2030",
+        "Finalidad: Investigación, desarrollo e innovación",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA",
+        "Plazo indicado: El día veinte hábil  a contar desde el día siguiente a  la publicación de la Resolución en el DOCM"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116746,
+        "organo": {
+          "nivel1": "AUTONOMICA",
+          "nivel2": "CASTILLA-LA MANCHA",
+          "nivel3": "AGENCIA DE INVESTIGACIÓN E INNOVACIÓN DE CASTILLA-LA MANCHA"
+        },
+        "sedeElectronica": "www.jccm.es",
+        "codigoBDNS": "915185",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 10000000,
+        "mrr": false,
+        "descripcion": "AYUDAS PROYECTOS DE INVESTIGACIÓN CIENTÍFICA Y TRANSFERENCIA DE TECNOLOGÍA, COFINANCIADAS POR EL FEDER (2027-2030",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "ACTIVIDADES PROFESIONALES, CIENTÍFICAS Y TÉCNICAS",
+            "codigo": "N"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES42 - CASTILLA LA MANCHA"
+          }
+        ],
+        "descripcionFinalidad": "Investigación, desarrollo e innovación",
+        "descripcionBasesReguladoras": "Orden 247/2022, de 22 de diciembre, modificada por la Orden 85/2024, de 23 de mayo, y por la Orden 44/2026, de 27 de marzo, de la Consejería de Educación, Cultura y Deportes",
+        "urlBasesReguladoras": "http://docm.jccm.es/docm/eli/es-cm/o/2022/12/22/247",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "Desde el  día siguiente a la publicación de la Resolución el el DOCM",
+        "textFin": "El día veinte hábil  a contar desde el día siguiente a  la publicación de la Resolución en el DOCM",
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [
+          {
+            "descripcion": "FEDER - FONDO EUROPEO DE DESARROLLO REGIONAL"
+          }
+        ],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481486,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "RESOLUCIÓN CONVOCATORIA F_102411.PDF",
+            "long": 392996,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915184",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "IV PREMIOS A LA EXCELENCIA Y AL ESFUERZO ACADÉMICO",
+      "organism": "LOCAL / TORREMOLINOS / AYUNTAMIENTO DE TORREMOLINOS",
+      "territory": "ES617 - Málaga",
+      "sector": "EDUCACIÓN",
+      "beneficiaryTypes": [
+        "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Educación",
+      "eligibleActivities": [],
+      "budgetTotal": 3000,
+      "amount": "3000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": "2026-07-17",
+      "deadline": "2026-07-17",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915184",
+      "basesUrl": "https://transparencia.torremolinos.es/presupuestos-municipales-2025/",
+      "theme": "Educación",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915184.",
+        "Territorio detectado: ES617 - Málaga.",
+        "Tipo de beneficiario: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915184: IV PREMIOS A LA EXCELENCIA Y AL ESFUERZO ACADÉMICO",
+        "Finalidad: Educación",
+        "Beneficiarios: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116745,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "TORREMOLINOS",
+          "nivel3": "AYUNTAMIENTO DE TORREMOLINOS"
+        },
+        "sedeElectronica": null,
+        "codigoBDNS": "915184",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 3000,
+        "mrr": false,
+        "descripcion": "IV PREMIOS A LA EXCELENCIA Y AL ESFUERZO ACADÉMICO",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "EDUCACIÓN",
+            "codigo": "Q"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES617 - Málaga"
+          }
+        ],
+        "descripcionFinalidad": "Educación",
+        "descripcionBasesReguladoras": "Bases reguladoras de IV PREMIOS A LA EXCELENCIA Y AL ESFUERZO ACADÉMICO",
+        "urlBasesReguladoras": "https://transparencia.torremolinos.es/presupuestos-municipales-2025/",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": "2026-07-17",
+        "textInicio": "Al dia siguiente de su publicacion en el BOPMA",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [
+          {
+            "descripcion": "FEDER - FONDO EUROPEO DE DESARROLLO REGIONAL"
+          }
+        ],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481449,
+            "descripcion": "Modelo  de solicitud",
+            "nombreFic": "rU_nvsYXQcVJ+JWa4OMhm+VbM4ktf_CoKjAwAPk51kE=.pdf",
+            "long": 130148,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          },
+          {
+            "id": 1481446,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "20260623_Resolución_DECRETO 2026-7978 [Resolución PR_2026_6750 - Actuación genérica con fiscalización] (1).pdf",
+            "long": 2439851,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915173",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "CONVOCATORIA PARA LA CONCESIÓN DE AYUDAS DIRIGIDAS A ESTABLECIMIENTOS DE HOSTELERÍA INSCRITOS EN LA MARCA “ALIMENTOS DE SEGOVIA” PARA LA ELABORACIÓN DE UN MENÚ KM.0",
+      "organism": "LOCAL / DIPUTACIÓN PROV. DE SEGOVIA / DIPUTACIÓN PROVINCIAL DE SEGOVIA",
+      "territory": "ES416 - Segovia",
+      "sector": "HOSTELERÍA",
+      "beneficiaryTypes": [
+        "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras actuaciones de carácter económico",
+      "eligibleActivities": [],
+      "budgetTotal": 20000,
+      "amount": "20.000 EUR presupuesto",
+      "deadlineStart": "2026-07-02",
+      "deadlineEnd": "2026-08-03",
+      "deadline": "2026-08-03",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915173",
+      "basesUrl": "www.dipsegovia.es/subvenciones",
+      "theme": "Otras actuaciones de carácter económico",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915173.",
+        "Territorio detectado: ES416 - Segovia.",
+        "Tipo de beneficiario: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915173: CONVOCATORIA PARA LA CONCESIÓN DE AYUDAS DIRIGIDAS A ESTABLECIMIENTOS DE HOSTELERÍA INSCRITOS EN LA MARCA “ALIMENTOS DE SEGOVIA” PARA LA ELABORACIÓN DE UN MENÚ KM.0",
+        "Finalidad: Otras actuaciones de carácter económico",
+        "Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116734,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "DIPUTACIÓN PROV. DE SEGOVIA",
+          "nivel3": "DIPUTACIÓN PROVINCIAL DE SEGOVIA"
+        },
+        "sedeElectronica": "https://sede.dipsegovia.es/",
+        "codigoBDNS": "915173",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 20000,
+        "mrr": false,
+        "descripcion": "CONVOCATORIA PARA LA CONCESIÓN DE AYUDAS DIRIGIDAS A ESTABLECIMIENTOS DE HOSTELERÍA INSCRITOS EN LA MARCA “ALIMENTOS DE SEGOVIA” PARA LA ELABORACIÓN DE UN MENÚ KM.0",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "HOSTELERÍA",
+            "codigo": "I"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES416 - Segovia"
+          }
+        ],
+        "descripcionFinalidad": "Otras actuaciones de carácter económico",
+        "descripcionBasesReguladoras": "CONVOCATORIA PARA LA CONCESIÓN DE AYUDAS DIRIGIDAS A ESTABLECIMIENTOS DE HOSTELERÍA INSCRITOS EN LA MARCA “ALIMENTOS DE SEGOVIA” PARA LA ELABORACIÓN DE UN MENÚ KM. 0",
+        "urlBasesReguladoras": "www.dipsegovia.es/subvenciones",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": "2026-07-02",
+        "fechaFinSolicitud": "2026-08-03",
+        "textInicio": null,
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481433,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "BASES Ayudas Menú Km.0 2026.pdf",
+            "long": 742868,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915171",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Convocatoria de Subvención a municipios de la provincia de Ciudad Real para Universidades Populares 2026.",
+      "organism": "LOCAL / DIPUTACIÓN PROV. DE CIUDAD REAL / DIPUTACIÓN PROVINCIAL DE CIUDAD REAL",
+      "territory": "ES422 - Ciudad Real",
+      "sector": "Administración pública y de la política económica, social y medioambiental",
+      "beneficiaryTypes": [
+        "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Otras Prestaciones económicas",
+      "eligibleActivities": [],
+      "budgetTotal": 630000,
+      "amount": "630.000 EUR presupuesto",
+      "deadlineStart": null,
+      "deadlineEnd": null,
+      "deadline": "Plazo no estructurado",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Media",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915171",
+      "basesUrl": "https://dipucr.transparencialocal.gob.es/es_ES/buscar/contenido/articulo/articulo-943-reglamento-regulador-del-plan-de-asistencia-economica-y-cooperacion-municipal-boletin-oficial-provincia-numero-32-de-15-de-marzo",
+      "theme": "Otras Prestaciones económicas",
+      "score": 57,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915171.",
+        "Territorio detectado: ES422 - Ciudad Real.",
+        "Tipo de beneficiario: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Plazo no estructurado o relativo: requiere lectura de bases/anuncio.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915171: Convocatoria de Subvención a municipios de la provincia de Ciudad Real para Universidades Populares 2026.",
+        "Finalidad: Otras Prestaciones económicas",
+        "Beneficiarios: PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116732,
+        "organo": {
+          "nivel1": "LOCAL",
+          "nivel2": "DIPUTACIÓN PROV. DE CIUDAD REAL",
+          "nivel3": "DIPUTACIÓN PROVINCIAL DE CIUDAD REAL"
+        },
+        "sedeElectronica": "https://sede.dipucr.es/",
+        "codigoBDNS": "915171",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 630000,
+        "mrr": false,
+        "descripcion": "Convocatoria de Subvención a municipios de la provincia de Ciudad Real para Universidades Populares 2026.",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS JURÍDICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "Administración pública y de la política económica, social y medioambiental",
+            "codigo": "84.1"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES422 - Ciudad Real"
+          }
+        ],
+        "descripcionFinalidad": "Otras Prestaciones económicas",
+        "descripcionBasesReguladoras": "SERVICIO SUBVENCIONES-Convocatoria de Subvenciones a municipios de la provincia de Ciudad Real para Universidades Populares 2026.",
+        "urlBasesReguladoras": "https://dipucr.transparencialocal.gob.es/es_ES/buscar/contenido/articulo/articulo-943-reglamento-regulador-del-plan-de-asistencia-economica-y-cooperacion-municipal-boletin-oficial-provincia-numero-32-de-15-de-marzo",
+        "sePublicaDiarioOficial": true,
+        "abierto": true,
+        "fechaInicioSolicitud": null,
+        "fechaFinSolicitud": null,
+        "textInicio": "A partir del día siguiente al de la publicación de la convocatoria en el BOP",
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481444,
+            "descripcion": "Texto en castellano de la convocatoria",
+            "nombreFic": "Certificado de acuerdos.pdf",
+            "long": 263418,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    },
+    {
+      "id": "bdns-915168",
+      "sourceId": "bdns-snpsap",
+      "source": "BDNS/SNPSAP",
+      "title": "Resolución del Vicerrectorado de Estudiantes de la Universidad de La Laguna, por la que se publica la convocatoria de ayudas de Comedor para alumnado, para el curso 2026-2027.",
+      "organism": "OTROS / UNIVERSIDAD DE LA LAGUNA",
+      "territory": "ES7 - CANARIAS",
+      "sector": "EDUCACIÓN",
+      "beneficiaryTypes": [
+        "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "objective": "Educación",
+      "eligibleActivities": [],
+      "budgetTotal": 100000,
+      "amount": "100.000 EUR presupuesto",
+      "deadlineStart": "2026-07-15",
+      "deadlineEnd": "2026-10-15",
+      "deadline": "2026-10-15",
+      "deadlineStatus": "open",
+      "deadlineConfidence": "Alta",
+      "officialUrl": "https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=GE&numConv=915168",
+      "basesUrl": "https://sede.ull.es/ecivilis-site/bulletinBoard/showBulletin/61801:1",
+      "theme": "Educación",
+      "score": 55,
+      "fit": [
+        "Fuente oficial BDNS/SNPSAP con codigo 915168.",
+        "Territorio detectado: ES7 - CANARIAS.",
+        "Tipo de beneficiario: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA."
+      ],
+      "risks": [
+        "Revisar requisitos y anexos antes de decidir candidatura.",
+        "Puede depender de publicacion en diario oficial."
+      ],
+      "evidence": [
+        "BDNS 915168: Resolución del Vicerrectorado de Estudiantes de la Universidad de La Laguna, por la que se publica la convocatoria de ayudas de Comedor para alumnado, para el curso 2026-2027.",
+        "Finalidad: Educación",
+        "Beneficiarios: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+      ],
+      "internalFacts": [
+        "Perfil minimo entidad"
+      ],
+      "raw": {
+        "id": 1116729,
+        "organo": {
+          "nivel1": "OTROS",
+          "nivel2": "UNIVERSIDAD DE LA LAGUNA",
+          "nivel3": null
+        },
+        "sedeElectronica": "https://sede.ull.es/",
+        "codigoBDNS": "915168",
+        "fechaRecepcion": "2026-06-24",
+        "instrumentos": [
+          {
+            "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN "
+          }
+        ],
+        "tipoConvocatoria": "Concurrencia competitiva - canónica",
+        "presupuestoTotal": 100000,
+        "mrr": false,
+        "descripcion": "Resolución del Vicerrectorado de Estudiantes de la Universidad de La Laguna, por la que se publica la convocatoria de ayudas de Comedor para alumnado, para el curso 2026-2027.",
+        "descripcionLeng": null,
+        "tiposBeneficiarios": [
+          {
+            "descripcion": "PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA"
+          }
+        ],
+        "sectores": [
+          {
+            "descripcion": "EDUCACIÓN",
+            "codigo": "Q"
+          }
+        ],
+        "regiones": [
+          {
+            "descripcion": "ES7 - CANARIAS"
+          }
+        ],
+        "descripcionFinalidad": "Educación",
+        "descripcionBasesReguladoras": "Bases Reguladoras de las convocatorias de becas y ayudas del Vicerrectorado con competencias en materia de política asistencial para el alumnado de la Universidad de La Laguna.",
+        "urlBasesReguladoras": "https://sede.ull.es/ecivilis-site/bulletinBoard/showBulletin/61801:1",
+        "sePublicaDiarioOficial": true,
+        "abierto": false,
+        "fechaInicioSolicitud": "2026-07-15",
+        "fechaFinSolicitud": "2026-10-15",
+        "textInicio": null,
+        "textFin": null,
+        "ayudaEstado": null,
+        "urlAyudaEstado": null,
+        "fondos": [],
+        "reglamento": null,
+        "objetivos": [],
+        "sectoresProductos": [],
+        "documentos": [
+          {
+            "id": 1481438,
+            "descripcion": "Documento de la convocatoria en español",
+            "nombreFic": "Convocatoria Ayudas de Comedor curso 2026_27.pdf",
+            "long": 467660,
+            "datMod": "2026-06-24",
+            "datPublicacion": "2026-06-24"
+          }
+        ],
+        "anuncios": [],
+        "advertencia": "La reutilización de los datos del Sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas está sujeta a una serie de restricciones y consideraciones legales. Consulte el aviso legal en https://www.infosubvenciones.es/bdnstrans/GE/es/avisolegal.Además, el usuario debe ser consciente que la información presentada es de naturaleza dinámica, y que los datos pueden ser sometidos a correcciones, inserciones, modificaciones y eliminaciones en momentos posteriores a su extracción. Accesos al API del sistema Nacional de Publicidad de Subvenciones y Ayudas Públicas. La Administración Presupuestaria, para salvaguardar la protección del acceso libre e irrestricto de los ciudadanos a este Portal y a su información podrá adoptar medidas restrictivas de acceso al API ante situaciones de manifiesto abuso del servicio, riesgos de seguridad, o uso fraudulento de la información descargada, de acuerdo con las buenas prácticas de gestión de datos abiertos (https://datos.gob.es/es/blog/limitaciones-la-consulta-de-una-api) establecidas por el Ministerio para la Transformación Digital y de la Función Pública."
+      }
+    }
+  ]
+}

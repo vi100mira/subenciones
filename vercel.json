@@ -1,0 +1,24 @@
+{
+  "outputDirectory": "prototype",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/app/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/source-blob-upload.ts": {
+      "maxDuration": 60
+    },
+    "api/source-connections.ts": {
+      "maxDuration": 30
+    },
+    "api/ingestion-dispatch.ts": {
+      "maxDuration": 30
+    }
+  }
+}

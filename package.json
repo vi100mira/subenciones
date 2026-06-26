@@ -1,0 +1,25 @@
+{
+  "name": "subvenciones-rag",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "echo \"Static prototype: open prototype/index.html or serve prototype/\"",
+    "typecheck": "tsc --noEmit",
+    "check:line-budgets": "node scripts/guardrails/check-line-budgets.mjs",
+    "check:stability": "npm run typecheck && npm run check:line-budgets",
+    "radar:bdns": "node scripts/radar/fetch-bdns-latest.mjs",
+    "worker:chunk-documents": "node scripts/workers/chunk-documents.mjs",
+    "deploy": "npx vercel deploy --prod --yes"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
+    "@vercel/blob": "^2.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^20.11.24",
+    "@vercel/node": "^5.5.28",
+    "typescript": "^5.2.2"
+  }
+}

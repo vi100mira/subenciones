@@ -1,0 +1,11 @@
+backend/var/
+.tmp/
+__pycache__/
+*.pyc
+.env
+.venv/
+node_modules/
+
+.vercel
+.env*
+!.env.example
