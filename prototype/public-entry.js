@@ -16,10 +16,12 @@
           <li>Analisis web solo si se autoriza expresamente.</li>
           <li>Superadmin separado para fuentes, campanas RAG y operaciones.</li>
         </ul>
-        <div class="public-entry__actions">
-          <button class="primary-action" data-public-action="entity-login">Acceder como entidad demo</button>
-          <button class="ghost-action" data-public-action="superadmin-login">Entrar como superadmin</button>
-        </div>
+        <form class="inline-form public-entry__actions" id="public-login-form">
+          <label><span>Email</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
+          <label><span>Contrasena</span><input name="password" type="password" minlength="6" required /></label>
+          <button class="primary-action" type="submit">Acceder</button>
+        </form>
+        <div id="public-login-status" class="plain-note"><strong>Acceso</strong><span>El rol se asigna desde las credenciales validadas, no desde botones publicos.</span></div>
         <div class="public-entry__role-note"><strong>Flujo previsto</strong><span>Solicitud, verificacion por email, aprobacion y acceso al cockpit de la entidad.</span></div>
       </section>
       <section class="public-entry__card">
@@ -61,8 +63,26 @@
     document.querySelector(`[data-screen="${screen}"]`)?.click();
   }
 
-  entry.querySelector("[data-public-action='entity-login']").addEventListener("click", () => showApp("entity", "entity"));
-  entry.querySelector("[data-public-action='superadmin-login']").addEventListener("click", () => showApp("superadmin", "platform"));
+  entry.querySelector("#public-login-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const email = String(data.get("email") || "").trim().toLowerCase();
+    const password = String(data.get("password") || "");
+    const status = entry.querySelector("#public-login-status");
+
+    // Prototype-only credential gate; replace with Supabase Auth before production.
+    if (!email.includes("@") || password.length < 6) {
+      status.innerHTML = "<strong>Acceso rechazado</strong><span>Credenciales incompletas o no validas.</span>";
+      return;
+    }
+
+    if (email === "superadmin@subvenciones-rag.local" || email.startsWith("superadmin@")) {
+      showApp("superadmin", "platform");
+      return;
+    }
+
+    showApp("entity", "entity");
+  });
 
   entry.querySelector("#public-onboarding-form").addEventListener("submit", async (event) => {
     event.preventDefault();

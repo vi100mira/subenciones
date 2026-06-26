@@ -46,6 +46,10 @@
   margin-top: 18px;
 }
 
+form.public-entry__actions {
+  display: grid;
+}
+
 .public-entry__role-note {
   margin-top: 18px;
   padding: 12px;

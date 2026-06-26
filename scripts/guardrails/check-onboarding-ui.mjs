@@ -21,10 +21,25 @@ try {
 
   assert(await page.locator(".public-entry").isVisible(), "No se ve la landing publica");
   assert(await page.locator("#public-onboarding-form").isVisible(), "No se ve el formulario publico");
+  assert(await page.locator("#public-login-form").isVisible(), "No se ve el acceso por credenciales");
+  assert((await page.locator("[data-public-action]").count()) === 0, "Sigue existiendo un acceso directo por rol");
   assert(await page.locator(".app-shell").evaluate((el) => el.hidden), "El cockpit aparece antes de acceso");
-  await page.locator("[data-public-action='superadmin-login']").click();
+
+  await page.locator("#public-login-form [name='email']").fill("superadmin@subvenciones-rag.local");
+  await page.locator("#public-login-form [name='password']").fill("demo2026");
+  await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
   assert((await page.locator("#screen-title").textContent()) === "Consola plataforma", "Superadmin no aterriza en Plataforma");
   assert((await page.locator("body").getAttribute("data-role")) === "superadmin", "No se aplica rol superadmin");
+
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto("about:blank");
+  await page.goto(publicUrl, { waitUntil: "networkidle" });
+  assert(await page.locator(".public-entry").isVisible(), "La landing no reaparece en sesion limpia");
+  await page.locator("#public-login-form [name='email']").fill("admin@novaterra.local");
+  await page.locator("#public-login-form [name='password']").fill("demo2026");
+  await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
+  assert((await page.locator("#screen-title").textContent()) === "Perfil de entidad", "Entidad no aterriza en su perfil");
+  assert((await page.locator("body").getAttribute("data-role")) === "entity", "No se aplica rol entidad");
 
   await page.evaluate(() => sessionStorage.removeItem("prototype-role"));
   await page.goto(appUrl, { waitUntil: "networkidle" });
@@ -49,6 +64,7 @@ try {
         publicUrl,
         title,
         publicFormVisible: true,
+        credentialGateVisible: true,
         cockpitOnboardingHidden: true,
         security: "sin patrones de secreto visibles"
       },
