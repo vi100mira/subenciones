@@ -1,11 +1,27 @@
-backend/var/
-.tmp/
-__pycache__/
-*.pyc
-.env
-.venv/
+# Dependencies
 node_modules/
+.venv/
 
-.vercel
+# Local secrets and provider state
 .env*
 !.env.example
+.vercel/
+
+# Build, cache and test output
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+.vite/
+.turbo/
+.tmp/
+
+# Backend local runtime
+backend/var/
+__pycache__/
+*.pyc
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
