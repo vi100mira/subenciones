@@ -1,0 +1,90 @@
+.public-entry {
+  min-height: 100vh;
+  padding: 28px;
+  background: #f5f7f4;
+  color: #17201c;
+}
+
+.public-entry[hidden],
+.app-shell[hidden] {
+  display: none;
+}
+
+.public-entry__grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.public-entry__intro,
+.public-entry__card {
+  border: 1px solid #d8e0dc;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(28, 42, 36, 0.08);
+  padding: 22px;
+}
+
+.public-entry__intro h1 {
+  margin: 8px 0 12px;
+  font-size: 34px;
+  letter-spacing: 0;
+}
+
+.public-entry__intro p,
+.public-entry__intro li {
+  color: #60706a;
+  line-height: 1.55;
+}
+
+.public-entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.public-entry__role-note {
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px dashed #b8cac4;
+  border-radius: 8px;
+  background: #f7faf8;
+}
+
+.role-chip {
+  display: none;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid #31584f;
+  border-radius: 8px;
+  color: #dce7e3;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+body[data-role="entity"] .nav-item[data-screen="platform"],
+body[data-role="entity"] .nav-item[data-screen="operations"],
+body[data-role="entity"] #onboarding-request-panel {
+  display: none;
+}
+
+body[data-role="superadmin"] .nav-item[data-screen="entity"],
+body[data-role="superadmin"] .nav-item[data-screen="governance"],
+body[data-role="superadmin"] .nav-item[data-screen="workspace"],
+body[data-role="superadmin"] #onboarding-request-panel {
+  display: none;
+}
+
+body[data-role="superadmin"] .role-chip--superadmin,
+body[data-role="entity"] .role-chip--entity {
+  display: block;
+}
+
+@media (max-width: 860px) {
+  .public-entry__grid {
+    grid-template-columns: 1fr;
+  }
+}
