@@ -7,6 +7,8 @@
     "build": "echo \"Static prototype: open prototype/index.html or serve prototype/\"",
     "typecheck": "tsc --noEmit",
     "check:line-budgets": "node scripts/guardrails/check-line-budgets.mjs",
+    "check:ui": "node scripts/guardrails/check-onboarding-ui.mjs",
+    "check:e2e:onboarding": "node scripts/guardrails/check-onboarding-e2e.mjs",
     "check:stability": "npm run typecheck && npm run check:line-budgets",
     "radar:bdns": "node scripts/radar/fetch-bdns-latest.mjs",
     "worker:chunk-documents": "node scripts/workers/chunk-documents.mjs",
