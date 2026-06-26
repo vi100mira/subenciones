@@ -6,6 +6,7 @@ node_modules/
 .env*
 !.env.example
 .vercel/
+supabase/.temp/
 
 # Build, cache and test output
 dist/
