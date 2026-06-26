@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import type { WebSocketLikeConstructor } from "@supabase/realtime-js";
+import WebSocket from "ws";
 
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL;
@@ -12,7 +14,8 @@ export function getSupabaseAdmin() {
     auth: {
       autoRefreshToken: false,
       persistSession: false
-    }
+    },
+    realtime: { transport: WebSocket as unknown as WebSocketLikeConstructor }
   });
 }
 
