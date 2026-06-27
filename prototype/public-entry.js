@@ -42,8 +42,13 @@
 
   document.querySelector(".sidebar-note")?.insertAdjacentHTML(
     "beforeend",
-    `<div class="role-chip role-chip--entity">Rol entidad demo</div><div class="role-chip role-chip--superadmin">Rol superadmin</div>`
+    `<div class="role-chip role-chip--entity">Rol Novaterra: docente/gestor</div><div class="role-chip role-chip--superadmin">Rol superadmin</div>`
   );
+
+  const demoAccounts = {
+    "pmira@novaterra.org.es": { role: "entity", screen: "entity" },
+    "superadmin@subvenciones-rag.local": { role: "superadmin", screen: "platform" }
+  };
 
   function setRole(role) {
     document.body.dataset.role = role;
@@ -76,12 +81,13 @@
       return;
     }
 
-    if (email === "superadmin@subvenciones-rag.local" || email.startsWith("superadmin@")) {
-      showApp("superadmin", "platform");
+    const account = demoAccounts[email];
+    if (!account) {
+      status.innerHTML = "<strong>Acceso rechazado</strong><span>Usuario no autorizado en esta demo.</span>";
       return;
     }
 
-    showApp("entity", "entity");
+    showApp(account.role, account.screen);
   });
 
   entry.querySelector("#public-onboarding-form").addEventListener("submit", async (event) => {

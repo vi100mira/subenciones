@@ -35,7 +35,7 @@ try {
   await page.goto("about:blank");
   await page.goto(publicUrl, { waitUntil: "networkidle" });
   assert(await page.locator(".public-entry").isVisible(), "La landing no reaparece en sesion limpia");
-  await page.locator("#public-login-form [name='email']").fill("admin@novaterra.local");
+  await page.locator("#public-login-form [name='email']").fill("pmira@novaterra.org.es");
   await page.locator("#public-login-form [name='password']").fill("demo2026");
   await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
   assert((await page.locator("#screen-title").textContent()) === "Perfil de entidad", "Entidad no aterriza en su perfil");
