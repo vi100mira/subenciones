@@ -61,6 +61,57 @@ Next backend slice:
 4. Persist audit events for login, invite, source approval, export, and document generation.
 5. Keep public search available without login.
 
+## Credential E2E Matrix
+
+These are the access paths the product must verify end to end. The current prototype only simulates credentials; production must enforce the same matrix with Supabase Auth, tenant membership, RLS, audit events, and invitation state.
+
+| E2E case | Credential state | Expected destination | Data boundary | Monetization relation |
+| --- | --- | --- | --- | --- |
+| Public visitor | No credentials | Public radar/search | Public grant sources only | Free, not paywalled |
+| Public onboarding requester | Email in request form, not authenticated | Request created in review state | Minimal public/entity contact data only | Not billable until tenant activation |
+| Invited entity admin | Verified email invitation, terms pending | Terms and consent gate | No private analysis until accepted | Activation path, not charged for consent itself |
+| Entity reader | Authenticated tenant member | Entity cockpit, read-only surfaces | Approved tenant facts only | Can be included in free/low-cost seat tier |
+| Entity member/docente-gestor | Authenticated tenant member | Entity profile, opportunities, candidature preparation | Approved facts and assigned workflows | Monetizable as an operational seat above free threshold |
+| Analyst | Authenticated tenant analyst | Matching, checklist, Word draft preparation | Approved facts and evidence only | Monetizable when using drafting, alerts, or private RAG |
+| Admin/owner | Authenticated tenant admin/owner | Governance, users, sources, consents, exports | Tenant-private data under governance | Monetizable for team management, connectors, audit, private storage |
+| Platform superadmin | Platform credential, no tenant membership by default | Platform, operations, public source campaigns | Platform-public sources and operational metadata | Internal operating role, not a tenant billable user |
+| Suspended/revoked user | Credential exists but membership disabled | Access denied with support path | No tenant data | No active charge after revocation window |
+
+Current prototype guardrails:
+
+- `scripts/guardrails/check-onboarding-ui.mjs` verifies that the public landing requires a credential form and has no direct role buttons.
+- The same guardrail verifies a platform superadmin path and the Novaterra docente/gestor demo path.
+- `scripts/guardrails/check-onboarding-e2e.mjs` verifies the onboarding API without writing unless explicitly enabled.
+
+## Monetization Boundaries
+
+The product can charge for operational value, not for artificial scarcity or sensitive data extraction.
+
+Always free or non-billable:
+
+- Public grant discovery from official/public sources.
+- Inspecting official source links and evidence for a public opportunity.
+- Requesting entity onboarding.
+- Consent, deletion, export of own data, and account closure rights.
+- Basic explanation of why a public opportunity may or may not fit.
+
+Potentially billable, with social pricing caps:
+
+- Tenant workspace with multiple validated users.
+- Alerts, saved opportunities, collaborative review, and deadline tracking.
+- Private source connectors such as Drive or SharePoint after explicit consent.
+- Private RAG over approved tenant documents or guided-interview facts.
+- Word draft generation, candidature checklists, annex tracking, and audit exports.
+- Admin governance tools, role management, source health, cost visibility, and compliance evidence.
+
+Never monetizable:
+
+- Sensitive beneficiary data as a product asset.
+- Sale, reuse, or cross-tenant training on private embeddings or tenant documents.
+- Paid placement or ranking of grant opportunities.
+- Blocking access to public official information that the product already indexed from public sources.
+- Automatic eligibility decisions without human review.
+
 ## Evidence and Original Documents
 
 Every recommendation must show:
