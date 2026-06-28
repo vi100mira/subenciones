@@ -8,7 +8,7 @@ Connect the Opportunities grid to the Candidature workspace so users understand 
 
 - `prototype/ui-polish.js`: adds a Candidature column with `Preseleccionar`, `Activar`, and `Abrir` actions persisted in local storage.
 - `prototype/workspace-flow.js`: reads the same candidate selection state and rerenders when grid actions change it.
-- `prototype/stitch-theme.css`: styles candidate actions and keeps the opportunity controls/table header sticky while scrolling.
+- `prototype/stitch-theme.css`: styles candidate actions, keeps the opportunity controls/table header sticky, and adds a top horizontal scrollbar for the grid.
 - `prototype/index.html`: bumps asset versions.
 
 ## Verification
@@ -17,6 +17,7 @@ Connect the Opportunities grid to the Candidature workspace so users understand 
 - `npm run check:ui`
 - Playwright on `http://localhost:5174/?v=grid-candidates#view-opportunities`: confirmed `Candidatura` column, `Preseleccionar`, `Activar`, and `Abrir` actions, 1 active candidate in Workspace, and 4 tracked candidates.
 - Playwright on `http://localhost:5174/?v=grid-candidates-2#view-opportunities`: confirmed grid has its own vertical scroll and the table header stays visible while scrolling rows.
+- Playwright on `http://localhost:5174/?v=top-x-scroll#view-opportunities`: confirmed the top horizontal scrollbar is visible, has the same scroll width as the table, and stays synchronized with the grid body in both directions.
 
 ## Residual Risks
 

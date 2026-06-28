@@ -174,7 +174,18 @@
         </tr></thead>
         <tbody>${body}</tbody>
       </table>`;
+    syncGridTopScroll();
     window.lucide?.createIcons();
+  }
+
+  function syncGridTopScroll() {
+    const grid = document.querySelector("#opportunity-grid");
+    const topScroll = document.querySelector("#opportunity-grid-x-scroll");
+    const spacer = topScroll?.querySelector("span");
+    const table = grid?.querySelector("table");
+    if (!grid || !topScroll || !spacer || !table) return;
+    spacer.style.width = `${table.scrollWidth}px`;
+    topScroll.scrollLeft = grid.scrollLeft;
   }
 
   function setOpportunityView(view) {
@@ -213,7 +224,16 @@
       <div class="opportunity-grid-tools">
         <button class="ghost-action radar-chat-button" data-open-opportunity-chat type="button"><i data-lucide="message-square-text"></i> Conversar con radar</button>
       </div>`);
-    list.insertAdjacentHTML("afterend", `<div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
+    list.insertAdjacentHTML("afterend", `<div id="opportunity-grid-x-scroll" class="opportunity-grid-x-scroll" aria-label="Desplazamiento horizontal del grid"><span></span></div><div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
+    const topScroll = document.querySelector("#opportunity-grid-x-scroll");
+    topScroll?.addEventListener("scroll", () => {
+      const grid = document.querySelector("#opportunity-grid");
+      if (grid) grid.scrollLeft = topScroll.scrollLeft;
+    });
+    document.querySelector("#opportunity-grid")?.addEventListener("scroll", (event) => {
+      const scroller = document.querySelector("#opportunity-grid-x-scroll");
+      if (scroller) scroller.scrollLeft = event.currentTarget.scrollLeft;
+    });
     document.addEventListener("click", (event) => {
       const sort = event.target.closest("[data-grid-sort]");
       const rowAction = event.target.closest("[data-grid-opportunity], [data-grid-text]");

@@ -387,6 +387,24 @@ body.sidebar-collapsed .sidebar-note {
   gap: 8px;
 }
 
+.opportunity-grid-x-scroll {
+  position: sticky;
+  top: 304px;
+  z-index: 6;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 16px;
+  margin: 0 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.opportunity-grid-x-scroll span {
+  display: block;
+  height: 1px;
+}
+
 .opportunity-grid {
   overflow: auto;
   max-height: calc(100vh - 330px);
