@@ -163,6 +163,14 @@
     const list = document.querySelector("#opportunity-list");
     const heading = document.querySelector("#opportunities .list-panel .panel-heading");
     if (!list || !heading || document.querySelector("#opportunity-grid")) return;
+    const fit = window.RADAR?.quality;
+    if (fit?.entityFitRule && !document.querySelector("#entity-fit-note")) {
+      heading.insertAdjacentHTML("afterend", `
+        <div class="plain-note entity-fit-note" id="entity-fit-note">
+          <strong>Filtro de entidad activo</strong>
+          <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: ${fit.entityCandidateCount} candidatas compatibles. ${fit.entityDiscardedCount} descartadas por territorio fuera de ambito.</span>
+        </div>`);
+    }
     const filters = [...heading.querySelectorAll(".segmented")].find((group) => group.querySelector("[data-filter]"));
     if (filters && !filters.closest(".filter-control")) {
       const wrapper = document.createElement("div");
@@ -171,7 +179,7 @@
       filters.before(wrapper);
       wrapper.append(filters);
     }
-    heading.insertAdjacentHTML("afterend", `
+    (document.querySelector("#entity-fit-note") || heading).insertAdjacentHTML("afterend", `
       <div class="opportunity-grid-tools">
         <div class="view-control">
           <span class="control-label">Vista</span>

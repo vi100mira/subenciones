@@ -25,6 +25,12 @@ Agents are permissioned services, not autonomous black boxes. Each agent has a s
 - Store audit events.
 - Return channel-safe or app-rich responses.
 
+## Match Agent Entity Context
+
+Before ranking an opportunity, the Match Agent must load the active tenant profile: territory, legal form, collectives, programs, operating area, exclusions, and approved facts. Public grants outside the entity operating territory must not appear as normal candidates. They can be logged as discarded with a reason such as "territory outside active tenant scope".
+
+For a Valencian entity profile, statewide Spanish calls and Comunitat Valenciana calls can remain candidates. Provincial calls for Huelva, Cadiz, Teruel, Granada, London, or worldwide programs require explicit user intent before surfacing as candidates.
+
 ## Channel Adapters
 
 - Teams, WhatsApp, email, and future channels must stay thin.
