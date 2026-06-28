@@ -1,17 +1,36 @@
 (function () {
-  const activeId = "bdns-908014";
+  const candidateKey = "workspace-candidates-v1";
 
   function opportunities() {
     return window.RADAR?.opportunities || [];
   }
 
+  function defaultSelection() {
+    const rows = opportunities();
+    const activeId = rows.find((item) => item.id === "bdns-908014")?.id || rows[0]?.id || "";
+    return { activeId, selectedIds: rows.slice(0, 4).map((item) => item.id) };
+  }
+
+  function candidateSelection() {
+    try {
+      return { ...defaultSelection(), ...JSON.parse(localStorage.getItem(candidateKey) || "{}") };
+    } catch {
+      return defaultSelection();
+    }
+  }
+
   function selectedOpportunities() {
     const rows = opportunities();
-    const active = rows.find((item) => item.id === activeId) || rows[0];
-    const alternatives = rows.filter((item) => item.id !== active?.id).slice(0, 3);
+    const selection = candidateSelection();
+    const active = rows.find((item) => item.id === selection.activeId) || rows[0];
+    const alternatives = selection.selectedIds
+      .filter((id) => id !== active?.id)
+      .map((id) => rows.find((item) => item.id === id))
+      .filter(Boolean);
+    const fallback = rows.filter((item) => item.id !== active?.id && !selection.selectedIds.includes(item.id)).slice(0, Math.max(0, 3 - alternatives.length));
     return [
       { item: active, state: "Activa", tone: "safe", note: "Seleccionada para preparar checklist y borrador." },
-      ...alternatives.map((item, index) => ({
+      ...[...alternatives, ...fallback].slice(0, 3).map((item, index) => ({
         item,
         state: index === 0 ? "En evaluacion" : "Preseleccionada",
         tone: index === 0 ? "warning" : "review",
@@ -37,7 +56,7 @@
 
   function renderWorkspaceFlow() {
     const screen = document.querySelector("#workspace");
-    if (!screen || screen.dataset.flowReady === "true") return;
+    if (!screen) return;
     const selected = selectedOpportunities();
     const active = selected[0]?.item;
     screen.dataset.flowReady = "true";
@@ -88,4 +107,5 @@
 
   setTimeout(renderWorkspaceFlow, 0);
   window.addEventListener("hashchange", renderWorkspaceFlow);
+  window.addEventListener("workspace-candidates-changed", renderWorkspaceFlow);
 })();

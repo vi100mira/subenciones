@@ -48,6 +48,7 @@
   }
 
   const gridState = { sort: "score", dir: "desc", query: "" };
+  const candidateKey = "workspace-candidates-v1";
 
   function radarOpportunities() {
     return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
@@ -90,6 +91,34 @@
     return gridState.dir === "desc" ? "descending" : "ascending";
   }
 
+  function defaultCandidateSelection() {
+    const rows = radarOpportunities();
+    const activeId = rows.find((item) => item.id === "bdns-908014")?.id || rows[0]?.id || "";
+    return { activeId, selectedIds: rows.slice(0, 4).map((item) => item.id) };
+  }
+
+  function candidateSelection() {
+    try {
+      return { ...defaultCandidateSelection(), ...JSON.parse(localStorage.getItem(candidateKey) || "{}") };
+    } catch {
+      return defaultCandidateSelection();
+    }
+  }
+
+  function saveCandidateSelection(next) {
+    localStorage.setItem(candidateKey, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("workspace-candidates-changed"));
+  }
+
+  function candidateCell(item) {
+    const selection = candidateSelection();
+    const selected = selection.selectedIds.includes(item.id);
+    const active = selection.activeId === item.id;
+    if (active) return `<div class="candidate-state"><span class="badge safe">Activa</span><button class="ghost-action" data-candidate-action="open" data-candidate-id="${item.id}" type="button">Abrir</button></div>`;
+    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Activar</button></div>`;
+    return `<div class="candidate-state"><button class="ghost-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button">Preseleccionar</button></div>`;
+  }
+
   function selectGridOpportunity(id) {
     if (typeof state !== "undefined" && typeof renderOpportunities === "function") {
       state.selectedOpportunityId = id;
@@ -128,9 +157,10 @@
         <td><strong>${item.score}</strong><span>${item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja"}</span></td>
         <td>${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span></td>
         <td>${item.theme}<span>${item.territory}</span></td>
+        <td>${candidateCell(item)}</td>
         <td>${item.deadlineStatus === "uncertain" ? "Plazo incierto" : item.deadlineStatus === "closed" ? "Cerrada" : "Abierta"}<span>${item.amount || "Sin importe"}</span></td>
         <td>${gridActions(item)}</td>
-      </tr>`).join("") : `<tr><td colspan="7" class="grid-empty">No hay oportunidades con estos filtros.</td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">No hay oportunidades con estos filtros.</td></tr>`;
     grid.innerHTML = `
       <table>
         <thead><tr>
@@ -139,6 +169,7 @@
           <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
           <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
+          <th>Candidatura</th>
           <th>Estado</th><th>Acciones</th>
         </tr></thead>
         <tbody>${body}</tbody>
@@ -186,6 +217,7 @@
     document.addEventListener("click", (event) => {
       const sort = event.target.closest("[data-grid-sort]");
       const rowAction = event.target.closest("[data-grid-opportunity], [data-grid-text]");
+      const candidateAction = event.target.closest("[data-candidate-action]");
       if (sort) {
         gridState.dir = gridState.sort === sort.dataset.gridSort && gridState.dir === "desc" ? "asc" : "desc";
         gridState.sort = sort.dataset.gridSort;
@@ -198,6 +230,17 @@
       if (rowAction?.dataset.gridText) {
         selectGridOpportunity(rowAction.dataset.gridText);
         window.openOpportunityModal?.(rowAction.dataset.gridText, "text");
+      }
+      if (candidateAction) {
+        const selection = candidateSelection();
+        const id = candidateAction.dataset.candidateId;
+        const selectedIds = selection.selectedIds.includes(id) ? selection.selectedIds : [id, ...selection.selectedIds];
+        const next = candidateAction.dataset.candidateAction === "activate" || candidateAction.dataset.candidateAction === "open"
+          ? { activeId: id, selectedIds }
+          : { ...selection, selectedIds };
+        saveCandidateSelection(next);
+        renderOpportunityGrid();
+        if (candidateAction.dataset.candidateAction === "open" && typeof showScreen === "function") showScreen("workspace");
       }
     });
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => setTimeout(renderOpportunityGrid, 0)));
