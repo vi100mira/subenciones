@@ -59,7 +59,9 @@ body.sidebar-collapsed .sidebar {
 }
 
 body.sidebar-collapsed .brand {
-  justify-content: center;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
 }
 
 body.sidebar-collapsed .brand > div:not(.brand-mark),
@@ -70,10 +72,8 @@ body.sidebar-collapsed .role-chip {
 }
 
 body.sidebar-collapsed .sidebar-toggle {
-  position: absolute;
-  right: -8px;
-  top: 46px;
   background: #0f766e;
+  margin: 0;
 }
 
 body.sidebar-collapsed .nav-item {
@@ -285,6 +285,34 @@ body.sidebar-collapsed .sidebar-note {
 .icon-action:focus-visible::after {
   opacity: 1;
   transform: translateY(0);
+}
+
+.opportunity-item .opportunity-toolbar {
+  display: inline-flex;
+  width: auto;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fffc;
+}
+
+.opportunity-item .opportunity-toolbar > * {
+  width: 40px;
+}
+
+.opportunity-toolbar .icon-action {
+  min-height: 38px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.opportunity-toolbar .icon-action:hover,
+.opportunity-toolbar .icon-action:focus-visible {
+  border-color: var(--line);
+  background: #ffffff;
 }
 
 .check-item {

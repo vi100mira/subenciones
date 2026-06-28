@@ -3,7 +3,11 @@
     "Ver evidencia": "file-search",
     "Verificar": "shield-check",
     "Preparar Word": "file-text",
-    "Anexar": "paperclip"
+    "Anexar": "paperclip",
+    "Ver analisis": "scan-search",
+    "Bases": "scale",
+    "Ver texto original usado": "file-text",
+    "API oficial": "braces"
   };
 
   function applyWorkspaceActionIcons() {
@@ -16,6 +20,27 @@
       button.innerHTML = `<i data-lucide="${icon}"></i><span class="sr-only">${label}</span>`;
     });
     window.lucide?.createIcons();
+  }
+
+  function applyOpportunityActionIcons() {
+    document.querySelectorAll(".opportunity-item .button-row").forEach((row) => {
+      row.classList.add("opportunity-toolbar");
+      row.querySelectorAll("button, a").forEach((control) => {
+        const label = control.textContent.trim();
+        const icon = actionIcons[label] || "circle-ellipsis";
+        control.classList.add("icon-action");
+        control.title = label;
+        control.setAttribute("aria-label", label);
+        control.innerHTML = `<i data-lucide="${icon}"></i><span class="sr-only">${label}</span>`;
+      });
+    });
+    window.lucide?.createIcons();
+  }
+
+  function watchOpportunityList() {
+    const list = document.querySelector("#opportunity-list");
+    if (!list) return;
+    new MutationObserver(applyOpportunityActionIcons).observe(list, { childList: true });
   }
 
   function bindSidebarCollapse() {
@@ -40,4 +65,6 @@
 
   bindSidebarCollapse();
   applyWorkspaceActionIcons();
+  applyOpportunityActionIcons();
+  watchOpportunityList();
 })();
