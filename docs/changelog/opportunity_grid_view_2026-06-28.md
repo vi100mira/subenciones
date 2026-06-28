@@ -3,6 +3,7 @@
 ## Intent
 
 Add a dense grid view for opportunity comparison without replacing the existing card/detail review flow.
+Make filtering and sorting explicit enough for non-technical users.
 
 ## Files Touched
 
@@ -15,6 +16,7 @@ Add a dense grid view for opportunity comparison without replacing the existing 
 - `npm run check:stability`
 - `npm run check:ui`
 - Playwright on `http://localhost:5174/?v=grid-check-3#view-opportunities`: switched to Grid, searched "deportes", sorted by deadline, selected a row, and confirmed the analysis panel updated.
+- Playwright on `http://localhost:5174/?v=grid-controls#view-opportunities`: confirmed visible "Filtrar", "Vista", "Ordenar por", direction toggle, and active `asc/desc` sort marker.
 
 ## Residual Risks
 
