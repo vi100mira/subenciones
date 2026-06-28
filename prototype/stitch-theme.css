@@ -555,7 +555,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .radar-chat-modal {
-  width: min(760px, calc(100vw - 32px));
+  width: min(900px, calc(100vw - 32px));
 }
 
 .chat-log {
@@ -593,9 +593,9 @@ body.sidebar-collapsed .sidebar-note {
   margin-top: 10px;
 }
 
-.chat-results article {
+.chat-results article,
+.chat-compare article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 10px;
   padding: 10px;
   border: 1px solid var(--line);
@@ -603,15 +603,43 @@ body.sidebar-collapsed .sidebar-note {
   background: #ffffff;
 }
 
-.chat-results span {
+.chat-results span,
+.chat-compare span {
   color: var(--muted);
   font-size: 12px;
 }
 
-.chat-results .ghost-action {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-self: center;
+.chat-results p,
+.chat-compare p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.chat-actions,
+.prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.prompt-chips button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--teal);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chat-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .chat-form {
@@ -621,8 +649,9 @@ body.sidebar-collapsed .sidebar-note {
   margin-top: 14px;
 }
 
-.chat-form input {
-  min-height: 42px;
+.chat-form textarea {
+  min-height: 54px;
+  resize: vertical;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
