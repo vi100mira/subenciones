@@ -41,16 +41,28 @@
       const entityFit = territoryDecision(item);
       return { ...item, entityFit };
     });
-    const visible = annotated.filter((item) => item.entityFit.status === "candidate");
+    const territorialCandidates = annotated.filter((item) => item.entityFit.status === "candidate");
+    const archived = territorialCandidates
+      .filter((item) => item.deadlineStatus === "closed")
+      .map((item) => ({
+        ...item,
+        entityFit: {
+          status: "archived",
+          reason: "Archivada por plazo cerrado; no se muestra como oportunidad viva."
+        }
+      }));
+    const visible = territorialCandidates.filter((item) => item.deadlineStatus !== "closed");
     const discarded = annotated.filter((item) => item.entityFit.status !== "candidate");
     window.RADAR_ENTITY_CONTEXT = context;
     window.RADAR_ENTITY_DISCARDED = discarded;
+    window.RADAR_DEADLINE_ARCHIVED = archived;
     window.RADAR.opportunities = visible;
     window.RADAR.count = visible.length;
     window.RADAR.quality = {
       ...(window.RADAR.quality || {}),
       entityCandidateCount: visible.length,
       entityDiscardedCount: discarded.length,
+      entityArchivedClosedCount: archived.length,
       entityFitRule: `Solo estatal/Espana o ${context.territory}`
     };
   }

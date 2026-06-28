@@ -168,7 +168,7 @@
       heading.insertAdjacentHTML("afterend", `
         <div class="plain-note entity-fit-note" id="entity-fit-note">
           <strong>Filtro de entidad activo</strong>
-          <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: ${fit.entityCandidateCount} candidatas compatibles. ${fit.entityDiscardedCount} descartadas por territorio fuera de ambito.</span>
+          <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: ${fit.entityCandidateCount} oportunidades vivas o revisables. ${fit.entityDiscardedCount} descartadas por territorio y ${fit.entityArchivedClosedCount || 0} archivadas por plazo cerrado.</span>
         </div>`);
     }
     const filters = [...heading.querySelectorAll(".segmented")].find((group) => group.querySelector("[data-filter]"));

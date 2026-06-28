@@ -31,6 +31,8 @@ Before ranking an opportunity, the Match Agent must load the active tenant profi
 
 For a Valencian entity profile, statewide Spanish calls and Comunitat Valenciana calls can remain candidates. Provincial calls for Huelva, Cadiz, Teruel, Granada, London, or worldwide programs require explicit user intent before surfacing as candidates.
 
+Closed calls must not appear in the default "live opportunities" ranking. Keep them as archived or historical evidence with a clear reason, not as active candidates for preparation.
+
 ## Channel Adapters
 
 - Teams, WhatsApp, email, and future channels must stay thin.
