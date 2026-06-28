@@ -347,6 +347,125 @@ body.sidebar-collapsed .sidebar-note {
   background: #ffffff;
 }
 
+.opportunity-grid-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.opportunity-grid-tools .segmented {
+  flex: 0 0 auto;
+}
+
+.grid-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 240px;
+  max-width: 360px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+}
+
+.grid-search input {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.opportunity-grid {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.opportunity-grid table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.opportunity-grid th,
+.opportunity-grid td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(189, 201, 198, 0.55);
+  text-align: left;
+  vertical-align: top;
+}
+
+.opportunity-grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fffc;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.opportunity-grid th button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.opportunity-grid td {
+  font-size: 13px;
+}
+
+.opportunity-grid td:first-child {
+  width: 34%;
+}
+
+.opportunity-grid td span,
+.grid-title + span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.grid-title {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.opportunity-grid tr.is-selected {
+  background: #edfdfa;
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.opportunity-grid .grid-actions {
+  margin-top: 0;
+}
+
+.grid-empty {
+  color: var(--muted);
+  text-align: center;
+}
+
 .check-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
