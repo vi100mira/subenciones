@@ -7,7 +7,7 @@ Make the entity radar status easier to understand and interact with by replacing
 ## Files Touched
 
 - `prototype/ui-polish.js`: adds radar scope state, renders active/discarded/archived opportunity sets, and wires chart/legend clicks to the grid.
-- `prototype/stitch-theme.css`: styles the compact donut, legend, sticky spacing, and responsive layout.
+- `prototype/stitch-theme.css`: styles the compact donut, legend, sticky spacing, and responsive layout; removes the inner chart text.
 - `prototype/index.html`: bumps asset versions so the browser loads the new UI.
 
 ## Verification
@@ -15,6 +15,7 @@ Make the entity radar status easier to understand and interact with by replacing
 - `npm run check:stability`
 - `npm run check:ui`
 - Playwright on `http://localhost:5174/?v=radar-donut-3#view-opportunities`: confirmed default active scope has 13 rows, chart has 3 clickable zones, discarded scope shows 10 non-candidate rows, and archived scope shows 7 archived rows without activation actions.
+- Playwright on `http://localhost:5174/?v=radar-donut-click#view-opportunities`: confirmed angle-based chart clicks switch to discarded, archived, and active scopes; the chart no longer renders inner text.
 
 ## Residual Risks
 

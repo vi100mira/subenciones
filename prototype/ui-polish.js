@@ -68,6 +68,36 @@
     }[gridState.scope] || "vivas o revisables";
   }
 
+  function radarCounts() {
+    const fit = window.RADAR?.quality || {};
+    return {
+      active: Number(fit.entityCandidateCount || 0),
+      discarded: Number(fit.entityDiscardedCount || 0),
+      archived: Number(fit.entityArchivedClosedCount || 0)
+    };
+  }
+
+  function setEntityScope(scope) {
+    gridState.scope = scope;
+    renderEntityFitDashboard();
+    renderOpportunityGrid();
+  }
+
+  function scopeFromChartClick(event, chart) {
+    const rect = chart.getBoundingClientRect();
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const distance = Math.sqrt((dx * dx) + (dy * dy));
+    if (distance < rect.width * 0.22 || distance > rect.width * 0.55) return "";
+    const degrees = (Math.atan2(dy, dx) * 180 / Math.PI + 450) % 360;
+    const percent = degrees / 360 * 100;
+    const counts = radarCounts();
+    const total = Math.max(1, counts.active + counts.discarded + counts.archived);
+    const activeEnd = counts.active / total * 100;
+    const discardedEnd = activeEnd + counts.discarded / total * 100;
+    return percent < activeEnd ? "active" : percent < discardedEnd ? "discarded" : "archived";
+  }
+
   function currentOpportunityView() {
     return "grid";
   }
@@ -198,11 +228,7 @@
     const panel = document.querySelector("#entity-fit-note");
     const fit = window.RADAR?.quality;
     if (!panel || !fit) return;
-    const counts = {
-      active: Number(fit.entityCandidateCount || 0),
-      discarded: Number(fit.entityDiscardedCount || 0),
-      archived: Number(fit.entityArchivedClosedCount || 0)
-    };
+    const counts = radarCounts();
     const total = Math.max(1, counts.active + counts.discarded + counts.archived);
     let offset = 0;
     const segment = (scope) => {
@@ -216,19 +242,13 @@
         <strong>Radar de entidad</strong>
         <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: viendo ${scopeRows().length} ${scopeLabel()}.</span>
       </div>
-      <div class="fit-chart" aria-label="Distribucion de oportunidades del radar">
+      <div class="fit-chart" data-fit-chart title="Pincha un segmento para ver ese grupo" aria-label="Distribucion de oportunidades del radar">
         <svg viewBox="0 0 44 44">
           <circle class="fit-ring" cx="22" cy="22" r="15.9"></circle>
           ${segment("active")}
           ${segment("discarded")}
           ${segment("archived")}
         </svg>
-        <div class="fit-hit-map" aria-label="Cambiar alcance del radar desde el grafico">
-          <button class="active" data-entity-scope="active" type="button" aria-label="Ver ${counts.active} oportunidades vivas o revisables"></button>
-          <button class="discarded" data-entity-scope="discarded" type="button" aria-label="Ver ${counts.discarded} descartadas por territorio"></button>
-          <button class="archived" data-entity-scope="archived" type="button" aria-label="Ver ${counts.archived} archivadas por plazo cerrado"></button>
-        </div>
-        <div class="fit-total"><b>${counts[gridState.scope]}</b><span>${scopeLabel()}</span></div>
       </div>
       <div class="fit-legend">
         <button class="${gridState.scope === "active" ? "is-current" : ""}" data-entity-scope="active" type="button"><span class="dot active"></span><b>${counts.active}</b> Vivas</button>
@@ -298,10 +318,13 @@
       const rowAction = event.target.closest("[data-grid-opportunity], [data-grid-text]");
       const candidateAction = event.target.closest("[data-candidate-action]");
       const entityScope = event.target.closest("[data-entity-scope]");
+      const fitChart = event.target.closest("[data-fit-chart]");
       if (entityScope) {
-        gridState.scope = entityScope.dataset.entityScope;
-        renderEntityFitDashboard();
-        renderOpportunityGrid();
+        setEntityScope(entityScope.dataset.entityScope);
+      }
+      if (fitChart && !entityScope) {
+        const scope = scopeFromChartClick(event, fitChart);
+        if (scope) setEntityScope(scope);
       }
       if (sort) {
         gridState.dir = gridState.sort === sort.dataset.gridSort && gridState.dir === "desc" ? "asc" : "desc";
