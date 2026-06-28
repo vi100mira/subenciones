@@ -54,7 +54,7 @@
   }
 
   function currentOpportunityView() {
-    return localStorage.getItem("opportunity-view") || "cards";
+    return "grid";
   }
 
   function activeFilter() {
@@ -100,7 +100,7 @@
   function gridActions(item) {
     return `
       <div class="opportunity-toolbar grid-actions">
-        <button class="icon-action" data-grid-opportunity="${item.id}" title="Ver analisis" aria-label="Ver analisis"><i data-lucide="scan-search"></i><span class="sr-only">Ver analisis</span></button>
+        <button class="icon-action" data-grid-opportunity="${item.id}" title="Ver" aria-label="Ver"><i data-lucide="eye"></i><span class="sr-only">Ver</span></button>
         ${item.basesUrl ? `<a class="icon-action" href="${item.basesUrl}" target="_blank" rel="noreferrer" title="Bases" aria-label="Bases"><i data-lucide="scale"></i><span class="sr-only">Bases</span></a>` : ""}
         ${item.extractedText ? `<button class="icon-action" data-grid-text="${item.id}" title="Ver texto original usado" aria-label="Ver texto original usado"><i data-lucide="file-text"></i><span class="sr-only">Ver texto original usado</span></button>` : ""}
         ${item.officialUrl ? `<a class="icon-action" href="${item.officialUrl}" target="_blank" rel="noreferrer" title="API oficial" aria-label="API oficial"><i data-lucide="external-link"></i><span class="sr-only">API oficial</span></a>` : ""}
@@ -150,11 +150,10 @@
     const list = document.querySelector("#opportunity-list");
     const grid = document.querySelector("#opportunity-grid");
     if (!list || !grid) return;
-    localStorage.setItem("opportunity-view", view);
-    list.hidden = view === "grid";
-    grid.hidden = view !== "grid";
+    list.hidden = true;
+    grid.hidden = false;
     document.querySelectorAll("[data-opportunity-view]").forEach((button) => {
-      button.classList.toggle("is-selected", button.dataset.opportunityView === view);
+      button.classList.toggle("is-selected", button.dataset.opportunityView === "grid");
     });
     renderOpportunityGrid();
   }
@@ -181,21 +180,9 @@
     }
     (document.querySelector("#entity-fit-note") || heading).insertAdjacentHTML("afterend", `
       <div class="opportunity-grid-tools">
-        <div class="view-control">
-          <span class="control-label">Vista</span>
-          <div class="segmented" aria-label="Vista de oportunidades">
-            <button data-opportunity-view="cards">Tarjetas</button>
-            <button data-opportunity-view="grid">Grid</button>
-          </div>
-        </div>
-        <label class="grid-search"><i data-lucide="search"></i><input type="search" aria-label="Buscar oportunidades" placeholder="Buscar convocatoria, fuente o ambito"></label>
+        <button class="ghost-action radar-chat-button" data-open-opportunity-chat type="button"><i data-lucide="message-square-text"></i> Conversar con radar</button>
       </div>`);
     list.insertAdjacentHTML("afterend", `<div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
-    document.querySelectorAll("[data-opportunity-view]").forEach((button) => button.addEventListener("click", () => setOpportunityView(button.dataset.opportunityView)));
-    document.querySelector(".grid-search input")?.addEventListener("input", (event) => {
-      gridState.query = event.target.value;
-      renderOpportunityGrid();
-    });
     document.addEventListener("click", (event) => {
       const sort = event.target.closest("[data-grid-sort]");
       const rowAction = event.target.closest("[data-grid-opportunity], [data-grid-text]");
@@ -204,10 +191,13 @@
         gridState.sort = sort.dataset.gridSort;
         renderOpportunityGrid();
       }
-      if (rowAction?.dataset.gridOpportunity) selectGridOpportunity(rowAction.dataset.gridOpportunity);
+      if (rowAction?.dataset.gridOpportunity) {
+        selectGridOpportunity(rowAction.dataset.gridOpportunity);
+        window.openOpportunityModal?.(rowAction.dataset.gridOpportunity, "analysis");
+      }
       if (rowAction?.dataset.gridText) {
         selectGridOpportunity(rowAction.dataset.gridText);
-        document.querySelector("#opportunity-detail details")?.setAttribute("open", "");
+        window.openOpportunityModal?.(rowAction.dataset.gridText, "text");
       }
     });
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => setTimeout(renderOpportunityGrid, 0)));
