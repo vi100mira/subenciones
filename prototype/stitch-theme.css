@@ -1,0 +1,164 @@
+:root {
+  --bg: #ecfdf6;
+  --surface: #ffffff;
+  --surface-2: #e6f8f0;
+  --ink: #101e1a;
+  --muted: #3e4947;
+  --line: #bdc9c6;
+  --teal: #005c55;
+  --teal-dark: #00453f;
+  --blue: #345e9e;
+  --amber: #a16207;
+  --red: #ba1a1a;
+  --green: #23783b;
+  --violet: #6b4ea0;
+  --shadow: 0 18px 45px rgba(28, 42, 36, 0.08);
+}
+
+body {
+  background:
+    radial-gradient(circle at 78% 0%, rgba(156, 242, 232, 0.24), transparent 30%),
+    linear-gradient(180deg, #ecfdf6 0%, #f7fcfa 55%, #e6f8f0 100%);
+  color: var(--ink);
+}
+
+.brand-mark {
+  background: #ecfdf6 url("./assets/subvenciones-rag-logo.svg") center / 34px 34px no-repeat;
+  color: transparent;
+  border: 1px solid rgba(163, 250, 239, 0.35);
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #15231f 0%, #10211d 100%);
+  border-right: 1px solid rgba(163, 250, 239, 0.12);
+}
+
+.nav-item {
+  border-radius: 8px;
+  min-height: 46px;
+}
+
+.nav-item:hover,
+.nav-item.is-active {
+  background: #0f766e;
+  border-color: rgba(163, 250, 239, 0.3);
+  color: #ffffff;
+}
+
+.main {
+  padding: 26px 28px 36px;
+}
+
+.topbar {
+  margin-bottom: 24px;
+}
+
+.topbar h1 {
+  color: var(--ink);
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.18;
+}
+
+.eyebrow {
+  color: var(--teal);
+  letter-spacing: 0.08em;
+}
+
+.panel,
+.metric,
+.opportunity-card,
+.detail-panel,
+.modal {
+  border-color: var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.panel-heading h2,
+.opportunity-card h3,
+.metric strong {
+  color: var(--ink);
+}
+
+.primary-action {
+  min-height: 40px;
+  border-radius: 8px;
+  background: var(--teal);
+  box-shadow: 0 10px 20px rgba(0, 92, 85, 0.16);
+}
+
+.primary-action:hover {
+  background: #0f766e;
+}
+
+.ghost-action,
+.icon-button,
+.text-action {
+  border-color: var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--teal);
+}
+
+.segmented {
+  background: var(--surface-2);
+  border-color: var(--line);
+  border-radius: 8px;
+}
+
+.segmented button.is-selected {
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 5px 14px rgba(16, 30, 26, 0.08);
+}
+
+.source-map {
+  background-color: #f8fffc;
+  background-image:
+    linear-gradient(rgba(0, 106, 99, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 106, 99, 0.08) 1px, transparent 1px);
+}
+
+.source-node {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.source-node.healthy {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.source-node.degraded {
+  background: #fff7df;
+  color: #7a4b00;
+}
+
+.source-node.unknown {
+  border-color: #cbbcff;
+  color: var(--violet);
+}
+
+.source-node.blocked {
+  background: #ffdad6;
+  color: #93000a;
+}
+
+.badge,
+.status-pill,
+.filter-note {
+  border-radius: 999px;
+}
+
+.inline-form input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0, 106, 99, 0.12);
+  outline: none;
+}
+
+@media (max-width: 860px) {
+  .main {
+    padding: 18px;
+  }
+}

@@ -1,8 +1,8 @@
 .public-entry {
   min-height: 100vh;
-  padding: 28px;
-  background: #f5f7f4;
-  color: #17201c;
+  padding: 0;
+  background: #ecfdf6;
+  color: #101e1a;
 }
 
 .public-entry[hidden],
@@ -12,15 +12,61 @@
 
 .public-entry__grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
-  gap: 18px;
-  max-width: 1180px;
-  margin: 0 auto;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1fr);
+  min-height: 100vh;
 }
 
-.public-entry__intro,
+.public-entry__intro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 56px);
+  background:
+    linear-gradient(rgba(21, 35, 31, 0.86), rgba(21, 35, 31, 0.94)),
+    url("./assets/stitch-ngo-grant-hero.png") center / cover;
+  color: #ffffff;
+}
+
+.public-entry__intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 100px);
+  pointer-events: none;
+}
+
+.public-entry__brand,
+.public-entry__assurance {
+  position: relative;
+  z-index: 1;
+}
+
+.public-entry__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: auto;
+  color: #a3faef;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.public-entry__brand img {
+  width: 36px;
+  height: 36px;
+}
+
+.public-entry__access {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  padding: clamp(22px, 5vw, 64px);
+}
+
 .public-entry__card {
-  border: 1px solid #d8e0dc;
+  border: 1px solid #bdc9c6;
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 18px 45px rgba(28, 42, 36, 0.08);
@@ -28,15 +74,88 @@
 }
 
 .public-entry__intro h1 {
-  margin: 8px 0 12px;
-  font-size: 34px;
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 12px 0 18px;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.12;
   letter-spacing: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .public-entry__intro p,
 .public-entry__intro li {
-  color: #60706a;
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  color: #e3f5ed;
   line-height: 1.55;
+}
+
+.public-entry__intro .eyebrow {
+  margin-top: 70px;
+  color: #a3faef;
+}
+
+.public-entry__intro figure {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 28px 0 0;
+  border: 1px solid rgba(163, 250, 239, 0.18);
+  border-radius: 16px;
+  overflow: hidden;
+  opacity: 0.88;
+}
+
+.public-entry__intro figure img {
+  display: block;
+  width: 100%;
+}
+
+.public-entry__assurance {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  max-width: 620px;
+}
+
+.public-entry__assurance > span {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  column-gap: 12px;
+  color: #e3f5ed;
+  line-height: 1.45;
+}
+
+.public-entry__assurance strong {
+  display: block;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.public-entry__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 22px;
+  padding: 4px;
+  border-radius: 8px;
+  background: #e6f8f0;
+}
+
+.public-entry__tabs span {
+  padding: 14px;
+  border-radius: 6px;
+  color: #005c55;
+  font-weight: 800;
+  text-align: center;
+}
+
+.public-entry__tabs .is-active {
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(16, 30, 26, 0.08);
 }
 
 .public-entry__actions {
@@ -90,5 +209,9 @@ body[data-role="entity"] .role-chip--entity {
 @media (max-width: 860px) {
   .public-entry__grid {
     grid-template-columns: 1fr;
+  }
+
+  .public-entry__intro {
+    min-height: 58vh;
   }
 }

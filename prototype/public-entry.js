@@ -8,37 +8,44 @@
   entry.innerHTML = `
     <div class="public-entry__grid">
       <section class="public-entry__intro">
-        <p class="eyebrow">Inteligencia de subvenciones con control humano</p>
-        <h1>Subvenciones RAG</h1>
-        <p>Herramienta para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
-        <ul>
-          <li>Alta con datos minimos y verificacion del admin de entidad.</li>
-          <li>Analisis web solo si se autoriza expresamente.</li>
-          <li>Superadmin separado para fuentes, campanas RAG y operaciones.</li>
-        </ul>
-        <form class="inline-form public-entry__actions" id="public-login-form">
-          <label><span>Email</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
-          <label><span>Contrasena</span><input name="password" type="password" minlength="6" required /></label>
-          <button class="primary-action" type="submit">Acceder</button>
-        </form>
-        <div id="public-login-status" class="plain-note"><strong>Acceso</strong><span>El rol se asigna desde las credenciales validadas, no desde botones publicos.</span></div>
-        <div class="public-entry__role-note"><strong>Flujo previsto</strong><span>Solicitud, verificacion por email, aprobacion y acceso al cockpit de la entidad.</span></div>
+        <div class="public-entry__brand"><img src="./assets/subvenciones-rag-logo.svg" alt="" /><strong>Subvenciones RAG</strong></div>
+        <p class="eyebrow">Compromiso administrativo</p>
+        <h1>Garantia de integridad y privacidad institucional</h1>
+        <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
+        <div class="public-entry__assurance">
+          <span><i data-lucide="shield-check"></i><span><strong>Cumplimiento normativo</strong>Arquitectura alineada con RGPD y soberania del dato.</span></span>
+          <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Acceso por rol, auditoria y consentimiento granular.</span></span>
+        </div>
+        <figure><img src="./assets/stitch-ngo-grant-hero.png" alt="Ilustracion institucional de gestion segura de subvenciones" /></figure>
       </section>
-      <section class="public-entry__card">
-        <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad</h2></div><span class="badge review">Sin publicar</span></div>
-        <form class="inline-form" id="public-onboarding-form">
-          <label><span>Entidad</span><input name="entityName" value="Entidad social demo" required /></label>
-          <label><span>Web publica</span><input name="websiteUrl" placeholder="https://entidad.org" /></label>
-          <label><span>Email solicitante</span><input name="requesterEmail" type="email" required /></label>
-          <label><span>Email admin entidad</span><input name="adminEmail" type="email" required /></label>
-          <label><span>Territorio</span><input name="territory" value="Comunitat Valenciana" /></label>
-          <label><span><input name="publicWebConsent" type="checkbox" /> Autoriza solo analisis de web publica</span></label>
-          <button class="primary-action" type="submit">Registrar solicitud</button>
-        </form>
-        <div id="public-onboarding-status" class="plain-note"><strong>Estado</strong><span>La solicitud queda pendiente. No crea tenant activo, usuario, Drive ni aprobacion automatica.</span></div>
+      <section class="public-entry__access">
+        <article class="public-entry__card public-entry__card--login">
+          <div class="public-entry__tabs"><span class="is-active">Acceder</span><span>Registrar entidad</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional</h2></div><span class="badge review">Demo</span></div>
+          <form class="inline-form public-entry__actions" id="public-login-form">
+            <label><span>Email profesional</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
+            <label><span>Contrasena</span><input name="password" type="password" minlength="6" required /></label>
+            <button class="primary-action" type="submit">Acceder al panel</button>
+          </form>
+          <div id="public-login-status" class="plain-note"><strong>Acceso</strong><span>El rol se asigna desde las credenciales validadas, no desde botones publicos.</span></div>
+        </article>
+        <article class="public-entry__card">
+          <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad</h2></div><span class="badge review">Sin publicar</span></div>
+          <form class="inline-form" id="public-onboarding-form">
+            <label><span>Entidad</span><input name="entityName" value="Entidad social demo" required /></label>
+            <label><span>Web publica</span><input name="websiteUrl" placeholder="https://entidad.org" /></label>
+            <label><span>Email solicitante</span><input name="requesterEmail" type="email" required /></label>
+            <label><span>Email admin entidad</span><input name="adminEmail" type="email" required /></label>
+            <label><span>Territorio</span><input name="territory" value="Comunitat Valenciana" /></label>
+            <label><span><input name="publicWebConsent" type="checkbox" /> Autoriza solo analisis de web publica</span></label>
+            <button class="primary-action" type="submit">Registrar solicitud</button>
+          </form>
+          <div id="public-onboarding-status" class="plain-note"><strong>Estado</strong><span>La solicitud queda pendiente. No crea tenant activo, usuario, Drive ni aprobacion automatica.</span></div>
+        </article>
       </section>
     </div>`;
   document.body.prepend(entry);
+  window.lucide?.createIcons();
 
   document.querySelector(".sidebar-note")?.insertAdjacentHTML(
     "beforeend",
