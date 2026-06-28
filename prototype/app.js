@@ -11,7 +11,7 @@ const titles = {
   opportunities: "Oportunidades vivas",
   entity: "Perfil de entidad",
   governance: "Gobernanza del dato",
-  agents: "Agentes invocables",
+  agents: "Agentes y capacidades",
   workspace: "Candidatura",
   audit: "Auditoria",
   platform: "Consola plataforma",

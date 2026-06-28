@@ -637,6 +637,42 @@ body.sidebar-collapsed .sidebar-note {
   font-size: 12px;
 }
 
+.agent-readiness-note {
+  margin-bottom: 14px;
+}
+
+.agent-card.is-disabled,
+.channel-list > div.is-disabled,
+.stack-item.is-demo-run {
+  opacity: 0.62;
+  background: #f7faf8;
+}
+
+.agent-card.is-disabled {
+  pointer-events: none;
+}
+
+.agent-card.is-active-prototype {
+  border-color: var(--teal);
+  box-shadow: inset 0 0 0 1px rgba(0, 106, 99, 0.18);
+}
+
+.agent-readiness,
+.agent-panel-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.channel-list > div.is-disabled {
+  position: relative;
+}
+
+.channel-list > div.is-disabled .badge {
+  margin-left: auto;
+}
+
 .screen#opportunities .workbench {
   grid-template-columns: minmax(0, 1fr);
 }
