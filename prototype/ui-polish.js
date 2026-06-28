@@ -79,17 +79,15 @@
   }
 
   function sortMark(key) {
-    return gridState.sort === key ? `<span class="sort-mark">${gridState.dir}</span>` : "";
+    const active = gridState.sort === key;
+    const icon = active ? (gridState.dir === "desc" ? "arrow-down" : "arrow-up") : "arrow-up-down";
+    const label = active ? `Orden ${gridState.dir === "desc" ? "descendente" : "ascendente"}` : "Ordenar columna";
+    return `<span class="sort-mark"><i data-lucide="${icon}"></i><span class="sr-only">${label}</span></span>`;
   }
 
-  function syncGridControls() {
-    const order = document.querySelector("[data-grid-order]");
-    const dir = document.querySelector("[data-grid-dir]");
-    if (order) order.value = gridState.sort;
-    if (dir) {
-      dir.textContent = gridState.dir === "desc" ? "Descendente" : "Ascendente";
-      dir.setAttribute("aria-label", `Orden ${dir.textContent.toLowerCase()}`);
-    }
+  function sortAria(key) {
+    if (gridState.sort !== key) return "none";
+    return gridState.dir === "desc" ? "descending" : "ascending";
   }
 
   function selectGridOpportunity(id) {
@@ -136,16 +134,15 @@
     grid.innerHTML = `
       <table>
         <thead><tr>
-          <th><button data-grid-sort="title">Convocatoria ${sortMark("title")}</button></th>
-          <th><button data-grid-sort="source">Fuente ${sortMark("source")}</button></th>
-          <th><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
-          <th><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
-          <th><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
+          <th aria-sort="${sortAria("title")}"><button data-grid-sort="title">Convocatoria ${sortMark("title")}</button></th>
+          <th aria-sort="${sortAria("source")}"><button data-grid-sort="source">Fuente ${sortMark("source")}</button></th>
+          <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
+          <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
+          <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
           <th>Estado</th><th>Acciones</th>
         </tr></thead>
         <tbody>${body}</tbody>
       </table>`;
-    syncGridControls();
     window.lucide?.createIcons();
   }
 
@@ -183,30 +180,12 @@
             <button data-opportunity-view="grid">Grid</button>
           </div>
         </div>
-        <div class="grid-order">
-          <label><span class="control-label">Ordenar por</span><select data-grid-order>
-            <option value="score">Prioridad</option>
-            <option value="deadline">Plazo</option>
-            <option value="title">Convocatoria</option>
-            <option value="source">Fuente</option>
-            <option value="theme">Ambito</option>
-          </select></label>
-          <button class="ghost-action" data-grid-dir type="button">Descendente</button>
-        </div>
         <label class="grid-search"><i data-lucide="search"></i><input type="search" aria-label="Buscar oportunidades" placeholder="Buscar convocatoria, fuente o ambito"></label>
       </div>`);
     list.insertAdjacentHTML("afterend", `<div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
     document.querySelectorAll("[data-opportunity-view]").forEach((button) => button.addEventListener("click", () => setOpportunityView(button.dataset.opportunityView)));
     document.querySelector(".grid-search input")?.addEventListener("input", (event) => {
       gridState.query = event.target.value;
-      renderOpportunityGrid();
-    });
-    document.querySelector("[data-grid-order]")?.addEventListener("change", (event) => {
-      gridState.sort = event.target.value;
-      renderOpportunityGrid();
-    });
-    document.querySelector("[data-grid-dir]")?.addEventListener("click", () => {
-      gridState.dir = gridState.dir === "desc" ? "asc" : "desc";
       renderOpportunityGrid();
     });
     document.addEventListener("click", (event) => {

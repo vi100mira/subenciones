@@ -356,9 +356,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .view-control,
-.filter-control,
-.grid-order,
-.grid-order label {
+.filter-control {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -378,20 +376,6 @@ body.sidebar-collapsed .sidebar-note {
 .opportunity-grid-tools .segmented,
 .filter-control .segmented {
   flex: 0 0 auto;
-}
-
-.grid-order select {
-  min-height: 38px;
-  padding: 0 34px 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #ffffff;
-  color: var(--ink);
-  font: inherit;
-}
-
-.grid-order .ghost-action {
-  min-height: 38px;
 }
 
 .grid-search {
@@ -454,6 +438,9 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .opportunity-grid th button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -464,11 +451,24 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .sort-mark {
-  display: inline-block;
-  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
   color: var(--teal);
-  font-size: 11px;
-  text-transform: uppercase;
+}
+
+.sort-mark svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.3;
+}
+
+.opportunity-grid th[aria-sort="none"] .sort-mark {
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+.opportunity-grid th[aria-sort="ascending"],
+.opportunity-grid th[aria-sort="descending"] {
+  color: var(--teal);
 }
 
 .opportunity-grid td {
