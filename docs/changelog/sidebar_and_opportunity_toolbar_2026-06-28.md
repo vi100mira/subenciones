@@ -5,6 +5,7 @@
 - Repositioned the collapsed-sidebar control below the product mark so it no longer interferes with the logo.
 - Converted opportunity-card actions from two wide buttons plus two text links into a compact icon toolbar.
 - Preserved accessible labels and native hover tooltips for the opportunity actions: analysis, bases, original text, and official API.
+- Balanced the opportunity toolbar as four equal segmented cells and replaced the API braces icon with a lighter external-link icon.
 
 ## Verification
 
@@ -12,3 +13,4 @@
 - `npm run check:ui`
 - Browser geometry check confirmed the collapsed toggle no longer overlaps the logo.
 - Browser visual check confirmed opportunity actions render as compact icons.
+- Browser geometry check confirmed each opportunity action cell renders at the same width.

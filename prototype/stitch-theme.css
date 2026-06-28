@@ -288,25 +288,47 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .opportunity-item .opportunity-toolbar {
-  display: inline-flex;
-  width: auto;
-  gap: 8px;
+  display: inline-grid;
+  grid-template-columns: repeat(4, 38px);
+  width: max-content;
+  gap: 0;
   margin-top: 12px;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #f8fffc;
 }
 
 .opportunity-item .opportunity-toolbar > * {
-  width: 40px;
+  width: 38px;
 }
 
 .opportunity-toolbar .icon-action {
-  min-height: 38px;
+  min-width: 38px;
+  min-height: 36px;
   border-color: transparent;
+  border-radius: 7px;
   background: transparent;
   box-shadow: none;
+}
+
+.opportunity-toolbar .icon-action svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.opportunity-toolbar .icon-action + .icon-action {
+  border-left-color: rgba(189, 201, 198, 0.7);
+  border-radius: 0;
+}
+
+.opportunity-toolbar .icon-action:first-child {
+  border-radius: 7px 0 0 7px;
+}
+
+.opportunity-toolbar .icon-action:last-child {
+  border-radius: 0 7px 7px 0;
 }
 
 .opportunity-toolbar .icon-action:hover,

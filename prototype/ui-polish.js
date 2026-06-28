@@ -7,7 +7,7 @@
     "Ver analisis": "scan-search",
     "Bases": "scale",
     "Ver texto original usado": "file-text",
-    "API oficial": "braces"
+    "API oficial": "external-link"
   };
 
   function applyWorkspaceActionIcons() {
