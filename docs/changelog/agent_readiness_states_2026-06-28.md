@@ -6,7 +6,7 @@ Make the Agents screen honest about what is actually developed versus what is on
 
 ## Files Touched
 
-- `prototype/agents-readiness.js`: marks agent cards, channels, and demo runs with real readiness states without changing the core renderer.
+- `prototype/agents-readiness.js`: marks agent cards, channels, and demo runs with real readiness states, and clarifies that Explorer Agent is a platform/superadmin capability for public-source ingestion.
 - `prototype/app.js`: renames the screen from invocable agents to agents and capabilities.
 - `prototype/index.html`: loads the readiness enhancement.
 - `prototype/stitch-theme.css`: styles disabled cards, demo traces, and readiness notes.
@@ -16,6 +16,7 @@ Make the Agents screen honest about what is actually developed versus what is on
 - `npm run check:stability`
 - `npm run check:ui`
 - Playwright on `http://localhost:5174/?v=agent-readiness#view-agents`: confirmed title `Agentes y capacidades`, 6 cards, 5 disabled cards, 1 active prototype card, 3 disabled channels, and 3 demo run traces.
+- Playwright on `http://localhost:5174/?v=agent-platform-scope-2#view-agents`: confirmed Explorer is the only superadmin/platform card, still disabled for entity view, and notes that current radar data is fixtures/snapshot.
 
 ## Residual Risks
 

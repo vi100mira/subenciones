@@ -1,10 +1,11 @@
 (function () {
   const readiness = {
     "Explorer Agent": {
-      status: "En desarrollo",
-      tone: "warning",
+      status: "Solo superadmin",
+      tone: "review",
       disabled: true,
-      note: "El radar usa datos de prototipo. Falta invocacion real de ingestion y refresco auditado."
+      platformOnly: true,
+      note: "Agente de plataforma para traer novedades publicas y refrescos programados. En esta demo los datos son fixtures/snapshot, no una ejecucion real diaria."
     },
     "Match Agent": {
       status: "Operativo en prototipo",
@@ -49,6 +50,7 @@
       if (!meta || card.dataset.readinessApplied) return;
       card.dataset.readinessApplied = "true";
       card.classList.toggle("is-disabled", meta.disabled);
+      card.classList.toggle("is-platform-only", Boolean(meta.platformOnly));
       card.classList.toggle("is-active-prototype", !meta.disabled);
       card.setAttribute("aria-disabled", String(meta.disabled));
       const oldBadge = card.querySelector(".badge");
@@ -83,7 +85,7 @@
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
         <strong>Estado real del prototipo</strong>
-        <span>Solo el Match Agent esta operativo como asistente local de radar. El resto queda visible como direccion de producto, pero deshabilitado hasta tener backend, permisos, auditoria y pruebas.</span>
+        <span>El Match Agent esta operativo como asistente local para la entidad. Explorer pertenece a plataforma/superadmin y queda visible como capacidad de ingesta programada, pero aun no ejecuta jobs reales desde esta pantalla.</span>
       </div>`);
   }
 
