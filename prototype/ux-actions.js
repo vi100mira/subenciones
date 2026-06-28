@@ -41,6 +41,23 @@ function addGovernanceContext() {
   `);
 }
 
+function showPolicyModal() {
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="modal-backdrop" data-close-modal>
+      <article class="modal policy-modal" role="dialog" aria-modal="true">
+        <div class="panel-heading"><h2>Politicas y normas</h2><button class="icon-button" data-close-modal>X</button></div>
+        <div class="policy-list">
+          <article><strong>Fuentes publicas</strong><p>El radar puede leer fuentes oficiales o abiertas. Cada recomendacion debe conservar evidencia y procedencia.</p></article>
+          <article><strong>Datos de entidad</strong><p>Solo se usan con permiso de la entidad, dentro de su tenant y con el minimo contexto necesario.</p></article>
+          <article><strong>IA y RAG</strong><p>La IA ayuda a comparar, explicar y redactar borradores. No decide elegibilidad ni presenta solicitudes.</p></article>
+          <article><strong>Revision humana</strong><p>Todo borrador, exportacion, envio o uso externo requiere validacion de una persona autorizada.</p></article>
+          <article><strong>Plataforma</strong><p>El superadmin gestiona fuentes comunes, ingestas publicas y campanas. La entidad gobierna usuarios, permisos y fuentes privadas.</p></article>
+        </div>
+      </article>
+    </div>
+  `);
+}
+
 function handleWorkspaceAction(action, button) {
   if (action === "Preparar Word") {
     document.querySelector("#proposal-outline").insertAdjacentHTML("afterbegin", `
@@ -66,6 +83,7 @@ function bindStaticActions() {
     const text = button.textContent.trim();
     if (text === "Exportar auditoria") exportAudit();
     if (text === "Exportar borrador Word" || text === "Exportar cuando se apruebe") exportProposal();
+    if (button.dataset.policyModal !== undefined) showPolicyModal();
     if (text === "Solicitar fuente") showToast("Solicitud registrada en demo. La aprueba el responsable de datos de la entidad.");
     if (text === "Nueva campana") showToast("Demo: campana de superadmin para sincronizar, preparar textos y, mas adelante, embeddings.");
     if (button.dataset.sourceAction) showToast(`${button.dataset.sourceAction}: aqui se abriria permisos, responsable, alcance y ultima revision.`);

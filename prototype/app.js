@@ -1,7 +1,6 @@
 const state = {
   selectedOpportunityId: (window.RADAR?.opportunities || window.MOCK.opportunities)[0].id
 };
-
 function opportunities() {
   return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
 }
@@ -153,7 +152,7 @@ function renderOpportunities() {
     </div>
     <div class="button-row">
       <button class="primary-action" data-jump="workspace">Crear candidatura</button>
-      <button class="ghost-action" data-jump="governance">Ver uso de datos</button>
+      <button class="ghost-action" data-policy-modal>Ver politicas de datos</button>
     </div>
   `;
   bindJumps();
@@ -296,6 +295,7 @@ function renderOperations() {
 }
 
 function showScreen(screenId) {
+  if (screenId === "governance") screenId = "entity";
   document.querySelectorAll(".screen").forEach((screen) => {
     screen.classList.toggle("is-visible", screen.id === screenId);
   });

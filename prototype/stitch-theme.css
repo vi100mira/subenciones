@@ -867,6 +867,35 @@ body.sidebar-collapsed .sidebar-note {
   color: var(--teal);
 }
 
+.footer-link {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.policy-list {
+  display: grid;
+  gap: 10px;
+}
+
+.policy-list article {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.policy-list p {
+  margin: 5px 0 0;
+}
+
 .inline-form input:focus {
   border-color: var(--teal);
   box-shadow: 0 0 0 3px rgba(0, 106, 99, 0.12);
