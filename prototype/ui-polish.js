@@ -47,11 +47,25 @@
     }).observe(list, { childList: true });
   }
 
-  const gridState = { sort: "score", dir: "desc", query: "" };
+  const gridState = { sort: "score", dir: "desc", query: "", scope: "active" };
   const candidateKey = "workspace-candidates-v1";
 
   function radarOpportunities() {
     return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
+  }
+
+  function scopeRows() {
+    if (gridState.scope === "discarded") return window.RADAR_ENTITY_DISCARDED || [];
+    if (gridState.scope === "archived") return window.RADAR_DEADLINE_ARCHIVED || [];
+    return radarOpportunities();
+  }
+
+  function scopeLabel() {
+    return {
+      active: "vivas o revisables",
+      discarded: "descartadas por territorio",
+      archived: "archivadas por plazo cerrado"
+    }[gridState.scope] || "vivas o revisables";
   }
 
   function currentOpportunityView() {
@@ -111,6 +125,8 @@
   }
 
   function candidateCell(item) {
+    if (gridState.scope === "discarded") return `<span class="badge danger">No candidata</span>`;
+    if (gridState.scope === "archived") return `<span class="badge review">Archivada</span>`;
     const selection = candidateSelection();
     const selected = selection.selectedIds.includes(item.id);
     const active = selection.activeId === item.id;
@@ -141,7 +157,7 @@
     if (!grid) return;
     const selectedId = typeof state !== "undefined" ? state.selectedOpportunityId : "";
     const query = gridState.query.toLowerCase();
-    const rows = radarOpportunities()
+    const rows = scopeRows()
       .filter(matchesFilter)
       .filter((item) => !query || [item.title, item.source, item.theme, item.territory, item.organism].some((value) => compactText(value).toLowerCase().includes(query)))
       .sort((a, b) => {
@@ -158,7 +174,7 @@
         <td>${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span></td>
         <td>${item.theme}<span>${item.territory}</span></td>
         <td>${candidateCell(item)}</td>
-        <td>${item.deadlineStatus === "uncertain" ? "Plazo incierto" : item.deadlineStatus === "closed" ? "Cerrada" : "Abierta"}<span>${item.amount || "Sin importe"}</span></td>
+        <td>${item.entityFit?.status === "discarded" ? "Descartada" : item.entityFit?.status === "archived" ? "Archivada" : item.deadlineStatus === "uncertain" ? "Plazo incierto" : item.deadlineStatus === "closed" ? "Cerrada" : "Abierta"}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
         <td>${gridActions(item)}</td>
       </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">No hay oportunidades con estos filtros.</td></tr>`;
     grid.innerHTML = `
@@ -176,6 +192,49 @@
       </table>`;
     syncGridTopScroll();
     window.lucide?.createIcons();
+  }
+
+  function renderEntityFitDashboard() {
+    const panel = document.querySelector("#entity-fit-note");
+    const fit = window.RADAR?.quality;
+    if (!panel || !fit) return;
+    const counts = {
+      active: Number(fit.entityCandidateCount || 0),
+      discarded: Number(fit.entityDiscardedCount || 0),
+      archived: Number(fit.entityArchivedClosedCount || 0)
+    };
+    const total = Math.max(1, counts.active + counts.discarded + counts.archived);
+    let offset = 0;
+    const segment = (scope) => {
+      const percent = counts[scope] ? (counts[scope] / total) * 100 : 0;
+      const html = `<circle class="fit-segment is-${scope}${gridState.scope === scope ? " is-current" : ""}" cx="22" cy="22" r="15.9" pathLength="100" stroke-dasharray="${percent} ${100 - percent}" stroke-dashoffset="${-offset}"></circle>`;
+      offset += percent;
+      return html;
+    };
+    panel.innerHTML = `
+      <div class="fit-copy">
+        <strong>Radar de entidad</strong>
+        <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: viendo ${scopeRows().length} ${scopeLabel()}.</span>
+      </div>
+      <div class="fit-chart" aria-label="Distribucion de oportunidades del radar">
+        <svg viewBox="0 0 44 44">
+          <circle class="fit-ring" cx="22" cy="22" r="15.9"></circle>
+          ${segment("active")}
+          ${segment("discarded")}
+          ${segment("archived")}
+        </svg>
+        <div class="fit-hit-map" aria-label="Cambiar alcance del radar desde el grafico">
+          <button class="active" data-entity-scope="active" type="button" aria-label="Ver ${counts.active} oportunidades vivas o revisables"></button>
+          <button class="discarded" data-entity-scope="discarded" type="button" aria-label="Ver ${counts.discarded} descartadas por territorio"></button>
+          <button class="archived" data-entity-scope="archived" type="button" aria-label="Ver ${counts.archived} archivadas por plazo cerrado"></button>
+        </div>
+        <div class="fit-total"><b>${counts[gridState.scope]}</b><span>${scopeLabel()}</span></div>
+      </div>
+      <div class="fit-legend">
+        <button class="${gridState.scope === "active" ? "is-current" : ""}" data-entity-scope="active" type="button"><span class="dot active"></span><b>${counts.active}</b> Vivas</button>
+        <button class="${gridState.scope === "discarded" ? "is-current" : ""}" data-entity-scope="discarded" type="button"><span class="dot discarded"></span><b>${counts.discarded}</b> Descartadas</button>
+        <button class="${gridState.scope === "archived" ? "is-current" : ""}" data-entity-scope="archived" type="button"><span class="dot archived"></span><b>${counts.archived}</b> Archivadas</button>
+      </div>`;
   }
 
   function syncGridTopScroll() {
@@ -208,7 +267,7 @@
     if (fit?.entityFitRule && !document.querySelector("#entity-fit-note")) {
       heading.insertAdjacentHTML("afterend", `
         <div class="plain-note entity-fit-note" id="entity-fit-note">
-          <strong>Filtro de entidad activo</strong>
+          <strong>Radar de entidad</strong>
           <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: ${fit.entityCandidateCount} oportunidades vivas o revisables. ${fit.entityDiscardedCount} descartadas por territorio y ${fit.entityArchivedClosedCount || 0} archivadas por plazo cerrado.</span>
         </div>`);
     }
@@ -238,6 +297,12 @@
       const sort = event.target.closest("[data-grid-sort]");
       const rowAction = event.target.closest("[data-grid-opportunity], [data-grid-text]");
       const candidateAction = event.target.closest("[data-candidate-action]");
+      const entityScope = event.target.closest("[data-entity-scope]");
+      if (entityScope) {
+        gridState.scope = entityScope.dataset.entityScope;
+        renderEntityFitDashboard();
+        renderOpportunityGrid();
+      }
       if (sort) {
         gridState.dir = gridState.sort === sort.dataset.gridSort && gridState.dir === "desc" ? "asc" : "desc";
         gridState.sort = sort.dataset.gridSort;
@@ -263,7 +328,14 @@
         if (candidateAction.dataset.candidateAction === "open" && typeof showScreen === "function") showScreen("workspace");
       }
     });
+    document.addEventListener("keydown", (event) => {
+      const entityScope = event.target.closest?.("[data-entity-scope]");
+      if (!entityScope || !["Enter", " "].includes(event.key)) return;
+      event.preventDefault();
+      entityScope.click();
+    });
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => setTimeout(renderOpportunityGrid, 0)));
+    renderEntityFitDashboard();
     setOpportunityView(currentOpportunityView());
   }
 
