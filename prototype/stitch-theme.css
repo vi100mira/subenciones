@@ -389,6 +389,11 @@ body.sidebar-collapsed .sidebar-note {
   background: #ffffff;
 }
 
+#opportunity-list[hidden],
+#opportunity-grid[hidden] {
+  display: none !important;
+}
+
 .opportunity-grid table {
   width: 100%;
   min-width: 980px;
