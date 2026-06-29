@@ -677,6 +677,75 @@ body.sidebar-collapsed .sidebar-note {
   margin-left: auto;
 }
 
+.entity-hero {
+  margin-bottom: 14px;
+}
+
+.entity-contract-grid,
+.entity-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.entity-contract-grid div,
+.entity-agent-card,
+.context-list div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.entity-contract-grid span,
+.entity-agent-card span,
+.context-list span,
+.entity-contract-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.entity-contract-grid strong {
+  display: block;
+  margin: 4px 0;
+}
+
+.entity-agent-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.entity-agent-card p {
+  margin: 8px 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.entity-agent-card.is-disabled {
+  opacity: 0.68;
+}
+
+.context-list,
+.activation-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.context-list div {
+  display: grid;
+  gap: 5px;
+}
+
+.activation-steps .ghost-action {
+  justify-content: flex-start;
+}
+
+.activation-steps .ghost-action:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 .screen#opportunities .workbench {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -912,6 +981,11 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 @media (max-width: 860px) {
+  .entity-contract-grid,
+  .entity-agent-grid {
+    grid-template-columns: 1fr;
+  }
+
   #entity-fit-note {
     grid-template-columns: minmax(0, 1fr) auto;
   }
