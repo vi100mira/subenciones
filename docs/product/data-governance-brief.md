@@ -1,5 +1,11 @@
 # Data Governance Brief
 
+## Third-Sector Context
+
+The product serves third-sector and social-impact entities. Their work can involve vulnerable people, public accountability, mixed funding, and special-category or high-risk data. Privacy is therefore not a compliance add-on; it is part of the product purpose.
+
+See `docs/product/third-sector-principles.md`.
+
 ## Entity Data Inventory
 
 - Public: website, annual reports, published project descriptions, public funding history.

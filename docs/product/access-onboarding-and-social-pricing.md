@@ -4,6 +4,8 @@
 
 The product should be useful before an entity connects private data. Public grant discovery can be open or low-friction. Anything involving entity data, private sources, drafting, exports, audit, or team management requires an authenticated tenant account.
 
+The economic posture is third-sector first: charge for operational value and sustainability, not for exploiting social vulnerability, private data, public information scarcity, or paid ranking. See `docs/product/third-sector-principles.md`.
+
 ## Access Model
 
 | User type | Can search public grants | Can save opportunities | Can use entity facts | Can connect Drive/SharePoint | Can export drafts | Can manage users |
@@ -87,6 +89,8 @@ Current prototype guardrails:
 
 The product can charge for operational value, not for artificial scarcity or sensitive data extraction.
 
+Because the target market is third-sector and social-impact entities, pricing must be proportionate to mission, size, and capacity. The business model should support the product sustainably without behaving like a normal profit-maximizing SaaS that extracts maximum willingness to pay from essential social work.
+
 Always free or non-billable:
 
 - Public grant discovery from official/public sources.
@@ -106,6 +110,7 @@ Potentially billable, with social pricing caps:
 
 Never monetizable:
 
+- Third-sector vulnerability as a product asset.
 - Sensitive beneficiary data as a product asset.
 - Sale, reuse, or cross-tenant training on private embeddings or tenant documents.
 - Paid placement or ranking of grant opportunities.

@@ -10,6 +10,14 @@ The product should deliver value before asking for private documents. The first 
 
 The private RAG layer is optional and should focus on the entity's own approved opportunity sources: calls received by email, PDFs from funders, Drive/SharePoint folders with grant opportunities, federation alerts, historical opportunities, and approved internal facts used to improve matching. It is not a default ingestion of all company or entity data.
 
+## Third-Sector Posture
+
+The product is designed for third-sector and social-impact entities, where economic activity supports a mission rather than ordinary profit maximization. This affects product decisions, pricing, data handling, and AI boundaries.
+
+The system must not monetize vulnerability, sensitive beneficiary data, private embeddings, paid placement, or artificial scarcity around public information. Paid value should come from operational support: workspace, alerts, private source connectors, review workflows, Word drafting, audit, and governance.
+
+See `docs/product/third-sector-principles.md`.
+
 ## Value Proposition
 
 - Find live public and private opportunities without checking many portals manually.
@@ -54,6 +62,7 @@ The private RAG layer is optional and should focus on the entity's own approved 
 ## Non-Goals
 
 - No broad ingestion of company/entity data during onboarding.
+- No product strategy based on extracting value from sensitive beneficiary data or third-sector vulnerability.
 - No requirement to connect Drive/SharePoint before receiving value.
 - No live BDNS/GVA/LABORA ingestion in the visual prototype.
 - No real WhatsApp/Teams integration yet.

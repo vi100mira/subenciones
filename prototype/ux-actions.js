@@ -14,7 +14,7 @@ function downloadWord(filename, title, sections) {
 
 function exportAudit() {
   downloadWord("auditoria-subvenciones-demo.doc", "Auditoria de trazabilidad - demo", [
-    { title: "Alcance", lines: "Eventos de prototipo. Solo la lectura BDNS procede del snapshot publico cargado; el resto simula la trazabilidad que tendra el producto." },
+    { title: "Alcance", lines: "Eventos de prototipo. Solo la lectura BDNS procede de la copia publica cargada; el resto simula la trazabilidad que tendra el producto." },
     { title: "Eventos", lines: window.MOCK.audit.map((item) => `${item.time} - ${item.event}: ${item.actor}. ${item.detail}`) },
     { title: "Control humano", lines: "Ningun evento implica envio, presentacion ni uso externo de informacion sin revision humana." }
   ]);
@@ -36,7 +36,7 @@ function addGovernanceContext() {
   list.insertAdjacentHTML("beforebegin", `
     <div class="plain-note" id="governance-owner-note">
       <strong>Quien gobierna esto</strong>
-      <span>El superadmin gestiona fuentes comunes de plataforma. Cada entidad decide sus fuentes privadas y un responsable interno aprueba que datos se usan para matching o borradores.</span>
+      <span>La administracion de plataforma gestiona fuentes comunes. Cada entidad decide sus fuentes privadas y un responsable interno aprueba que datos se usan para analisis o borradores.</span>
     </div>
   `);
 }
@@ -48,10 +48,10 @@ function showPolicyModal() {
         <div class="panel-heading"><h2>Politicas y normas</h2><button class="icon-button" data-close-modal>X</button></div>
         <div class="policy-list">
           <article><strong>Fuentes publicas</strong><p>El radar puede leer fuentes oficiales o abiertas. Cada recomendacion debe conservar evidencia y procedencia.</p></article>
-          <article><strong>Datos de entidad</strong><p>Solo se usan con permiso de la entidad, dentro de su tenant y con el minimo contexto necesario.</p></article>
-          <article><strong>IA y RAG</strong><p>La IA ayuda a comparar, explicar y redactar borradores. No decide elegibilidad ni presenta solicitudes.</p></article>
+          <article><strong>Datos de entidad</strong><p>Solo se usan con permiso de la entidad, dentro de su propio entorno y con el minimo contexto necesario.</p></article>
+          <article><strong>IA con fuentes verificables</strong><p>La IA ayuda a comparar, explicar y redactar borradores. No decide elegibilidad ni presenta solicitudes.</p></article>
           <article><strong>Revision humana</strong><p>Todo borrador, exportacion, envio o uso externo requiere validacion de una persona autorizada.</p></article>
-          <article><strong>Plataforma</strong><p>El superadmin gestiona fuentes comunes, ingestas publicas y campanas. La entidad gobierna usuarios, permisos y fuentes privadas.</p></article>
+          <article><strong>Plataforma</strong><p>La administracion de plataforma gestiona fuentes comunes, lecturas publicas y revisiones programadas. La entidad gobierna usuarios, permisos y fuentes privadas.</p></article>
         </div>
       </article>
     </div>
@@ -70,7 +70,7 @@ function handleWorkspaceAction(action, button) {
     return;
   }
   if (action === "Anexar") return showToast("Demo: se abriria selector de documentos Office/PDF y se registraria la procedencia.");
-  if (action === "Ver evidencia") return showToast("Evidencia: fuente oficial y perfil minimo aprobados para matching.");
+  if (action === "Ver evidencia") return showToast("Evidencia: fuente oficial y perfil minimo aprobados para analisis.");
   button.closest(".check-item").querySelector(".badge").textContent = "Verificado";
   button.closest(".check-item").querySelector(".badge").className = "badge safe";
   showToast("Punto verificado en demo. Queda registrado para auditoria.");
@@ -85,7 +85,7 @@ function bindStaticActions() {
     if (text === "Exportar borrador Word" || text === "Exportar cuando se apruebe") exportProposal();
     if (button.dataset.policyModal !== undefined) showPolicyModal();
     if (text === "Solicitar fuente") showToast("Solicitud registrada en demo. La aprueba el responsable de datos de la entidad.");
-    if (text === "Nueva campana") showToast("Demo: campana de superadmin para sincronizar, preparar textos y, mas adelante, embeddings.");
+    if (text === "Nueva revision") showToast("Demo: revision de plataforma para sincronizar, preparar textos y, mas adelante, actualizar el indice de busqueda.");
     if (button.dataset.sourceAction) showToast(`${button.dataset.sourceAction}: aqui se abriria permisos, responsable, alcance y ultima revision.`);
     if (button.dataset.workspaceAction) handleWorkspaceAction(button.dataset.workspaceAction, button);
   });

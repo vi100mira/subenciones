@@ -92,14 +92,14 @@ window.MOCK = {
     { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "Bloqueada", health: "blocked", priority: 0, control: "No indexar" }
   ],
   facts: [
-    { label: "Actuacion CV", class: "Sugerido", text: "Dato propuesto para que la entidad lo confirme antes de usarlo en matching." },
+    { label: "Actuacion CV", class: "Sugerido", text: "Dato propuesto para que la entidad lo confirme antes de usarlo en el analisis de encaje." },
     { label: "Programas de empleo", class: "Sin aprobar", text: "Puede venir de entrevista guiada, web publica autorizada o documentos seleccionados." },
     { label: "Acompanamiento individual", class: "Sin aprobar", text: "No se usa en borradores hasta que un admin de entidad lo apruebe." },
     { label: "Casos personales", class: "Bloqueado", text: "Historias identificables de beneficiarios excluidas del MVP." }
   ],
   governance: [
-    { class: "Publico", use: "Matching y redaccion", policy: "Permitido", tone: "safe" },
-    { class: "Interno aprobado", use: "Matching y borradores", policy: "Minimizar contexto", tone: "review" },
+    { class: "Publico", use: "Analisis y redaccion", policy: "Permitido", tone: "safe" },
+    { class: "Interno aprobado", use: "Analisis y borradores", policy: "Minimizar contexto", tone: "review" },
     { class: "Personal", use: "Solo requisitos formales", policy: "Anonimizar", tone: "warning" },
     { class: "Sensible", use: "No requerido", policy: "Bloqueado", tone: "danger" }
   ],
@@ -108,17 +108,17 @@ window.MOCK = {
     { title: "Presupuesto base de programa", detail: "Uso interno permitido para rangos agregados.", state: "Aprobar" }
   ],
   agents: [
-    { name: "Explorer Agent", icon: "radar", purpose: "Localiza convocatorias y detecta novedades.", access: "Fuentes publicas", status: "Listo" },
-    { name: "Match Agent", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + hechos aprobados", status: "Listo" },
-    { name: "Governance Agent", icon: "shield-check", purpose: "Clasifica datos y bloquea usos inseguros.", access: "Metadatos y snippets", status: "Revision" },
-    { name: "Documentary Agent", icon: "file-search", purpose: "Extrae requisitos, anexos y checklist.", access: "Bases y PDFs", status: "Listo" },
-    { name: "Draft Agent", icon: "pen-tool", purpose: "Prepara esquemas y borradores revisables.", access: "Evidencia + hechos aprobados", status: "Controlado" },
-    { name: "Monitor Agent", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
+    { name: "Busqueda de convocatorias", icon: "radar", purpose: "Localiza convocatorias y detecta novedades.", access: "Fuentes publicas", status: "Listo" },
+    { name: "Asistente de encaje", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + informacion validada", status: "Listo" },
+    { name: "Politicas de datos", icon: "shield-check", purpose: "Clasifica datos y bloquea usos inseguros.", access: "Metadatos y textos autorizados", status: "Revision" },
+    { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y checklist.", access: "Bases y PDFs", status: "Listo" },
+    { name: "Borrador de memoria", icon: "pen-tool", purpose: "Prepara esquemas y borradores revisables.", access: "Evidencia + informacion validada", status: "Controlado" },
+    { name: "Avisos y recordatorios", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
   ],
   runs: [
-    { agent: "Explorer Agent", detail: "Refresco BDNS/GVA simulado", time: "Hace 18 min" },
-    { agent: "Match Agent", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
-    { agent: "Governance Agent", detail: "Bloqueo snippet sensible", time: "Hace 9 min" }
+    { agent: "Busqueda de convocatorias", detail: "Refresco BDNS/GVA simulado", time: "Hace 18 min" },
+    { agent: "Asistente de encaje", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
+    { agent: "Politicas de datos", detail: "Bloqueo de texto sensible", time: "Hace 9 min" }
   ],
   checklist: [
     { item: "Confirmar beneficiario elegible", state: "done", action: "Ver evidencia" },
@@ -134,15 +134,15 @@ window.MOCK = {
     { title: "Indicadores", text: "Participantes atendidos, finalizacion de itinerarios, inserciones y continuidad." }
   ],
   audit: [
-    { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion sin datos privados.", info: "Evento demo basado en el ultimo snapshot BDNS cargado en el prototipo. Sirve para ensenar que una fuente publica se ha refrescado sin usar informacion de la entidad." },
-    { event: "Encaje recalculado", actor: "Agente de encaje", time: "12:08", detail: "Uso de 3 hechos internos aprobados.", info: "Evento simulado: todavia no hay motor RAG real. Muestra como quedaria trazado el uso de hechos internos aprobados cuando exista matching automatico." },
-    { event: "Fragmento bloqueado", actor: "Gobernanza", time: "12:12", detail: "Posible dato personal indirecto.", info: "Evento simulado de seguridad: indica que un texto no deberia usarse para matching ni borradores hasta que una persona lo revise o anonimice." },
+    { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion sin datos privados.", info: "Evento demo basado en la ultima copia BDNS cargada en el prototipo. Sirve para ensenar que una fuente publica se ha refrescado sin usar informacion de la entidad." },
+    { event: "Encaje recalculado", actor: "Asistente de encaje", time: "12:08", detail: "Uso de 3 datos internos aprobados.", info: "Evento simulado: todavia no hay motor de IA con fuentes reales. Muestra como quedaria trazado el uso de informacion aprobada cuando exista analisis automatico de encaje." },
+    { event: "Fragmento bloqueado", actor: "Politicas de datos", time: "12:12", detail: "Posible dato personal indirecto.", info: "Evento simulado de seguridad: indica que un texto no deberia usarse para analisis de encaje ni borradores hasta que una persona lo revise o anonimice." },
     { event: "Checklist generado", actor: "Documentacion", time: "12:18", detail: "Pendiente de revision humana.", info: "Evento simulado: representa la generacion de tareas de candidatura a partir de bases y evidencias. No equivale a una solicitud presentada." }
   ],
   operationsJobs: [
     { title: "Carpeta privada demo", detail: "Leidos 4 documentos aprobados, 1 bloqueado por privacidad, 0 errores", state: "Completado" },
     { title: "Boletines DOGV/BOP", detail: "2 convocatorias tienen plazo relativo y necesitan revision humana", state: "Atencion" },
-    { title: "Preparacion de textos privados", detail: "128 fragmentos esperando revision antes de generar embeddings", state: "En cola" },
+    { title: "Preparacion de textos privados", detail: "128 fragmentos esperando revision antes de entrar en el indice de busqueda", state: "En cola" },
     { title: "Conservacion de originales", detail: "12 documentos guardados con huella para poder demostrar procedencia", state: "OK" }
   ],
   operationsHealth: [
@@ -152,8 +152,8 @@ window.MOCK = {
     { title: "Microsoft 365 / SharePoint", detail: "Pendiente de conectar credenciales de la entidad", state: "Pendiente" }
   ],
   tenants: [
-    { title: "Entidad demo", detail: "tenant-demo - onboarding - logo pendiente", state: "Onboarding" },
-    { title: "Entidad social CV", detail: "tenant-social-cv - activa - 3 fuentes privadas", state: "Activa" }
+    { title: "Entidad demo", detail: "alta pendiente - logo pendiente", state: "Alta" },
+    { title: "Entidad social CV", detail: "activa - 3 fuentes privadas", state: "Activa" }
   ],
   platformCampaigns: [
     { title: "BDNS/SNPSAP", detail: "Campana publica: buscar cambios, guardar evidencias y preparar textos reutilizables", state: "Activa" },

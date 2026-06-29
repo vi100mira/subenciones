@@ -8,7 +8,7 @@
   entry.innerHTML = `
     <div class="public-entry__grid">
       <section class="public-entry__intro">
-        <div class="public-entry__brand"><img src="./assets/subvenciones-rag-logo.svg" alt="" /><strong>Subvenciones RAG</strong></div>
+        <div class="public-entry__brand"><img src="./assets/subvenciones-rag-logo.svg" alt="" /><strong>Subvenciones con IA</strong></div>
         <p class="eyebrow">Compromiso administrativo</p>
         <h1>Garantia de integridad y privacidad institucional</h1>
         <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
@@ -40,7 +40,7 @@
             <label><span><input name="publicWebConsent" type="checkbox" /> Autoriza solo analisis de web publica</span></label>
             <button class="primary-action" type="submit">Registrar solicitud</button>
           </form>
-          <div id="public-onboarding-status" class="plain-note"><strong>Estado</strong><span>La solicitud queda pendiente. No crea tenant activo, usuario, Drive ni aprobacion automatica.</span></div>
+          <div id="public-onboarding-status" class="plain-note"><strong>Estado</strong><span>La solicitud queda pendiente. No activa la entidad, usuario, Drive ni aprobacion automatica.</span></div>
         </article>
       </section>
     </div>`;
@@ -49,7 +49,7 @@
 
   document.querySelector(".sidebar-note")?.insertAdjacentHTML(
     "beforeend",
-    `<div class="role-chip role-chip--entity">Rol Novaterra: docente/gestor</div><div class="role-chip role-chip--superadmin">Rol superadmin</div>`
+    `<div class="role-chip role-chip--entity">Rol Novaterra: docente/gestor</div><div class="role-chip role-chip--superadmin">Rol plataforma</div>`
   );
 
   const demoAccounts = {

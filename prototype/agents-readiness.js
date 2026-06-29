@@ -1,37 +1,37 @@
 (function () {
   const readiness = {
-    "Explorer Agent": {
-      status: "Solo superadmin",
+    "Busqueda de convocatorias": {
+      status: "Solo plataforma",
       tone: "review",
       disabled: true,
       platformOnly: true,
-      note: "Agente de plataforma para traer novedades publicas y refrescos programados. En esta demo los datos son fixtures/snapshot, no una ejecucion real diaria."
+      note: "Servicio de plataforma para traer novedades publicas y refrescos programados. En esta demo los datos son una copia de trabajo, no una ejecucion diaria real."
     },
-    "Match Agent": {
+    "Asistente de encaje": {
       status: "Operativo en prototipo",
       tone: "safe",
       disabled: false,
-      note: "Disponible como radar conversacional local sobre oportunidades filtradas. Sin LLM externo."
+      note: "Disponible como radar conversacional local sobre oportunidades filtradas. Sin IA externa."
     },
-    "Governance Agent": {
+    "Politicas de datos": {
       status: "En desarrollo",
       tone: "warning",
       disabled: true,
-      note: "Hay reglas visuales de clasificacion, pero no bloqueo automatico backend."
+      note: "Hay reglas visibles, pero no bloqueo automatico en servidor."
     },
-    "Documentary Agent": {
+    "Revision documental": {
       status: "En desarrollo",
       tone: "warning",
       disabled: true,
       note: "Checklist y evidencias son demo. Falta extraccion real de bases/PDF y trazas."
     },
-    "Draft Agent": {
+    "Borrador de memoria": {
       status: "En desarrollo",
       tone: "warning",
       disabled: true,
-      note: "Puede exportar borrador Word demo, pero no redacta desde RAG ni aprobaciones reales."
+      note: "Puede exportar borrador Word demo, pero no redacta aun desde informacion validada real."
     },
-    "Monitor Agent": {
+    "Avisos y recordatorios": {
       status: "En desarrollo",
       tone: "warning",
       disabled: true,
@@ -41,6 +41,24 @@
 
   function badge(text, tone) {
     return `<span class="badge ${tone}">${text}</span>`;
+  }
+
+  function statusDot(meta) {
+    return `
+      <span class="agent-status-dot ${meta.tone}" title="${meta.status}: ${meta.note}">
+        <span class="sr-only">${meta.status}</span>
+      </span>`;
+  }
+
+  function addStatusLegend() {
+    const grid = document.querySelector("#agent-grid");
+    if (!grid || document.querySelector("#agents-status-legend")) return;
+    grid.insertAdjacentHTML("beforebegin", `
+      <div class="agent-status-legend" id="agents-status-legend" aria-label="Leyenda de estado de asistentes">
+        <span><i class="legend-dot review"></i>Solo plataforma o norma</span>
+        <span><i class="legend-dot safe"></i>Operativo en prototipo</span>
+        <span><i class="legend-dot warning"></i>En desarrollo</span>
+      </div>`);
   }
 
   function enhanceAgentCards() {
@@ -53,8 +71,9 @@
       card.classList.toggle("is-platform-only", Boolean(meta.platformOnly));
       card.classList.toggle("is-active-prototype", !meta.disabled);
       card.setAttribute("aria-disabled", String(meta.disabled));
+      card.querySelector(".opportunity-topline")?.classList.add("agent-card-topline");
       const oldBadge = card.querySelector(".badge");
-      if (oldBadge) oldBadge.outerHTML = badge(meta.status, meta.tone);
+      if (oldBadge) oldBadge.outerHTML = statusDot(meta);
       card.insertAdjacentHTML("beforeend", `<p class="agent-readiness">${meta.note}</p>`);
     });
   }
@@ -75,7 +94,7 @@
     if (!runs || !panel || panel.dataset.readinessApplied) return;
     panel.dataset.readinessApplied = "true";
     panel.querySelector("h2").textContent = "Trazas demo";
-    runs.insertAdjacentHTML("beforebegin", `<p class="agent-panel-note">Eventos simulados para mostrar auditoria futura. No son ejecuciones reales de agentes backend.</p>`);
+    runs.insertAdjacentHTML("beforebegin", `<p class="agent-panel-note">Eventos simulados para mostrar auditoria futura. No son ejecuciones reales de servicios en servidor.</p>`);
     runs.querySelectorAll(".stack-item").forEach((item) => item.classList.add("is-demo-run"));
   }
 
@@ -85,12 +104,13 @@
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
         <strong>Estado real del prototipo</strong>
-        <span>El Match Agent esta operativo como asistente local para la entidad. Explorer pertenece a plataforma/superadmin y queda visible como capacidad de ingesta programada, pero aun no ejecuta jobs reales desde esta pantalla.</span>
+        <span>El Asistente de encaje esta operativo como asistente local para la entidad. La busqueda de convocatorias pertenece a administracion de plataforma y queda visible como capacidad programada, pero aun no ejecuta trabajos reales desde esta pantalla.</span>
       </div>`);
   }
 
   function applyAgentReadiness() {
     addReadinessNote();
+    addStatusLegend();
     enhanceAgentCards();
     enhanceChannels();
     enhanceRuns();

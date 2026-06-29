@@ -10,7 +10,7 @@ const titles = {
   opportunities: "Oportunidades vivas",
   entity: "Perfil de entidad",
   governance: "Gobernanza del dato",
-  agents: "Agentes y capacidades",
+  agents: "Asistentes y servicios",
   workspace: "Candidatura",
   audit: "Auditoria",
   platform: "Consola plataforma",
@@ -274,7 +274,7 @@ function renderPlatform() {
     ${window.MOCK.tenants.map(row).join("")}
   `;
   document.querySelector("#platform-campaigns").innerHTML = window.MOCK.platformCampaigns.map(row).join("");
-  document.querySelector("#platform-campaigns").insertAdjacentHTML("afterbegin", `<div class="plain-note"><strong>Que es una campana</strong><span>Una campana es una ejecucion controlada por superadmin para buscar cambios en fuentes publicas, guardar evidencias y preparar textos. Cuando activemos embeddings, tambien regenerara vectores solo de lo que haya cambiado.</span></div>`);
+  document.querySelector("#platform-campaigns").insertAdjacentHTML("afterbegin", `<div class="plain-note"><strong>Que es una revision</strong><span>Una revision es una ejecucion controlada por administracion de plataforma para buscar cambios en fuentes publicas, guardar evidencias y preparar textos. Cuando activemos el indice de busqueda, solo se actualizara lo que haya cambiado.</span></div>`);
 }
 
 function renderOperations() {

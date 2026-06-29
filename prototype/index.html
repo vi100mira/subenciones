@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Subvenciones RAG MVP</title>
+    <title>Subvenciones con IA</title>
     <link rel="stylesheet" href="./styles.css?v=20260626-source-colors" />
     <link rel="stylesheet" href="./public-entry.css?v=20260628-stitch-entry" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260628-policy-footer" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260629-friendly-language" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
   <body>
@@ -15,8 +15,8 @@
         <div class="brand">
           <div class="brand-mark">SR</div>
           <div>
-            <strong>Subvenciones RAG</strong>
-            <span>Multi-entidad</span>
+            <strong>Subvenciones con IA</strong>
+            <span>Para entidades</span>
           </div>
           <button class="sidebar-toggle" id="sidebar-toggle" title="Colapsar menu lateral"><i data-lucide="panel-left-close"></i></button>
         </div>
@@ -32,7 +32,7 @@
             <i data-lucide="building-2"></i><span>Entidad</span>
           </button>
           <button class="nav-item" data-screen="agents">
-            <i data-lucide="bot"></i><span>Agentes</span>
+            <i data-lucide="bot"></i><span>Asistentes</span>
           </button>
           <button class="nav-item" data-screen="workspace">
             <i data-lucide="file-pen-line"></i><span>Candidatura</span>
@@ -52,7 +52,7 @@
           <span class="status-dot"></span>
           <div>
             <strong>Modo prototipo</strong>
-            <span>Mock + Supabase demo</span>
+            <span>Datos de ejemplo</span>
           </div>
         </div>
       </aside>
@@ -60,7 +60,7 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Cockpit de inteligencia de subvenciones</p>
+            <p class="eyebrow">Panel de ayudas y subvenciones</p>
             <h1 id="screen-title">Panel de oportunidades</h1>
           </div>
           <div class="top-actions">
@@ -144,8 +144,8 @@
 
             <article class="panel">
               <div class="panel-heading">
-                <h2>Actividad agentica</h2>
-                <button class="text-action" data-jump="agents">Agentes</button>
+                <h2>Actividad de asistentes</h2>
+                <button class="text-action" data-jump="agents">Asistentes</button>
               </div>
               <div id="agent-runs-small" class="stack-list"></div>
             </article>
@@ -308,15 +308,15 @@
           <div class="two-column">
             <article class="panel">
               <div class="panel-heading">
-                <div><p class="eyebrow">Superadmin</p><h2>Alta de entidades</h2></div>
-                <span class="badge review">OAuth + allowlist</span>
+                <div><p class="eyebrow">Administracion de plataforma</p><h2>Alta de entidades</h2></div>
+                <span class="badge review">Acceso autorizado</span>
               </div>
               <div id="tenant-list" class="stack-list"></div>
             </article>
             <article class="panel">
               <div class="panel-heading">
-                <div><p class="eyebrow">Vectorizacion</p><h2>Campanas de plataforma</h2></div>
-                <button class="ghost-action">Nueva campana</button>
+                <div><p class="eyebrow">Lectura de fuentes</p><h2>Revisiones de plataforma</h2></div>
+                <button class="ghost-action">Nueva revision</button>
               </div>
               <div id="platform-campaigns" class="stack-list"></div>
             </article>
@@ -324,12 +324,12 @@
           <article class="panel">
             <div class="panel-heading">
               <div><p class="eyebrow">Separacion de datos</p><h2>Modelo operativo</h2></div>
-              <span class="badge safe">Tenant aislado</span>
+              <span class="badge safe">Entidad aislada</span>
             </div>
             <div class="source-control-row">
               <div><strong>Fuentes publicas</strong><span>Indexadas por plataforma y reutilizables por todas las entidades.</span></div>
-              <div><strong>Fuentes privadas</strong><span>Vectorizadas por tenant, con permisos y auditoria propios.</span></div>
-              <div><strong>Marca entidad</strong><span>Logo, color, perfil y motivaciones desde tenant config.</span></div>
+              <div><strong>Fuentes privadas</strong><span>Preparadas por entidad, con permisos y auditoria propios.</span></div>
+              <div><strong>Marca entidad</strong><span>Logo, color, perfil y preferencias desde su configuracion.</span></div>
             </div>
           </article>
         </section>
@@ -337,12 +337,12 @@
         <section class="screen" id="operations" aria-labelledby="screen-title">
           <div class="metric-grid">
             <article class="metric">
-              <span>Ingestas 24h</span>
+              <span>Lecturas 24h</span>
               <strong>42</strong>
               <small>3 con advertencias</small>
             </article>
             <article class="metric">
-              <span>Cola vectorizacion</span>
+              <span>Cola de indice</span>
               <strong>128</strong>
               <small>Tiempo estimado 11 min</small>
             </article>
@@ -362,8 +362,8 @@
             <article class="panel">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Jobs</p>
-                  <h2>Estado de ingesta y vectorizacion</h2>
+                  <p class="eyebrow">Trabajos</p>
+                  <h2>Estado de lectura e indice</h2>
                 </div>
                 <span class="badge warning">2 requieren atencion</span>
               </div>
@@ -374,7 +374,7 @@
               <div class="panel-heading">
                 <div>
                   <p class="eyebrow">Salud</p>
-                  <h2>Fuentes y agentes</h2>
+                  <h2>Fuentes y asistentes</h2>
                 </div>
               </div>
               <div id="operations-health" class="stack-list"></div>
@@ -385,7 +385,7 @@
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Capacidad</p>
-                <h2>Lectura de carga</h2>
+                  <h2>Rendimiento</h2>
               </div>
             </div>
             <div class="capacity-grid">
@@ -396,22 +396,22 @@
             </div>
           </article>
         </section>
-        <footer class="app-footer"><strong>Subvenciones RAG</strong><span>Radar publico libre | Datos privados solo con consentimiento | Sin envio automatico sin revision humana</span><button class="footer-link" data-policy-modal type="button">Politicas y normas</button></footer>
+        <footer class="app-footer"><strong>Subvenciones con IA</strong><span>Radar publico libre | Datos privados solo con consentimiento | Sin envio automatico sin revision humana</span><button class="footer-link" data-policy-modal type="button">Politicas y normas</button></footer>
       </main>
     </div>
 
-    <script src="./mock-data.js?v=20260626-action-focus"></script>
+    <script src="./mock-data.js?v=20260629-friendly-language"></script>
     <script src="./radar-data.js?v=20260626-action-focus"></script>
     <script src="./entity-fit.js?v=20260628-territory-fit"></script>
-    <script src="./app.js?v=20260628-policy-footer"></script>
-    <script src="./ux-actions.js?v=20260628-policy-footer"></script>
+    <script src="./app.js?v=20260629-friendly-language"></script>
+    <script src="./ux-actions.js?v=20260629-friendly-language"></script>
     <script src="./opportunity-actions.js?v=20260626-modal-filters"></script>
     <script src="./opportunity-chat.js?v=20260628-chat-assistant"></script>
     <script src="./workspace-flow.js?v=20260628-workspace-flow"></script>
     <script src="./onboarding-actions.js?v=20260626-onboarding-request"></script>
-    <script src="./public-entry.js?v=20260628-stitch-entry"></script>
+    <script src="./public-entry.js?v=20260629-friendly-language"></script>
     <script src="./ui-polish.js?v=20260628-radar-donut-click"></script>
-    <script src="./agents-readiness.js?v=20260628-agent-readiness"></script>
-    <script src="./entity-activation.js?v=20260629-entity-activation"></script>
+    <script src="./agents-readiness.js?v=20260629-friendly-language"></script>
+    <script src="./entity-activation.js?v=20260629-friendly-language"></script>
   </body>
 </html>

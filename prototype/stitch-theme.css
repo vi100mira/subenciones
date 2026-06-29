@@ -648,10 +648,6 @@ body.sidebar-collapsed .sidebar-note {
   background: #f7faf8;
 }
 
-.agent-card.is-disabled {
-  pointer-events: none;
-}
-
 .agent-card.is-active-prototype {
   border-color: var(--teal);
   box-shadow: inset 0 0 0 1px rgba(0, 106, 99, 0.18);
@@ -716,6 +712,62 @@ body.sidebar-collapsed .sidebar-note {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.agent-status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.agent-status-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.legend-dot,
+.agent-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.agent-status-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+}
+
+.legend-dot.safe,
+.agent-status-dot.safe {
+  background: #2f7b49;
+}
+
+.legend-dot.review,
+.agent-status-dot.review {
+  background: #5369a6;
+}
+
+.legend-dot.warning,
+.agent-status-dot.warning {
+  background: #b87918;
+}
+
+.agent-card-topline {
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.agent-card .agent-card-topline strong,
+.entity-agent-card strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .entity-agent-card p {
   margin: 8px 0;
   color: var(--muted);
@@ -724,6 +776,45 @@ body.sidebar-collapsed .sidebar-note {
 
 .entity-agent-card.is-disabled {
   opacity: 0.68;
+}
+
+.tool-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tool-map article {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.tool-map article > div {
+  display: grid;
+  gap: 6px;
+}
+
+.tool-map span {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.tool-map code {
+  overflow: hidden;
+  color: var(--teal);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.tool-map small {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .context-list,
@@ -735,6 +826,108 @@ body.sidebar-collapsed .sidebar-note {
 .context-list div {
   display: grid;
   gap: 5px;
+}
+
+.section-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.context-list header {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 8px;
+}
+
+.context-list header > span {
+  display: inline-grid;
+}
+
+.context-status,
+.context-list header > span:last-child {
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.context-status.safe { background: #ddf4e6; color: #327a42; }
+.context-status.warning { background: #fff1cf; color: #9b650e; }
+.context-status.danger { background: #f9deda; color: #af3223; }
+
+.context-list header > span:last-child {
+  color: var(--teal);
+  cursor: help;
+}
+
+.context-list svg {
+  width: 15px;
+  height: 15px;
+}
+
+.fact-review-table {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fact-review-head,
+.fact-review-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(150px, 1fr) 96px minmax(120px, 0.8fr) 74px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.fact-review-head {
+  background: #f8fffc;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.fact-review-row {
+  border-top: 1px solid rgba(189, 201, 198, 0.55);
+  background: #ffffff;
+}
+
+.fact-review-row small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.mini-actions {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 28px);
+}
+
+.mini-actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--teal);
+  cursor: pointer;
+}
+
+.mini-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mini-actions svg {
+  width: 14px;
+  height: 14px;
 }
 
 .activation-steps .ghost-action {
@@ -982,7 +1175,16 @@ body.sidebar-collapsed .sidebar-note {
 
 @media (max-width: 860px) {
   .entity-contract-grid,
-  .entity-agent-grid {
+  .entity-agent-grid,
+  .tool-map {
+    grid-template-columns: 1fr;
+  }
+
+  .fact-review-head {
+    display: none;
+  }
+
+  .fact-review-row {
     grid-template-columns: 1fr;
   }
 
