@@ -21,6 +21,7 @@ The app needs an operations panel from the PMV stage. It should not be a decorat
 - source last sync
 - source health
 - cursor age
+- changed opportunities by severity
 - average duration per document
 
 ### Vectorization
@@ -41,6 +42,7 @@ The app needs an operations panel from the PMV stage. It should not be a decorat
 - p95 latency
 - failures
 - human-review pending count
+- critical change alerts pending tenant review
 - blocked actions by governance policy
 
 ### Storage
@@ -70,6 +72,8 @@ The app needs an operations panel from the PMV stage. It should not be a decorat
 ## Alert Thresholds
 
 - source failed 3 consecutive syncs
+- critical deadline or eligibility change detected for an active candidate
+- generated draft or checklist uses a superseded opportunity version
 - queue older than target SLA
 - blocked sensitive documents detected
 - OAuth token refresh fails

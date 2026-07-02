@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Subvenciones con IA</title>
-    <link rel="stylesheet" href="./styles.css?v=20260626-source-colors" />
+    <link rel="stylesheet" href="./styles.css?v=20260630-platform-panes" />
     <link rel="stylesheet" href="./public-entry.css?v=20260628-stitch-entry" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260629-friendly-language" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260702-constructed-docs-2" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
   <body>
@@ -102,13 +102,13 @@
             <article class="panel focus-panel">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Prioridad hoy</p>
+                  <p class="eyebrow">Muestra de analisis</p>
                   <h2>Linea de insercion sociolaboral con plazo cercano</h2>
                 </div>
-                <span class="badge urgency">Cierra en 2 dias</span>
+                <span class="badge urgency">No es alerta real</span>
               </div>
               <p class="lead">
-                Encaja por territorio, colectivo y tipo de actividad. Falta confirmar cofinanciacion y documentacion laboral.
+                Ejemplo de como se vera una prioridad cuando el tenant tenga perfil validado, evidencias y alertas reales.
               </p>
               <div class="evidence-row">
                 <span><i data-lucide="map-pin"></i> Comunitat Valenciana</span>
@@ -158,7 +158,7 @@
               <div class="panel-heading">
                 <div>
                   <p class="eyebrow">Ranking explicable</p>
-                  <h2>Radar publico BDNS</h2>
+                  <h2>Radar de financiacion</h2>
                 </div>
                 <div class="segmented">
                   <button class="is-selected" data-filter="all">Todas</button>
@@ -305,7 +305,15 @@
         </section>
 
         <section class="screen" id="platform" aria-labelledby="screen-title">
-          <div class="two-column">
+          <div class="segmented" aria-label="Submenu plataforma"><button class="is-selected" data-platform-tab="reviews">Revisiones</button><button data-platform-tab="entities">Entidades</button></div>
+          <article class="panel" data-platform-pane="reviews">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Lectura de fuentes</p><h2>Revisiones de plataforma</h2></div>
+              <button class="ghost-action" data-review-action="create">Programar revision</button>
+            </div>
+            <div id="platform-campaigns" class="stack-list"></div>
+          </article>
+          <div class="two-column" data-platform-pane="entities" hidden>
             <article class="panel">
               <div class="panel-heading">
                 <div><p class="eyebrow">Administracion de plataforma</p><h2>Alta de entidades</h2></div>
@@ -313,25 +321,7 @@
               </div>
               <div id="tenant-list" class="stack-list"></div>
             </article>
-            <article class="panel">
-              <div class="panel-heading">
-                <div><p class="eyebrow">Lectura de fuentes</p><h2>Revisiones de plataforma</h2></div>
-                <button class="ghost-action">Nueva revision</button>
-              </div>
-              <div id="platform-campaigns" class="stack-list"></div>
-            </article>
           </div>
-          <article class="panel">
-            <div class="panel-heading">
-              <div><p class="eyebrow">Separacion de datos</p><h2>Modelo operativo</h2></div>
-              <span class="badge safe">Entidad aislada</span>
-            </div>
-            <div class="source-control-row">
-              <div><strong>Fuentes publicas</strong><span>Indexadas por plataforma y reutilizables por todas las entidades.</span></div>
-              <div><strong>Fuentes privadas</strong><span>Preparadas por entidad, con permisos y auditoria propios.</span></div>
-              <div><strong>Marca entidad</strong><span>Logo, color, perfil y preferencias desde su configuracion.</span></div>
-            </div>
-          </article>
         </section>
 
         <section class="screen" id="operations" aria-labelledby="screen-title">
@@ -396,22 +386,27 @@
             </div>
           </article>
         </section>
-        <footer class="app-footer"><strong>Subvenciones con IA</strong><span>Radar publico libre | Datos privados solo con consentimiento | Sin envio automatico sin revision humana</span><button class="footer-link" data-policy-modal type="button">Politicas y normas</button></footer>
+        <footer class="app-footer"><strong>Subvenciones con IA</strong><span>Radar publico libre | Datos privados solo con consentimiento | Sin envio automatico sin revision humana</span><button class="footer-link" data-policy-modal type="button">Politicas y modelo</button></footer>
       </main>
     </div>
 
-    <script src="./mock-data.js?v=20260629-friendly-language"></script>
-    <script src="./radar-data.js?v=20260626-action-focus"></script>
+    <script src="./mock-data.js?v=20260701-novaterra-only"></script>
+    <script src="./private-radar-data.js?v=20260701-private-corpus"></script>
+    <script src="./radar-data.js?v=20260701-platform-raw-corpus"></script>
+    <script src="./deadline-trace.js?v=20260702-date-trace"></script>
+    <script src="./platform-coverage-data.js?v=20260701-functional-agents"></script>
     <script src="./entity-fit.js?v=20260628-territory-fit"></script>
-    <script src="./app.js?v=20260629-friendly-language"></script>
-    <script src="./ux-actions.js?v=20260629-friendly-language"></script>
-    <script src="./opportunity-actions.js?v=20260626-modal-filters"></script>
-    <script src="./opportunity-chat.js?v=20260628-chat-assistant"></script>
-    <script src="./workspace-flow.js?v=20260628-workspace-flow"></script>
-    <script src="./onboarding-actions.js?v=20260626-onboarding-request"></script>
-    <script src="./public-entry.js?v=20260629-friendly-language"></script>
-    <script src="./ui-polish.js?v=20260628-radar-donut-click"></script>
-    <script src="./agents-readiness.js?v=20260629-friendly-language"></script>
+    <script src="./app.js?v=20260701-logo-picker"></script><script src="./audit-runtime.js?v=20260701-real-audit-2"></script><script src="./operations-platform.js?v=20260702-document-package-api"></script>
+    <script src="./ux-actions.js?v=20260702-document-project"></script>
+    <script src="./opportunity-actions.js?v=20260701-private-source-labels"></script><script src="./opportunity-requirements.js?v=20260702-constructed-docs-2"></script>
+    <script src="./opportunity-chat.js?v=20260702-document-project"></script>
+    <script src="./workspace-flow.js?v=20260702-document-project"></script>
+    <script src="./watch-actions.js?v=20260701-private-corpus"></script>
+    <script src="./alert-actions.js?v=20260630-alert-actions"></script>
+    <script src="./onboarding-actions.js?v=20260626-onboarding-request"></script><script src="./auth-credentials.js?v=20260701-server-auth"></script><script src="./tenant-plan.js?v=20260701-plan-access"></script><script src="./public-entry.js?v=20260702-login-help"></script>
+    <script src="./ui-polish.js?v=20260702-document-project"></script>
+    <script src="./platform-source-manager.js?v=20260701-source-activation"></script>
+    <script src="./agents-readiness.js?v=20260701-platform-agents-operative"></script>
     <script src="./entity-activation.js?v=20260629-friendly-language"></script>
   </body>
 </html>

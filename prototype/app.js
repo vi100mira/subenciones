@@ -1,8 +1,7 @@
-const state = {
-  selectedOpportunityId: (window.RADAR?.opportunities || window.MOCK.opportunities)[0].id
-};
+const state = { selectedOpportunityId: (window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
+const privateOpenRows = () => [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
 function opportunities() {
-  return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
+  const rows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || []; return rows.length ? [...rows, ...privateOpenRows()] : window.MOCK.opportunities;
 }
 
 const titles = {
@@ -14,7 +13,7 @@ const titles = {
   workspace: "Candidatura",
   audit: "Auditoria",
   platform: "Consola plataforma",
-  operations: "Operaciones"
+  operations: "Operaciones", plan: "Plan y monetizacion"
 };
 
 function badge(text, tone = "review") {
@@ -42,7 +41,7 @@ function renderDashboard() {
     metrics[2].querySelector("span").textContent = "Errores BDNS";
     metrics[2].querySelector("strong").textContent = window.RADAR.quality.detailErrorCount;
     metrics[2].querySelector("small").textContent = "Errores de detalle BDNS";
-    metrics[3].querySelector("span").textContent = "Corpus estatal";
+    metrics[3].querySelector("span").textContent = "Corpus publico";
     metrics[3].querySelector("strong").textContent = window.RADAR.totalElements || radarCount;
     metrics[3].querySelector("small").textContent = "Resultados potenciales BDNS";
   }
@@ -50,17 +49,17 @@ function renderDashboard() {
   document.querySelector("#agent-runs-small").innerHTML = window.MOCK.runs.slice(0, 3).map(renderStackItem).join("");
   document.querySelector("#source-map").innerHTML = `
     <div class="source-legend">
-      <span><i class="legend-dot active"></i>Activa</span>
+      <span><i class="legend-dot active"></i>Operativa</span>
       <span><i class="legend-dot warning"></i>Con avisos</span>
-      <span><i class="legend-dot pending"></i>Pendiente</span>
+      <span><i class="legend-dot pending"></i>No conectada</span>
       <span><i class="legend-dot blocked"></i>Bloqueada</span>
     </div>
-  ` + window.MOCK.sources.slice(0, 6).map((source) => {
-    const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.status === "Pendiente" ? " pending" : source.status.includes("Activa") ? " active" : "";
-    const cls = `${source.scope.includes("privado") || source.kind === "Privativa" ? " private" : ""}${status}`;
+  ` + window.MOCK.sources.map((source) => {
+    const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
+    const cls = `${source.scope.includes("privado") || source.scope.includes("curada") || source.kind === "Privativa" ? " private" : ""}${status}`;
     return `<div class="source-node${cls}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
   }).join("");
-  document.querySelector("#source-map").insertAdjacentHTML("afterend", `<div class="plain-note"><strong>Que muestra este panel:</strong><br><span>No son oportunidades. Son fuentes que alimentan el radar y su estado de uso.</span></div>`);
+  document.querySelector("#source-map").insertAdjacentHTML("afterend", `<div class="plain-note"><strong>Que muestra este panel:</strong><br><span>No son oportunidades ni promete cobertura completa. BDNS tiene carga real parcial; territorial y privado muestran fuentes validadas, semillas o conectores pendientes.</span></div>`);
 }
 
 function renderOpportunities() {
@@ -79,7 +78,7 @@ function renderOpportunities() {
         </div>
         <div class="evidence-row">
           ${badge(item.deadline, tone)}
-          ${badge(item.theme, "review")}
+          ${badge(item.theme, "review")}${item.sourceScope ? badge(item.sourceScope, item.sourceScope.includes("tenant") ? "warning" : "review") : ""}
         </div>
         <div class="button-row">
           <button class="ghost-action" data-opportunity="${item.id}">Ver analisis</button>
@@ -128,10 +127,9 @@ function renderOpportunities() {
     </div>
     <p class="lead">${item.source} · ${item.territory}</p>
     <div class="detail-grid">
-      <div><span>Importe</span><strong>${item.amount}</strong></div>
-      <div><span>Plazo</span><strong>${item.deadline}</strong></div>
-      <div><span>Confianza plazo</span><strong>${item.deadlineConfidence}</strong></div>
-      <div><span>Nota</span><strong>No es elegibilidad</strong></div>
+      <div><span>Importe</span><strong>${item.amount}</strong></div><div><span>Plazo</span><strong>${item.deadline}</strong></div>
+      <div><span>Confianza plazo</span><strong>${item.deadlineConfidence}</strong></div><div><span>Origen</span><strong>${item.sourceScope || "Publica oficial"}</strong></div>
+      <div><span>Financiador</span><strong>${item.funderType || "Administracion publica"}</strong></div><div><span>Evidencia</span><strong>${item.evidenceQuality || "Fuente oficial"}</strong></div>
     </div>
     <div class="detail-section">
       <h2>Por que puede encajar</h2>
@@ -142,7 +140,7 @@ function renderOpportunities() {
       <ul>${item.risks.map((risk) => `<li>${risk}</li>`).join("")}</ul>
     </div>
     <div class="detail-section">
-      <h2>Evidencia publica</h2>
+      <h2>Evidencia de fuente</h2>
       <ul>${item.evidence.map((evidence) => `<li>${evidence}</li>`).join("")}</ul>
     </div>
     ${documentSection}
@@ -151,7 +149,7 @@ function renderOpportunities() {
       <div class="evidence-row">${item.internalFacts.map((fact) => badge(fact, "review")).join("")}</div>
     </div>
     <div class="button-row">
-      <button class="primary-action" data-jump="workspace">Crear candidatura</button>
+      <button class="primary-action" data-jump="workspace" data-watch-opportunity="${item.id}" data-watch-reason="candidate_workspace">Crear candidatura</button>
       <button class="ghost-action" data-policy-modal>Ver politicas de datos</button>
     </div>
   `;
@@ -255,26 +253,25 @@ function renderPlatform() {
   const row = (item) => {
     const tone = item.state === "Activa" ? "safe" : item.state === "Atencion" ? "warning" : "review";
     return `
-      <div class="stack-item">
-        <div class="opportunity-topline">
-          <strong>${item.title}</strong>
-          ${badge(item.state, tone)}
-        </div>
+      <details class="stack-item">
+        <summary class="opportunity-topline"><strong>${item.title}</strong><span class="collapse-hint">Abrir configuracion</span>${badge(item.state, tone)}</summary>
         <span>${item.detail}</span>
-      </div>
+        ${item.cron ? `<div class="source-control-row"><div><strong>Cron</strong><span>${item.cron}</span></div><div><strong>IA</strong><span>${item.costPolicy}</span></div><div><strong>Manual</strong><span>${item.trigger}</span></div></div><div class="plain-note"><strong>Ayuda cron</strong><span>Formato: minuto hora dia-mes mes dia-semana. Diario 06:00: 0 6 * * *. Semanal lunes 07:00: 0 7 * * 1.</span></div><div class="inline-form"><label><span>Expresion cron</span><input data-cron-input value="${item.cron}" /></label><label><span>Presupuesto diario IA</span><input value="${item.budget}" /></label><button class="ghost-action" data-review-action="save" type="button">Guardar cron</button><button class="primary-action" data-review-action="run" type="button">Ejecutar ahora</button></div>` : ""}
+      </details>
     `;
   };
+  const tenantRow = (item) => `<div class="tenant-grid-row"><div><strong>${item.title}</strong><span>${item.detail}</span></div><div>${badge(item.state, item.state === "Activa" ? "safe" : "review")}</div><div><span>Gobierno</span><strong>Admin validado + terminos</strong></div><div class="tenant-actions"><button class="ghost-action" data-tenant-action="edit" type="button">Editar</button><button class="ghost-action" data-tenant-action="terms" type="button">Terminos</button><button class="ghost-action" data-tenant-action="suspend" type="button">Suspender</button><button class="danger-action" data-tenant-action="delete" type="button">Eliminar</button></div></div>`;
   document.querySelector("#tenant-list").innerHTML = `
+    <div class="source-control-row"><div><strong>Tenant minimo</strong><span>Nombre, web publica, email admin y consentimiento.</span></div><div><strong>Agente investigador</strong><span>12 paginas, profundidad 2, 90s, 3 MB.</span></div><div><strong>Revision humana</strong><span>Tipo, territorio, temas y logo quedan pendientes.</span></div></div>
     <div class="inline-form">
-      <label><span>Nombre</span><input value="Entidad social demo" /></label>
-      <label><span>Slug</span><input value="entidad-social-demo" /></label>
-      <label><span>Color</span><input value="#24515a" /></label>
-      <button class="primary-action" type="button">Crear entidad</button>
+      <label><span>Nombre</span><input value="Nueva entidad social" /></label>
+      <label><span>Web publica</span><input value="https://entidad.org" /></label><label><span>Email admin</span><input value="admin@entidad.org" /></label><label><span>Logo opcional</span><span class="logo-picker"><input id="tenant-logo-upload" type="file" accept="image/*" /><span class="ghost-action">Subir logo</span><small data-logo-file>Sin archivo</small></span></label><label><span>Consentimiento</span><input value="Autoriza analisis web publica" /></label>
+      <button class="primary-action" type="button">Crear tenant e investigar web</button>
     </div>
-    ${window.MOCK.tenants.map(row).join("")}
+    <div class="plain-note"><strong>Salida esperada del agente</strong><span>Logo candidato, tipo juridico, territorio, programas, colectivos y temas. Todo queda como sugerido hasta que el admin lo apruebe.</span></div>
+    <div class="tenant-grid"><div class="tenant-grid-head"><span>Entidad</span><span>Estado</span><span>Control</span><span>Operaciones</span></div>${window.MOCK.tenants.map(tenantRow).join("")}</div>
   `;
-  document.querySelector("#platform-campaigns").innerHTML = window.MOCK.platformCampaigns.map(row).join("");
-  document.querySelector("#platform-campaigns").insertAdjacentHTML("afterbegin", `<div class="plain-note"><strong>Que es una revision</strong><span>Una revision es una ejecucion controlada por administracion de plataforma para buscar cambios en fuentes publicas, guardar evidencias y preparar textos. Cuando activemos el indice de busqueda, solo se actualizara lo que haya cambiado.</span></div>`);
+  document.querySelector("#platform-campaigns").innerHTML = `<div class="source-control-row"><div><strong>Detectar cambios</strong><span>Hash/etag sin IA antes de modelos.</span></div><div><strong>Programar cron</strong><span>Cadencia y presupuesto por campana.</span></div><div><strong>Ejecutar ahora</strong><span>Manual con motivo y auditoria.</span></div></div><div class="plain-note"><strong>Flujo del agente</strong><span>Abre cada revision para editar cron, presupuesto y ejecucion manual.</span></div>${window.MOCK.platformCampaigns.map(row).join("")}`;
 }
 
 function renderOperations() {
@@ -302,7 +299,8 @@ function showScreen(screenId) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.screen === screenId);
   });
-  document.querySelector("#screen-title").textContent = titles[screenId];
+  document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && screenId === "opportunities" ? "Corpus RAG plataforma" : titles[screenId];
+  document.querySelector(".top-actions .primary-action").innerHTML = (screenId === "platform" || screenId === "operations" || document.body.dataset.role === "superadmin") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
@@ -318,6 +316,8 @@ function bindJumps() {
   document.querySelectorAll("[data-jump]").forEach((button) => {
     button.addEventListener("click", () => showScreen(button.dataset.jump));
   });
+  document.querySelectorAll("[data-platform-tab]").forEach((button) => button.addEventListener("click", () => { document.querySelectorAll("[data-platform-tab]").forEach((tab) => tab.classList.toggle("is-selected", tab === button)); document.querySelectorAll("[data-platform-pane]").forEach((pane) => { pane.hidden = pane.dataset.platformPane !== button.dataset.platformTab; }); }));
+  document.querySelectorAll("#platform-campaigns details summary").forEach((summary) => summary.addEventListener("click", (event) => { event.preventDefault(); summary.parentElement.open = !summary.parentElement.open; }));
 }
 
 function showToast(message) {
@@ -341,7 +341,7 @@ function init() {
   renderPlatform();
   renderOperations();
   bindNavigation();
-  bindJumps();
+  bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
 
   document.querySelector("#refresh-button").addEventListener("click", () => {
     showToast("Fuentes refrescadas en modo prototipo. No se ha enviado ningun dato privado.");

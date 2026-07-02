@@ -1,11 +1,18 @@
 (function () {
   const readiness = {
     "Busqueda de convocatorias": {
-      status: "Solo plataforma",
-      tone: "review",
-      disabled: true,
+      status: "Operativo plataforma",
+      tone: "safe",
+      disabled: false,
       platformOnly: true,
       note: "Servicio de plataforma para traer novedades publicas y refrescos programados. En esta demo los datos son una copia de trabajo, no una ejecucion diaria real."
+    },
+    "Investigador de entidad": {
+      status: "Operativo plataforma",
+      tone: "safe",
+      disabled: false,
+      platformOnly: true,
+      note: "Servicio de superadmin para crear tenant minimo desde web publica consentida. Propone logo y hechos; no aprueba contexto por si solo."
     },
     "Asistente de encaje": {
       status: "Operativo en prototipo",
@@ -55,8 +62,8 @@
     if (!grid || document.querySelector("#agents-status-legend")) return;
     grid.insertAdjacentHTML("beforebegin", `
       <div class="agent-status-legend" id="agents-status-legend" aria-label="Leyenda de estado de asistentes">
-        <span><i class="legend-dot review"></i>Solo plataforma o norma</span>
-        <span><i class="legend-dot safe"></i>Operativo en prototipo</span>
+        <span><i class="legend-dot safe"></i>Operativo</span>
+        <span><i class="legend-dot review"></i>Requiere revision</span>
         <span><i class="legend-dot warning"></i>En desarrollo</span>
       </div>`);
   }
@@ -104,7 +111,7 @@
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
         <strong>Estado real del prototipo</strong>
-        <span>El Asistente de encaje esta operativo como asistente local para la entidad. La busqueda de convocatorias pertenece a administracion de plataforma y queda visible como capacidad programada, pero aun no ejecuta trabajos reales desde esta pantalla.</span>
+        <span>Busqueda de convocatorias e Investigador de entidad son servicios troncales de superadmin. Funcionan como capacidades programadas o bajo demanda; sus salidas requieren evidencia y revision humana antes de afectar al tenant.</span>
       </div>`);
   }
 

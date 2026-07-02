@@ -12,24 +12,29 @@
 
 ## Core Flow
 
-1. Entity completes minimal onboarding: name, slug, owner/admin, territory, entity type, themes, alerts, and consent.
-2. User lands on dashboard with prioritized live opportunities from the platform public radar.
-3. User searches iteratively with AI: filters, clarifications, exclusions, priorities, and deadline constraints.
-4. Matching Agent ranks calls against the minimal profile and explains evidence.
-5. User optionally enables tenant-private opportunity sources.
-6. Explorer Agent refreshes public sources and, when approved, tenant-private opportunity sources.
-7. User opens a call detail panel.
-8. System shows fit reasons, risks, deadline confidence, public evidence, and any approved tenant facts used.
-9. Documentary Agent extracts requirements into a checklist.
-10. Drafting Agent creates a proposal outline.
-11. User reviews, edits, and exports.
-12. Audit records retrieval, generation, review, and export.
+1. Entity completes minimal onboarding: name, public website, admin email, and public-web analysis consent.
+2. Entity Research Agent reads the public website within limits and proposes logo, territory, entity type, themes, collectives, and programs.
+3. Entity admin reviews suggested facts before they become approved matching context.
+4. User lands on dashboard with prioritized live opportunities from the platform public/private-open radar.
+5. User searches iteratively with AI: filters, clarifications, exclusions, priorities, and deadline constraints.
+6. Matching Agent ranks calls against approved profile facts and explains evidence.
+7. User optionally enables tenant-private opportunity sources.
+8. Explorer Agent refreshes public sources and, when approved, tenant-private opportunity sources.
+9. User opens a call detail panel.
+10. System shows fit reasons, risks, deadline confidence, public evidence, and any approved tenant facts used.
+11. User preselects one or more candidates for comparison.
+12. To promote a candidate, Documentary Agent must build the required Word documentation structure: memoria, checklist, annex/evidence index, and budget guide.
+13. If tenant Drive is contracted and authorized, Documentary Agent may use approved tenant documents to personalize wording. If not, it must warn the user and generate only from public evidence plus approved tenant facts.
+14. Generated Word files are stored in tenant-scoped Blob and remain editable/downloadable for human review.
+15. Only after the documentation package exists can the candidate become an active project.
+16. User reviews, edits, and exports.
+17. Audit records retrieval, generation, review, project activation, and export.
 
 ## Search Modes
 
-- Public radar: default mode after onboarding; uses platform-managed public opportunities and minimal tenant profile.
+- Public/open radar: default mode after onboarding; uses platform-managed public grants, private-open funder calls, and minimal tenant profile.
 - Private opportunity radar: optional mode; uses tenant-approved opportunity sources only.
-- Combined view: merges public and tenant-private opportunities while keeping evidence and scopes visible.
+- Combined view: merges public, private-open, and tenant-private opportunities while keeping evidence and scopes visible.
 - Historical view: includes closed or archived opportunities only when the user asks for planning or precedent analysis.
 
 ## Channel Flow
@@ -44,5 +49,6 @@
 
 - Approve internal knowledge for matching.
 - Confirm uncertain eligibility.
-- Approve proposal export.
+- Generate documentation before candidate-to-project activation.
+- Approve proposal export or generated Word package.
 - Approve any external channel send containing non-public content.

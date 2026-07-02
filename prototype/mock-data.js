@@ -8,6 +8,9 @@ window.MOCK = {
       deadline: "25/06/2026",
       deadlineStatus: "open",
       deadlineConfidence: "Alta",
+      sourceScope: "Publica oficial",
+      funderType: "Administracion publica",
+      evidenceQuality: "Fuente oficial",
       score: 88,
       amount: "Hasta 120.000 EUR",
       theme: "Insercion sociolaboral",
@@ -35,6 +38,9 @@ window.MOCK = {
       deadline: "25/06/2026",
       deadlineStatus: "open",
       deadlineConfidence: "Alta",
+      sourceScope: "Publica oficial",
+      funderType: "Administracion publica",
+      evidenceQuality: "Fuente oficial",
       score: 81,
       amount: "Segun linea",
       theme: "Inclusion social",
@@ -54,12 +60,16 @@ window.MOCK = {
     },
     {
       id: "fundacion-caixa-accion-social",
+      canonicalKey: "fundacion-la-caixa-convocatorias-sociales",
       title: "Convocatoria social territorial",
       source: "Fundacion privada",
       territory: "Comunitat Valenciana",
       deadline: "Plazo por confirmar",
       deadlineStatus: "uncertain",
       deadlineConfidence: "Media",
+      sourceScope: "Privada abierta",
+      funderType: "Fundacion / obra social",
+      evidenceQuality: "Fuente del financiador por verificar",
       score: 73,
       amount: "Hasta 50.000 EUR",
       theme: "Accion social",
@@ -76,6 +86,62 @@ window.MOCK = {
         "Bases privadas pendientes de descarga en el prototipo."
       ],
       internalFacts: ["Proyectos acompanamiento", "Indicadores impacto"]
+    },
+    {
+      id: "banca-social-empleo-joven",
+      title: "Programa privado de empleo joven y competencias digitales",
+      source: "Obra social bancaria",
+      territory: "Comunitat Valenciana",
+      deadline: "Ventana prevista Q3 2026",
+      deadlineStatus: "uncertain",
+      deadlineConfidence: "Baja",
+      sourceScope: "Privada abierta",
+      funderType: "Banco / obra social",
+      evidenceQuality: "Pagina de financiador pendiente de revision",
+      score: 69,
+      amount: "Entre 20.000 y 80.000 EUR",
+      theme: "Empleo joven",
+      fit: [
+        "El objeto esperado encaja con itinerarios de insercion y competencias digitales.",
+        "La entidad podria aportar experiencia territorial y seguimiento de participantes."
+      ],
+      risks: [
+        "No hay plazo oficial confirmado en el prototipo.",
+        "Puede requerir colaboracion empresarial o indicadores de empleabilidad muy concretos."
+      ],
+      evidence: [
+        "Fuente privada abierta: programa social bancario a revisar por administracion de plataforma.",
+        "Patron historico: convocatorias orientadas a empleo, juventud e inclusion."
+      ],
+      internalFacts: ["Empleo joven", "Formacion digital", "Actuacion CV"]
+    },
+    {
+      id: "alerta-federacion-convenio-local",
+      title: "Aviso de financiacion por convenio para entidades asociadas",
+      source: "Federacion sectorial / aviso recibido",
+      territory: "Provincial",
+      deadline: "Invitacion recibida, fecha no publicada",
+      deadlineStatus: "uncertain",
+      deadlineConfidence: "Baja",
+      sourceScope: "Privada del tenant",
+      funderType: "Federacion / relacion privada",
+      evidenceQuality: "PDF recibido por la entidad",
+      score: 62,
+      amount: "Por confirmar",
+      theme: "Accion comunitaria",
+      fit: [
+        "Puede encajar por pertenencia sectorial y trayectoria local.",
+        "Requiere revisar si Novaterra esta invitada formalmente o solo informada."
+      ],
+      risks: [
+        "No debe reutilizarse para otros tenants.",
+        "La evidencia procede de un documento recibido y necesita aprobacion interna."
+      ],
+      evidence: [
+        "Fuente tenant-private: aviso recibido por la entidad, no promocionable a plataforma.",
+        "El acceso parece depender de relacion o membresia."
+      ],
+      internalFacts: ["Red territorial", "Pendiente aprobacion admin"]
     }
   ],
   alerts: [
@@ -84,11 +150,13 @@ window.MOCK = {
     { type: "source", title: "BDNS refrescada", detail: "12 nuevas convocatorias normalizadas en el radar." }
   ],
   sources: [
-    { name: "BDNS", kind: "Publica oficial", scope: "Plataforma", status: "Activa", health: "healthy", priority: 95, control: "Gestionada por plataforma" },
-    { name: "GVA", kind: "Portal autonomico", scope: "Tenant", status: "Activa", health: "healthy", priority: 82, control: "Admin entidad" },
-    { name: "LABORA", kind: "Empleo", scope: "Tenant", status: "Activa", health: "healthy", priority: 88, control: "Admin entidad" },
-    { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Activa con avisos", health: "degraded", priority: 74, control: "Lectura + alertas" },
-    { name: "Drive entidad demo", kind: "Privativa", scope: "Tenant privado", status: "Pendiente", health: "unknown", priority: 90, control: "Requiere aprobacion" },
+    { name: "BDNS", kind: "Publica oficial", scope: "Plataforma", status: "Operativa parcial", health: "healthy", priority: 95, control: "30/572 cargadas" },
+    { name: "GVA", kind: "Portal autonomico", scope: "Plataforma", status: "Fuente validada", health: "degraded", priority: 82, control: "Conector pendiente" },
+    { name: "LABORA", kind: "Empleo", scope: "Plataforma", status: "Monitor activo", health: "healthy", priority: 88, control: "Revision si cambia" },
+    { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Conector pendiente", health: "degraded", priority: 74, control: "Regla de extraccion" },
+    { name: "Fundaciones y obra social", kind: "Privada abierta", scope: "Plataforma curada", status: "Catalogo semilla", health: "unknown", priority: 84, control: "Revision editorial" },
+    { name: "Alertas federacion CV", kind: "Privada tenant", scope: "Tenant privado", status: "No conectada", health: "unknown", priority: 78, control: "Requiere aprobacion" },
+    { name: "Drive entidad", kind: "Privativa", scope: "Tenant privado", status: "No conectado", health: "unknown", priority: 90, control: "Requiere aprobacion" },
     { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "Bloqueada", health: "blocked", priority: 0, control: "No indexar" }
   ],
   facts: [
@@ -109,6 +177,7 @@ window.MOCK = {
   ],
   agents: [
     { name: "Busqueda de convocatorias", icon: "radar", purpose: "Localiza convocatorias y detecta novedades.", access: "Fuentes publicas", status: "Listo" },
+    { name: "Investigador de entidad", icon: "globe-2", purpose: "Analiza web publica y propone perfil, logo y temas.", access: "Web publica consentida", status: "Listo" },
     { name: "Asistente de encaje", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + informacion validada", status: "Listo" },
     { name: "Politicas de datos", icon: "shield-check", purpose: "Clasifica datos y bloquea usos inseguros.", access: "Metadatos y textos autorizados", status: "Revision" },
     { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y checklist.", access: "Bases y PDFs", status: "Listo" },
@@ -117,6 +186,7 @@ window.MOCK = {
   ],
   runs: [
     { agent: "Busqueda de convocatorias", detail: "Refresco BDNS/GVA simulado", time: "Hace 18 min" },
+    { agent: "Investigador de entidad", detail: "Perfil publico pendiente de aprobacion humana", time: "Hace 16 min" },
     { agent: "Asistente de encaje", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
     { agent: "Politicas de datos", detail: "Bloqueo de texto sensible", time: "Hace 9 min" }
   ],
@@ -142,7 +212,7 @@ window.MOCK = {
   operationsJobs: [
     { title: "Carpeta privada demo", detail: "Leidos 4 documentos aprobados, 1 bloqueado por privacidad, 0 errores", state: "Completado" },
     { title: "Boletines DOGV/BOP", detail: "2 convocatorias tienen plazo relativo y necesitan revision humana", state: "Atencion" },
-    { title: "Preparacion de textos privados", detail: "128 fragmentos esperando revision antes de entrar en el indice de busqueda", state: "En cola" },
+    { title: "Politica coste IA radar", detail: "IA maxima diaria por campana; deteccion hash/etag sin IA antes de interpretar", state: "OK" },
     { title: "Conservacion de originales", detail: "12 documentos guardados con huella para poder demostrar procedencia", state: "OK" }
   ],
   operationsHealth: [
@@ -152,12 +222,11 @@ window.MOCK = {
     { title: "Microsoft 365 / SharePoint", detail: "Pendiente de conectar credenciales de la entidad", state: "Pendiente" }
   ],
   tenants: [
-    { title: "Entidad demo", detail: "alta pendiente - logo pendiente", state: "Alta" },
-    { title: "Entidad social CV", detail: "activa - 3 fuentes privadas", state: "Activa" }
+    { title: "Novaterra", detail: "piloto activo - web publica autorizada - Drive pendiente", state: "Activa" }
   ],
   platformCampaigns: [
-    { title: "BDNS/SNPSAP", detail: "Campana publica: buscar cambios, guardar evidencias y preparar textos reutilizables", state: "Activa" },
-    { title: "DOGV/BOP", detail: "Campana publica con avisos: 2 plazos relativos requieren revision", state: "Atencion" },
-    { title: "Fundaciones privadas", detail: "Campana editorial: fuentes privadas curadas manualmente antes de indexar", state: "Pendiente" }
+    { title: "Radar publico estatal", detail: "BDNS/SNPSAP: cambios, evidencias y versiones reutilizables", cron: "0 6 * * *", trigger: "requiere motivo", costPolicy: "IA solo si cambio", budget: "3 EUR/dia", state: "Activa" },
+    { title: "Radar territorial CV", detail: "DOGV/BOP/GVA/LABORA con avisos por plazo relativo", cron: "0 7 * * *", trigger: "manual si hay urgencia", costPolicy: "IA max diaria", budget: "2 EUR/dia", state: "Atencion" },
+    { title: "Privadas abiertas", detail: "Fundaciones, bancos, obra social, RSC y federaciones", cron: "0 7 * * 1", trigger: "curacion previa", costPolicy: "IA diaria solo si live", budget: "1 EUR/dia", state: "Pendiente" }
   ]
 };

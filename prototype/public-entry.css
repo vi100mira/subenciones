@@ -169,6 +169,43 @@ form.public-entry__actions {
   display: grid;
 }
 
+.password-field {
+  position: relative;
+  display: block;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #005c55;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  background: #e6f8f0;
+  outline: 2px solid rgba(0, 106, 99, 0.18);
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .public-entry__role-note {
   margin-top: 18px;
   padding: 12px;

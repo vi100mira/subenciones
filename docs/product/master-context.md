@@ -2,7 +2,7 @@
 
 ## Product Purpose
 
-Subvenciones RAG is a privacy-first grants intelligence cockpit for third-sector and social-impact entities. It helps organizations discover public and approved private funding opportunities, understand why a call may fit, prepare reviewable candidatures, and keep evidence and audit trails visible.
+Subvenciones RAG is a privacy-first funding intelligence cockpit for third-sector and social-impact entities. It helps organizations discover public grants, private-open funder calls, and approved tenant-private opportunities, understand why a call may fit, prepare reviewable candidatures, and keep evidence and audit trails visible.
 
 Novaterra is only the pilot tenant. The product must work for many independent entities with isolated data, users, sources, embeddings, permissions, audit events, and configuration.
 
@@ -37,7 +37,9 @@ Canonical reference: `docs/product/third-sector-principles.md`.
 - Supabase/Postgres as source of truth.
 - pgvector-ready storage for chunks and embeddings.
 - Vercel Blob for originals, extracted text, snapshots, PDFs, and DOCX.
-- Public sources indexed through platform campaigns.
+- Public and private-open sources indexed through platform campaigns.
+- Platform campaigns use cheap detection first and cap AI interpretation at daily per campaign by default.
+- Entity public websites are analyzed by an Entity Research Agent only after consent; suggested facts and logo candidates require human approval.
 - Tenant-private sources indexed only inside the active tenant boundary.
 - Workers handle ingestion, extraction, chunking, embeddings, and source sync.
 
@@ -55,6 +57,7 @@ Every private row, chunk, document, embedding, match, draft, audit event, and co
 Agents are permissioned services with scopes, inputs, outputs, and audit events:
 
 - Busqueda de convocatorias / Explorer: public and approved source refresh.
+- Investigador de entidad / Entity Research: public website analysis, logo candidates, and suggested facts.
 - Asistente de encaje / Match: fit, risks, missing data, and evidence.
 - Politicas de datos / Governance: data classification and blocked use.
 - Revision documental / Documentary: requirements, bases, checklists.
@@ -71,6 +74,7 @@ No agent may access sensitive/private tenant data unless policy allows it. No ag
 - Tenant onboarding, roles, and credentials are partially simulated in the prototype.
 - Entity cockpit now distinguishes contracted assistants, tools, detected facts, and human validation.
 - Matching RAG, connected cockpit, real embeddings, real channels, and production-grade workers remain pending.
+- The private funder radar loop is documented but not yet implemented as a real ingestion campaign.
 
 ## Key Documents
 
@@ -83,5 +87,6 @@ No agent may access sensitive/private tenant data unless policy allows it. No ag
 - `docs/product/mvp-execution-plan.md`
 - `docs/architecture/multi-tenant-isolation.md`
 - `docs/architecture/rag-privacy-and-indexing.md`
+- `docs/architecture/private-funder-radar-loop.md`
 - `docs/architecture/secure-onboarding-auth-flow.md`
 - `docs/architecture/backend-scalability.md`

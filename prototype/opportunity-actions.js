@@ -1,5 +1,7 @@
 function currentOpportunities() {
-  return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
+  const privateRows = [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
+  const publicRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
+  return publicRows.length ? [...publicRows, ...privateRows] : window.MOCK.opportunities;
 }
 
 function modalScoreLabel(score) {
@@ -12,6 +14,7 @@ function openOpportunityModal(id, mode) {
   const isText = mode === "text";
   const body = isText ? `<p>${(item.extractedText || "No hay texto extraido disponible.").slice(0, 2400)}</p>` : `
     <p>${item.source} - ${item.territory}. ${modalScoreLabel(item.score)} (${item.score}/100 estimado, no elegibilidad).</p>
+    ${window.deadlineTrace ? window.deadlineTrace.panelFromTrace(window.deadlineTrace.build(item)) : ""}
     <h3>Por que puede encajar</h3><ul>${item.fit.map((x) => `<li>${x}</li>`).join("")}</ul>
     <h3>Riesgos</h3><ul>${item.risks.map((x) => `<li>${x}</li>`).join("")}</ul>
     <h3>Evidencia</h3><ul>${item.evidence.map((x) => `<li>${x}</li>`).join("")}</ul>`;
@@ -30,11 +33,11 @@ function applyOpportunityFilter(filter) {
   cards.forEach((card, index) => {
     const item = list[index];
     const critical = item.deadlineStatus === "open" && (item.deadlineConfidence === "Baja" || item.score >= 70);
-    const privateSource = !["BDNS/SNPSAP"].includes(item.source);
+    const privateSource = item.sourceScope ? item.sourceScope !== "Publica oficial" : !["BDNS/SNPSAP"].includes(item.source);
     card.hidden = filter === "critical" ? !critical : filter === "private" ? !privateSource : false;
   });
   document.querySelector("#filter-note")?.remove(); document.querySelector("#filter-empty")?.remove();
-  const text = filter === "critical" ? "Criticas: abiertas, alta prioridad o con plazo/confianza que requiere revision." : filter === "private" ? "Privadas: oportunidades de fundaciones, cargas manuales o fuentes no publicas de plataforma." : "Todas: radar publico y oportunidades disponibles para revisar.";
+  const text = filter === "critical" ? "Criticas: abiertas, alta prioridad o con plazo/confianza que requiere revision." : filter === "private" ? "Privadas: 20 oportunidades cargadas desde fuentes privadas abiertas y catalogo curado de plataforma." : "Todas: radar publico y oportunidades disponibles para revisar.";
   document.querySelector("#opportunity-list").insertAdjacentHTML("beforebegin", `<div class="plain-note" id="filter-note"><strong>${text}</strong></div>`);
   if (!cards.some((card) => !card.hidden)) document.querySelector("#opportunity-list").insertAdjacentHTML("beforebegin", `<div class="plain-note" id="filter-empty"><strong>No hay resultados en este filtro con el radar actual.</strong></div>`);
 }

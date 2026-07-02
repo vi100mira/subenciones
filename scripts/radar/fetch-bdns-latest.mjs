@@ -47,6 +47,12 @@ function normalizeDate(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
+function addDays(isoDate, days) {
+  const date = new Date(isoDate);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString();
+}
+
 function plainText(value) {
   return typeof value === "string" ? value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
 }
@@ -56,6 +62,30 @@ function deadlineStatus(detail) {
   if (!end) return { status: detail.abierto ? "open" : "uncertain", confidence: detail.abierto ? "Media" : "Baja" };
   const today = new Date().toISOString().slice(0, 10);
   return { status: end >= today ? "open" : "closed", confidence: "Alta" };
+}
+
+function deadlineEvidence(detail, documents, announcements) {
+  const announcement = announcements[0];
+  const document = documents[0];
+  if (announcement) return { label: announcement.officialJournal || "Anuncio oficial", url: announcement.url, date: announcement.publishedAt };
+  if (document) return { label: document.description || document.filename || "Documento oficial", url: "", date: document.publishedAt || document.modifiedAt };
+  return { label: "Ficha BDNS/SNPSAP", url: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`, date: "" };
+}
+
+function deadlineTraceFields(detail, deadline, documents, announcements, generatedAt) {
+  const evidence = deadlineEvidence(detail, documents, announcements);
+  const structured = Boolean(normalizeDate(detail.fechaFinSolicitud));
+  const status = deadline.status;
+  return {
+    deadlineObserved: detail.fechaFinSolicitud || detail.textFin || "Plazo no estructurado",
+    deadlineEvidenceLabel: evidence.label,
+    deadlineEvidenceUrl: evidence.url,
+    deadlineEvidenceDate: evidence.date || "",
+    deadlineReadAt: generatedAt,
+    deadlineNextReviewAt: addDays(generatedAt, status === "closed" ? 7 : 1),
+    deadlineUncertaintyReason: structured ? "" : "BDNS no ofrece fecha fin estructurada o expresa el plazo como texto relativo; requiere revisar bases/anuncio.",
+    tenantAlarmPolicy: status === "closed" ? "No alertar salvo reapertura, rectificacion o nueva version." : "Alertar a tenants afectados si cambia fecha fin, texto de plazo, anuncio oficial o confianza."
+  };
 }
 
 function estimateScore(detail) {
@@ -74,7 +104,7 @@ function estimateScore(detail) {
   return Math.min(score, 92);
 }
 
-function normalizeGrant(detail) {
+function normalizeGrant(detail, generatedAt) {
   const deadline = deadlineStatus(detail);
   const title = detail.descripcion || `Convocatoria BDNS ${detail.codigoBDNS}`;
   const territory = textList(detail.regiones).join(", ") || detail.organo?.nivel2 || detail.organo?.nivel1 || "Estatal";
@@ -104,6 +134,8 @@ function normalizeGrant(detail) {
     detail.textFin ? `Plazo indicado: ${detail.textFin}` : ""
   ].filter(Boolean);
 
+  const trace = deadlineTraceFields(detail, deadline, documents, announcements, generatedAt);
+
   return {
     id: `bdns-${detail.codigoBDNS}`,
     sourceId: "bdns-snpsap",
@@ -123,6 +155,7 @@ function normalizeGrant(detail) {
     deadline: detail.fechaFinSolicitud || detail.textFin || "Plazo no estructurado",
     deadlineStatus: deadline.status,
     deadlineConfidence: deadline.confidence,
+    ...trace,
     officialUrl: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`,
     basesUrl: detail.urlBasesReguladoras || detail.sedeElectronica || "",
     documents,
@@ -221,7 +254,7 @@ async function main() {
   }
 
   const generatedAt = new Date().toISOString();
-  const opportunities = details.map(normalizeGrant);
+  const opportunities = details.map((detail) => normalizeGrant(detail, generatedAt));
   const query = mode === "search" ? searchParams(0) : { pageSize, vpd: PORTAL };
   const dataset = {
     generatedAt,
@@ -241,7 +274,7 @@ async function main() {
   await fs.mkdir(outDir, { recursive: true });
   const outputName = mode === "search" ? "bdns-search.json" : "bdns-latest.json";
   await fs.writeFile(path.join(outDir, outputName), `${JSON.stringify(dataset, null, 2)}\n`, "utf8");
-  await fs.writeFile(prototypeOut, `window.RADAR = ${JSON.stringify(dataset, null, 2)};\n`, "utf8");
+  await fs.writeFile(prototypeOut, `window.RADAR = ${JSON.stringify(dataset, null, 2)};\nwindow.RADAR_PLATFORM_OPPORTUNITIES = window.RADAR.opportunities.map((item) => ({ ...item }));\n`, "utf8");
   console.log(JSON.stringify({ generatedAt, mode, totalElements, count: opportunities.length, quality: dataset.quality, output: path.join(outDir, outputName), prototypeOut }, null, 2));
 }
 

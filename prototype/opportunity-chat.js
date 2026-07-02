@@ -3,7 +3,9 @@
   const candidateKey = "workspace-candidates-v1";
 
   function opportunities() {
-    return window.RADAR?.opportunities || [];
+    const privateRows = [...(window.MOCK?.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
+    const publicRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
+    return publicRows.length ? [...publicRows, ...privateRows] : [];
   }
 
   function escapeHtml(value) {
@@ -103,7 +105,7 @@
         <div class="chat-actions">
           <button class="ghost-action" data-chat-open-opportunity="${escapeHtml(item.id)}" type="button">Ver</button>
           <button class="ghost-action" data-chat-candidate="select" data-chat-id="${escapeHtml(item.id)}" type="button">Preseleccionar</button>
-          <button class="ghost-action" data-chat-candidate="activate" data-chat-id="${escapeHtml(item.id)}" type="button">Activar</button>
+          <button class="ghost-action" data-chat-candidate="activate" data-chat-id="${escapeHtml(item.id)}" type="button">Preparar docs</button>
         </div>
       </article>`;
   }
@@ -125,9 +127,9 @@
     const selected = (current.selectedIds || []).map((id) => rows.find((item) => item.id === id)).filter(Boolean);
     const active = rows.find((item) => item.id === current.activeId);
     return `
-      <p>Ahora mismo hay ${selected.length || 0} oportunidades preseleccionadas y ${active ? "1 candidatura activa" : "ninguna candidatura activa"}.</p>
-      ${active ? `<p><b>Activa:</b> ${escapeHtml(active.title)}</p>` : ""}
-      <p>La activacion se hace desde la columna Candidatura del grid o desde los botones de esta conversacion.</p>`;
+      <p>Ahora mismo hay ${selected.length || 0} oportunidades preseleccionadas y ${active ? "1 candidatura en preparacion" : "ninguna candidatura en preparacion"}.</p>
+      ${active ? `<p><b>En preparacion:</b> ${escapeHtml(active.title)}</p>` : ""}
+      <p>Para pasar a proyecto, abre la candidatura y genera el paquete Word con el agente documental.</p>`;
   }
 
   function comparison(matches) {
@@ -217,7 +219,11 @@
     if (prompt) ask(prompt.dataset.chatPrompt);
     if (candidate) {
       updateCandidate(candidate.dataset.chatId, candidate.dataset.chatCandidate);
-      assistantSays(`<p>${candidate.dataset.chatCandidate === "activate" ? "He activado esta candidatura." : "La dejo preseleccionada para estudio."}</p>${workspaceAnswer()}`);
+      if (candidate.dataset.chatCandidate === "activate" && window.openWorkspaceAnalysis?.(candidate.dataset.chatId)) {
+        document.querySelector(".radar-chat-modal")?.closest(".modal-backdrop")?.remove();
+        return;
+      }
+      assistantSays(`<p>${candidate.dataset.chatCandidate === "activate" ? "La abro para preparar documentacion; aun no es proyecto." : "La dejo preseleccionada para estudio."}</p>${workspaceAnswer()}`);
     }
     if (opportunity) {
       document.querySelector(".radar-chat-modal")?.closest(".modal-backdrop")?.remove();

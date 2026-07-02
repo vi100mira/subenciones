@@ -77,6 +77,8 @@ Recommended flow:
 
 Do not fetch and vectorize all public sources on every user query.
 
+Freshness is part of retrieval quality. When a source changes, the platform must create a new opportunity/document version, classify the change, supersede old chunks, and compute which tenants are affected before sending alerts. Critical deadline or eligibility changes must mark existing recommendations and workspaces as needing human review.
+
 ## Indexing Campaigns
 
 Large indexing is a campaign, not a single request:
@@ -128,6 +130,8 @@ The operations panel must show:
 - vectorization backlog
 - public source freshness
 - private source freshness
+- critical opportunity changes
+- tenant alert backlog
 - blocked documents
 - cost by tenant/source/agent
 

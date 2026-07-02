@@ -108,6 +108,16 @@ Potentially billable, with social pricing caps:
 - Word draft generation, candidature checklists, annex tracking, and audit exports.
 - Admin governance tools, role management, source health, cost visibility, and compliance evidence.
 
+## Prototype Plan Gate
+
+The prototype now treats monetization as feature entitlement, not payment processing.
+
+- Platform superadmin sees platform and operations surfaces, plus global radar/audit views.
+- Tenant users never see `Plataforma` or `Operaciones`.
+- Tenant menus are filtered by the active plan features returned in the authenticated session.
+- Novaterra uses `mission_full` / `Plan integral piloto`, with all tenant-facing agents and workflows enabled.
+- The `Plan` screen shows contracted modules and billing status, but does not process payments yet.
+
 Never monetizable:
 
 - Third-sector vulnerability as a product asset.

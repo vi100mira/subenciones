@@ -47,11 +47,21 @@
     }).observe(list, { childList: true });
   }
 
-  const gridState = { sort: "score", dir: "desc", query: "", scope: "active" };
+  const gridState = { sort: "score", dir: "desc", query: "", scope: "active", page: 1, pageSize: 15 };
   const candidateKey = "workspace-candidates-v1";
+  const documentBlobKey = "tenant-document-blob-demo-v1";
+
+  function privateOpenRows() {
+    return [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
+  }
+
+  function publicRows() {
+    return document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
+  }
 
   function radarOpportunities() {
-    return window.RADAR?.opportunities?.length ? window.RADAR.opportunities : window.MOCK.opportunities;
+    const rows = publicRows();
+    return rows.length ? [...rows, ...privateOpenRows()] : window.MOCK.opportunities;
   }
 
   function scopeRows() {
@@ -71,7 +81,7 @@
   function radarCounts() {
     const fit = window.RADAR?.quality || {};
     return {
-      active: Number(fit.entityCandidateCount || 0),
+      active: radarOpportunities().length,
       discarded: Number(fit.entityDiscardedCount || 0),
       archived: Number(fit.entityArchivedClosedCount || 0)
     };
@@ -79,6 +89,7 @@
 
   function setEntityScope(scope) {
     gridState.scope = scope;
+    gridState.page = 1;
     renderEntityFitDashboard();
     renderOpportunityGrid();
   }
@@ -109,7 +120,7 @@
   function matchesFilter(item) {
     const filter = activeFilter();
     const critical = item.deadlineStatus === "open" && (item.deadlineConfidence === "Baja" || item.score >= 70);
-    const privateSource = !["BDNS/SNPSAP"].includes(item.source);
+    const privateSource = item.sourceScope ? item.sourceScope !== "Publica oficial" : !["BDNS/SNPSAP"].includes(item.source);
     return filter === "critical" ? critical : filter === "private" ? privateSource : true;
   }
 
@@ -154,14 +165,27 @@
     window.dispatchEvent(new CustomEvent("workspace-candidates-changed"));
   }
 
+  function documentState(id) {
+    try {
+      return JSON.parse(localStorage.getItem(documentBlobKey) || "{}")[id] || null;
+    } catch {
+      return null;
+    }
+  }
+
   function candidateCell(item) {
     if (gridState.scope === "discarded") return `<span class="badge danger">No candidata</span>`;
     if (gridState.scope === "archived") return `<span class="badge review">Archivada</span>`;
     const selection = candidateSelection();
     const selected = selection.selectedIds.includes(item.id);
     const active = selection.activeId === item.id;
-    if (active) return `<div class="candidate-state"><span class="badge safe">Activa</span><button class="ghost-action" data-candidate-action="open" data-candidate-id="${item.id}" type="button">Abrir</button></div>`;
-    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Activar</button></div>`;
+    if (active) {
+      const docs = documentState(item.id);
+      const label = docs?.projectState === "active" ? "Proyecto" : docs ? "Docs listas" : "Docs pendientes";
+      const tone = docs?.projectState === "active" ? "safe" : "warning";
+      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="ghost-action" data-candidate-action="open" data-candidate-id="${item.id}" type="button">Abrir</button></div>`;
+    }
+    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Preparar</button></div>`;
     return `<div class="candidate-state"><button class="ghost-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button">Preseleccionar</button></div>`;
   }
 
@@ -182,12 +206,30 @@
       </div>`;
   }
 
+  function renderGridPagination(totalRows) {
+    const holder = document.querySelector("#opportunity-pagination");
+    if (!holder) return;
+    const maxPage = Math.max(1, Math.ceil(totalRows / gridState.pageSize));
+    const start = totalRows ? ((gridState.page - 1) * gridState.pageSize) + 1 : 0;
+    const end = Math.min(totalRows, gridState.page * gridState.pageSize);
+    const publicLoaded = window.RADAR_PLATFORM_OPPORTUNITIES?.length || window.RADAR?.count || 0;
+    const publicPotential = window.RADAR?.totalElements || publicLoaded;
+    holder.innerHTML = `
+      <span><strong>${start}-${end}</strong> de ${totalRows} filas cargadas</span>
+      <div class="pager-buttons">
+        <button class="ghost-action" data-grid-page="prev" type="button" ${gridState.page <= 1 ? "disabled" : ""}>Anterior</button>
+        <span>Pagina ${gridState.page}/${maxPage}</span>
+        <button class="ghost-action" data-grid-page="next" type="button" ${gridState.page >= maxPage ? "disabled" : ""}>Siguiente</button>
+      </div>
+      <small>BDNS publico cargado: ${publicLoaded}/${publicPotential}. Esta tabla pagina las filas visibles tras filtros, territorio y fuentes privadas abiertas.</small>`;
+  }
+
   function renderOpportunityGrid() {
     const grid = document.querySelector("#opportunity-grid");
     if (!grid) return;
     const selectedId = typeof state !== "undefined" ? state.selectedOpportunityId : "";
     const query = gridState.query.toLowerCase();
-    const rows = scopeRows()
+    const filteredRows = scopeRows()
       .filter(matchesFilter)
       .filter((item) => !query || [item.title, item.source, item.theme, item.territory, item.organism].some((value) => compactText(value).toLowerCase().includes(query)))
       .sort((a, b) => {
@@ -196,12 +238,15 @@
         const result = av > bv ? 1 : av < bv ? -1 : 0;
         return gridState.dir === "asc" ? result : -result;
       });
+    const maxPage = Math.max(1, Math.ceil(filteredRows.length / gridState.pageSize));
+    gridState.page = Math.min(gridState.page, maxPage);
+    const rows = filteredRows.slice((gridState.page - 1) * gridState.pageSize, gridState.page * gridState.pageSize);
     const body = rows.length ? rows.map((item) => `
       <tr class="${item.id === selectedId ? "is-selected" : ""}" data-row-opportunity="${item.id}">
         <td><button class="grid-title" data-grid-opportunity="${item.id}">${item.title}</button><span>${item.organism || item.source}</span></td>
         <td>${item.source}</td>
         <td><strong>${item.score}</strong><span>${item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja"}</span></td>
-        <td>${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span></td>
+        <td>${window.deadlineTrace ? window.deadlineTrace.cell(item) : `${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span>`}</td>
         <td>${item.theme}<span>${item.territory}</span></td>
         <td>${candidateCell(item)}</td>
         <td>${item.entityFit?.status === "discarded" ? "Descartada" : item.entityFit?.status === "archived" ? "Archivada" : item.deadlineStatus === "uncertain" ? "Plazo incierto" : item.deadlineStatus === "closed" ? "Cerrada" : "Abierta"}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
@@ -220,6 +265,7 @@
         </tr></thead>
         <tbody>${body}</tbody>
       </table>`;
+    renderGridPagination(filteredRows.length);
     syncGridTopScroll();
     window.lucide?.createIcons();
   }
@@ -237,6 +283,26 @@
       offset += percent;
       return html;
     };
+    const isPlatform = document.body.dataset.role === "superadmin";
+    panel.classList.toggle("is-platform-corpus", isPlatform);
+    if (isPlatform) {
+      const privateOpen = privateOpenRows().length;
+      const publicTotal = publicRows().length;
+      const platformTotal = publicTotal + privateOpen;
+      const publicPotential = Number(window.RADAR?.totalElements || 0);
+      const coverage = window.PLATFORM_COVERAGE;
+      panel.innerHTML = `
+        <div class="fit-copy">
+          <strong>Estado funcional de agentes</strong>
+          <span>BDNS esta refrescado hoy. Privado abierto se mide por fuentes monitorizadas; no hay contador universal privado sin ampliar catalogo y scraping.</span>
+        </div>
+        <div class="fit-legend">
+          <span class="is-current"><span class="dot active"></span><b>${publicTotal}/${publicPotential}</b> Publicas BDNS</span>
+          <span><span class="dot discarded"></span><b>${coverage?.privateOpen?.sourcesReviewed || "?"}</b><span>Fuentes privadas<small>${coverage?.privateOpen?.activeOrOpen || "?"} activas/open</small></span></span>
+          <span><span class="dot archived"></span><b>${platformTotal}</b> Filas cargadas</span>
+        </div>`;
+      return;
+    }
     panel.innerHTML = `
       <div class="fit-copy">
         <strong>Radar de entidad</strong>
@@ -288,7 +354,7 @@
       heading.insertAdjacentHTML("afterend", `
         <div class="plain-note entity-fit-note" id="entity-fit-note">
           <strong>Radar de entidad</strong>
-          <span>${window.RADAR_ENTITY_CONTEXT?.name || "Entidad actual"}: ${fit.entityCandidateCount} oportunidades vivas o revisables. ${fit.entityDiscardedCount} descartadas por territorio y ${fit.entityArchivedClosedCount || 0} archivadas por plazo cerrado.</span>
+          <span>Corpus plataforma: ${radarCounts().active} oportunidades vivas o revisables. ${fit.entityDiscardedCount} descartadas por territorio y ${fit.entityArchivedClosedCount || 0} archivadas por plazo cerrado.</span>
         </div>`);
     }
     const filters = [...heading.querySelectorAll(".segmented")].find((group) => group.querySelector("[data-filter]"));
@@ -301,9 +367,11 @@
     }
     (document.querySelector("#entity-fit-note") || heading).insertAdjacentHTML("afterend", `
       <div class="opportunity-grid-tools">
+        <div class="grid-pagination" id="opportunity-pagination" aria-live="polite"></div>
+        <div id="opportunity-grid-x-scroll" class="opportunity-grid-x-scroll" aria-label="Desplazamiento horizontal del grid"><span></span></div>
         <button class="ghost-action radar-chat-button" data-open-opportunity-chat type="button"><i data-lucide="message-square-text"></i> Conversar con radar</button>
       </div>`);
-    list.insertAdjacentHTML("afterend", `<div id="opportunity-grid-x-scroll" class="opportunity-grid-x-scroll" aria-label="Desplazamiento horizontal del grid"><span></span></div><div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
+    list.insertAdjacentHTML("afterend", `<div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
     const topScroll = document.querySelector("#opportunity-grid-x-scroll");
     topScroll?.addEventListener("scroll", () => {
       const grid = document.querySelector("#opportunity-grid");
@@ -319,6 +387,11 @@
       const candidateAction = event.target.closest("[data-candidate-action]");
       const entityScope = event.target.closest("[data-entity-scope]");
       const fitChart = event.target.closest("[data-fit-chart]");
+      const gridPage = event.target.closest("[data-grid-page]");
+      if (gridPage) {
+        gridState.page += gridPage.dataset.gridPage === "next" ? 1 : -1;
+        renderOpportunityGrid();
+      }
       if (entityScope) {
         setEntityScope(entityScope.dataset.entityScope);
       }
@@ -329,6 +402,7 @@
       if (sort) {
         gridState.dir = gridState.sort === sort.dataset.gridSort && gridState.dir === "desc" ? "asc" : "desc";
         gridState.sort = sort.dataset.gridSort;
+        gridState.page = 1;
         renderOpportunityGrid();
       }
       if (rowAction?.dataset.gridOpportunity) {
@@ -348,6 +422,7 @@
           : { ...selection, selectedIds };
         saveCandidateSelection(next);
         renderOpportunityGrid();
+        if (candidateAction.dataset.candidateAction === "activate" && window.openWorkspaceAnalysis?.(id)) return;
         if (candidateAction.dataset.candidateAction === "open" && typeof showScreen === "function") showScreen("workspace");
       }
     });
@@ -357,7 +432,7 @@
       event.preventDefault();
       entityScope.click();
     });
-    document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => setTimeout(renderOpportunityGrid, 0)));
+    document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.page = 1; setTimeout(renderOpportunityGrid, 0); }));
     renderEntityFitDashboard();
     setOpportunityView(currentOpportunityView());
   }

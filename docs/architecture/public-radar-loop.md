@@ -45,6 +45,7 @@ Official source references:
 - No embeddings yet.
 - Deadline status is conservative: relative or missing dates become `uncertain`.
 - The BDNS detail API remains the source of truth for each imported call.
+- Future AI interpretation is capped at daily per campaign by default; cheaper hash/API checks should run before any model call.
 
 ## Next Loops
 
@@ -78,6 +79,26 @@ Run result on 2026-06-25:
 
 ## Next Loops
 
+## Vuelta 4: Deadline Traceability
+
+Status: implemented for generated BDNS output and Supabase import path.
+
+What changed:
+
+- Each normalized BDNS opportunity now carries deadline trace fields: observed deadline, evidence label, evidence URL, evidence publication date, agent read timestamp, next review timestamp, uncertainty reason, and tenant alarm policy.
+- `npm run platform:import-bdns-radar` can import the generated BDNS JSON into `platform_opportunities` and `platform_opportunity_versions`.
+- The import is idempotent: unchanged opportunities refresh `deadline_read_at` and `deadline_next_review_at`; changed content/deadline/criteria creates a new current version and supersedes the previous one.
+- Dry-run is the default. Use `-- --apply=true` only when intentionally writing to Supabase.
+
+Verification on 2026-07-02:
+
+- Mini BDNS run: `npm run radar:bdns -- --mode=search --tipo-administracion=C --descripcion=social --descripcion-tipo=1 --pages=1 --page-size=1 --max-details=1 --detail-delay-ms=0 --retries=1 --out-dir=.tmp\deadline-trace-bdns --prototype-out=.tmp\deadline-trace-bdns\radar-data.js`
+- Result: generated 1 opportunity with `deadlineObserved`, `deadlineEvidenceUrl`, `deadlineEvidenceDate`, `deadlineReadAt`, `deadlineNextReviewAt`, `deadlineUncertaintyReason`, and `tenantAlarmPolicy`.
+- Import dry-run: `npm run platform:import-bdns-radar -- --input=.tmp\deadline-trace-bdns\bdns-search.json`
+- Full run: `npm run radar:bdns -- --mode=search --tipo-administracion=C --descripcion=social --descripcion-tipo=1 --pages=20 --page-size=30 --max-details=572 --detail-delay-ms=180 --retries=4`
+- Full result: 572/572 public opportunities, 0 detail errors, 329 structured deadlines, 228 uncertain deadlines, and 0 missing trace fields.
+- Remote import: `npm run platform:import-bdns-radar -- --apply=true` inserted 572 traced current versions in Supabase. A second run refreshed 572 and created 0 duplicate versions.
+
 ## Vuelta 3: Official Evidence Metadata
 
 Status: implemented without binary downloads.
@@ -101,6 +122,7 @@ Current result:
 
 1. Add controlled download for official documents through `/convocatorias/documentos`.
 2. Add chunking for public call text and bases.
-3. Add semantic search over the public radar.
-4. Add quality sampling: URL health, deadline accuracy, duplicate detection, and classification gaps.
-5. Add source/corpus persistence in Supabase instead of browser fixture output.
+3. Add a private-open funder loop for foundations, banking social programs, CSR calls, and federation alerts.
+4. Add semantic search over the public/open radar.
+5. Add quality sampling: URL health, deadline accuracy, duplicate detection, and classification gaps.
+6. Add source/corpus persistence in Supabase instead of browser fixture output.

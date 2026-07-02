@@ -41,6 +41,7 @@
       const entityFit = territoryDecision(item);
       return { ...item, entityFit };
     });
+    window.RADAR_PLATFORM_OPPORTUNITIES = annotated;
     const territorialCandidates = annotated.filter((item) => item.entityFit.status === "candidate");
     const archived = territorialCandidates
       .filter((item) => item.deadlineStatus === "closed")

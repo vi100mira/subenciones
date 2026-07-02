@@ -20,13 +20,15 @@ Deliverables:
 - platform superadmin allowlist through OAuth email (`PLATFORM_ADMIN_EMAILS`)
 - `admin-organizations` API for creating/listing entities
 - `tenant_configs` for logo, color, profile, motivations, and onboarding status
-- minimal onboarding fields only: identity, owner/admin, territory, entity type, themes, alerts, and consent
+- minimal onboarding fields only: entity name, public website, admin email, public-web analysis consent, and optional uploaded logo
+- Entity Research Agent proposes territory, entity type, themes, collectives, programs, and logo candidates from the public website
 - tenant-aware source endpoints using explicit `x-tenant-id` or `tenantId`
 - prototype screen for the platform console
 
 Acceptance:
 
 - A superadmin can create an entity.
+- A tenant can be created before type/territory are known, as long as suggested facts remain pending review.
 - A tenant admin can read/update only its tenant config.
 - A tenant can use the public radar before connecting any private source.
 - Existing source and ingestion APIs do not silently pick the wrong tenant.
@@ -91,6 +93,28 @@ Acceptance:
 - Every recommendation cites public evidence.
 - Internal facts used are visible.
 - No recommendation can retrieve private chunks from another tenant.
+
+## Hito 4b: Cambios, Versiones y Alertas
+
+Status: pendiente.
+
+Deliverables:
+
+- version platform opportunities instead of overwriting them
+- detect deadline, criteria, document, budget, and submission-channel changes
+- run cheap source detection before AI and cap AI interpretation at daily per campaign by default
+- mark old evidence and chunks as superseded
+- compute which tenants are affected by a changed opportunity
+- create in-app alerts with evidence, previous value, new value, confidence, and recommended human action
+- keep external channel notifications safe and linked back to the app
+
+Acceptance:
+
+- A changed deadline creates a critical alert only for affected tenants.
+- AI cost is visible per platform campaign, and manual reruns require an audit reason.
+- A draft or checklist generated from an old version is marked as needing review.
+- Unaffected tenants are not notified.
+- The alert does not expose tenant-private data in platform logs or external channels.
 
 ## Hito 5: Cockpit Conectado
 

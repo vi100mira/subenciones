@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 
 const appUrl = process.env.UI_CHECK_URL || "http://localhost:5173/?v=guardrail-ui#view-entity";
 const publicUrl = process.env.UI_PUBLIC_CHECK_URL || "http://localhost:5173/?v=public-entry#view-welcome";
+const superadminPassword = process.env.UI_SUPERADMIN_PASSWORD;
+const tenantPassword = process.env.UI_TENANT_PASSWORD;
 const sensitivePatterns = [
   /SUPABASE_SERVICE_ROLE_KEY/i,
   /sb_secret_/i,
@@ -25,21 +27,25 @@ try {
   assert((await page.locator("[data-public-action]").count()) === 0, "Sigue existiendo un acceso directo por rol");
   assert(await page.locator(".app-shell").evaluate((el) => el.hidden), "El cockpit aparece antes de acceso");
 
-  await page.locator("#public-login-form [name='email']").fill("superadmin@subvenciones-rag.local");
-  await page.locator("#public-login-form [name='password']").fill("demo2026");
-  await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
-  assert((await page.locator("#screen-title").textContent()) === "Consola plataforma", "Superadmin no aterriza en Plataforma");
-  assert((await page.locator("body").getAttribute("data-role")) === "superadmin", "No se aplica rol superadmin");
+  if (superadminPassword) {
+    await page.locator("#public-login-form [name='email']").fill("vicentmirabarrachina@gmail.com");
+    await page.locator("#public-login-form [name='password']").fill(superadminPassword);
+    await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
+    assert((await page.locator("#screen-title").textContent()) === "Consola plataforma", "Superadmin no aterriza en Plataforma");
+    assert((await page.locator("body").getAttribute("data-role")) === "superadmin", "No se aplica rol superadmin");
+  }
 
   await page.evaluate(() => sessionStorage.clear());
   await page.goto("about:blank");
   await page.goto(publicUrl, { waitUntil: "networkidle" });
   assert(await page.locator(".public-entry").isVisible(), "La landing no reaparece en sesion limpia");
-  await page.locator("#public-login-form [name='email']").fill("pmira@novaterra.org.es");
-  await page.locator("#public-login-form [name='password']").fill("demo2026");
-  await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
-  assert((await page.locator("#screen-title").textContent()) === "Perfil de entidad", "Entidad no aterriza en su perfil");
-  assert((await page.locator("body").getAttribute("data-role")) === "entity", "No se aplica rol entidad");
+  if (tenantPassword) {
+    await page.locator("#public-login-form [name='email']").fill("admin@novaterra.org.es");
+    await page.locator("#public-login-form [name='password']").fill(tenantPassword);
+    await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
+    assert((await page.locator("#screen-title").textContent()) === "Perfil de entidad", "Entidad no aterriza en su perfil");
+    assert((await page.locator("body").getAttribute("data-role")) === "entity", "No se aplica rol entidad");
+  }
 
   await page.evaluate(() => sessionStorage.removeItem("prototype-role"));
   await page.goto(appUrl, { waitUntil: "networkidle" });

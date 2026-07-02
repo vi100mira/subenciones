@@ -6,7 +6,7 @@ Social-impact entities need to find relevant live grants, understand eligibility
 
 ## Product Thesis
 
-The product should deliver value before asking for private documents. The first paid value is an AI-assisted opportunity radar over a platform-managed public corpus. A tenant only needs a minimal, low-risk profile to search, filter, and iterate over relevant opportunities.
+The product should deliver value before asking for private documents. The first paid value is an AI-assisted opportunity radar over a platform-managed corpus of public grants and private-open funder calls. A tenant only needs a minimal, low-risk profile to search, filter, and iterate over relevant opportunities.
 
 The private RAG layer is optional and should focus on the entity's own approved opportunity sources: calls received by email, PDFs from funders, Drive/SharePoint folders with grant opportunities, federation alerts, historical opportunities, and approved internal facts used to improve matching. It is not a default ingestion of all company or entity data.
 
@@ -20,7 +20,7 @@ See `docs/product/third-sector-principles.md`.
 
 ## Value Proposition
 
-- Find live public and private opportunities without checking many portals manually.
+- Find live public grants, foundation calls, banking social programs, federation alerts, and tenant-private opportunities without checking many portals manually.
 - Iterate by natural language: territory, topic, funder type, cofinancing, deadline, eligible activity, or risk.
 - Explain why an opportunity may fit or not fit, with evidence and uncertainty.
 - Turn long bases into requirements, deadlines, checklists, and next actions.
@@ -42,6 +42,8 @@ See `docs/product/third-sector-principles.md`.
 - See what internal facts were used in the recommendation.
 - Identify missing information and documentation.
 - Produce a proposal outline and checklist for human review.
+- See deadline traceability for every candidate: observed deadline, status, confidence, source evidence, agent read date, next review, tenant alarm rule, and open uncertainty.
+- Show a complete presentation package inside each opportunity: entity requirements, required documents, submission steps, scoring criteria, official evidence, and a clear handoff to the documentary agent.
 - Receive alerts through web, Teams, WhatsApp, or email without leaking sensitive data.
 
 ## MVP Scope
@@ -49,10 +51,10 @@ See `docs/product/third-sector-principles.md`.
 - Static clickable prototype with realistic mock data.
 - One pilot entity profile, implemented as a generic tenant rather than a bespoke customer.
 - Minimal tenant onboarding: name, slug, owner/admin, logo/color, territory, entity type, thematic interests, alert preferences, and consent.
-- Platform public radar over reusable public sources and platform vectorization campaigns.
-- Public grant/opportunity list with status and deadline confidence.
+- Platform radar over reusable public sources, private-open funder sources, and platform vectorization campaigns.
+- Public grant/opportunity list with status, deadline confidence, and visible deadline traceability.
 - Iterative AI search over opportunities with filters, clarifying questions, and explainable ranking.
-- Optional tenant-private opportunity radar for approved private sources.
+- Optional tenant-private opportunity radar for approved emails, PDFs, partner notices, and invitation-based sources.
 - Private knowledge snippets with data classes.
 - Agentic cockpit with specialist agents and audit trail.
 - Matching detail with evidence, risks, internal facts, and next actions.

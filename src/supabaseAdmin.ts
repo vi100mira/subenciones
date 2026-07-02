@@ -25,6 +25,19 @@ export function bearerToken(authorization: string | string[] | undefined): strin
   return value.trim().toLowerCase().startsWith("bearer ") ? value.slice(7).trim() : "";
 }
 
+export function isPlatformAdminEmail(email: string): boolean {
+  const configured = [
+    process.env.PLATFORM_ADMIN_EMAILS || "",
+    process.env.AUTH_SUPERADMIN_EMAIL || ""
+  ].join(",");
+  const allowedEmails = configured
+    .split(",")
+    .map((allowedEmail) => allowedEmail.trim().toLowerCase())
+    .filter(Boolean);
+
+  return allowedEmails.includes(email.trim().toLowerCase());
+}
+
 export type SourcePermission = "sources:read" | "sources:write" | "sources:approve" | "sources:delete";
 
 export async function requirePlatformAdmin(
@@ -38,12 +51,7 @@ export async function requirePlatformAdmin(
   const user = userData?.user;
   if (userError || !user?.id || !user.email) throw new Error("Token invalido");
 
-  const allowedEmails = (process.env.PLATFORM_ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-
-  if (!allowedEmails.includes(user.email.toLowerCase())) throw new Error("Permiso de plataforma insuficiente");
+  if (!isPlatformAdminEmail(user.email)) throw new Error("Permiso de plataforma insuficiente");
   return { userId: user.id, email: user.email };
 }
 

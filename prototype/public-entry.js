@@ -21,10 +21,10 @@
       <section class="public-entry__access">
         <article class="public-entry__card public-entry__card--login">
           <div class="public-entry__tabs"><span class="is-active">Acceder</span><span>Registrar entidad</span></div>
-          <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional</h2></div><span class="badge review">Demo</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional</h2></div><span class="badge safe">Credenciales</span></div>
           <form class="inline-form public-entry__actions" id="public-login-form">
             <label><span>Email profesional</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
-            <label><span>Contrasena</span><input name="password" type="password" minlength="6" required /></label>
+            <label><span>Contrasena</span><span class="password-field"><input name="password" type="password" minlength="6" required /><button class="password-toggle" data-toggle-password type="button" aria-label="Mostrar contrasena" title="Mostrar contrasena"><i data-lucide="eye"></i></button></span></label>
             <button class="primary-action" type="submit">Acceder al panel</button>
           </form>
           <div id="public-login-status" class="plain-note"><strong>Acceso</strong><span>El rol se asigna desde las credenciales validadas, no desde botones publicos.</span></div>
@@ -47,19 +47,17 @@
   document.body.prepend(entry);
   window.lucide?.createIcons();
 
-  document.querySelector(".sidebar-note")?.insertAdjacentHTML(
-    "beforeend",
-    `<div class="role-chip role-chip--entity">Rol Novaterra: docente/gestor</div><div class="role-chip role-chip--superadmin">Rol plataforma</div>`
-  );
+  function setRole(session) {
+    document.body.dataset.role = session.role;
+    sessionStorage.setItem("prototype-role", session.role);
+    window.CredentialsAuth?.applySession?.(session);
+    window.PlanAccess?.applyMenuPolicy?.();
+    const cta = document.querySelector(".top-actions .primary-action"); if (cta) cta.innerHTML = session.role === "superadmin" ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
+  }
 
-  const demoAccounts = {
-    "pmira@novaterra.org.es": { role: "entity", screen: "entity" },
-    "superadmin@subvenciones-rag.local": { role: "superadmin", screen: "platform" }
-  };
-
-  function setRole(role) {
-    document.body.dataset.role = role;
-    sessionStorage.setItem("prototype-role", role);
+  function initialScreen(session, requested) {
+    if (session.role === "superadmin" && (!requested || ["dashboard", "entity", "workspace"].includes(requested))) return session.screen;
+    return requested || session.screen || "dashboard";
   }
 
   function showPublic() {
@@ -68,33 +66,45 @@
     history.replaceState(null, "", "#view-welcome");
   }
 
-  function showApp(role, screen) {
-    setRole(role);
+  function showApp(session, screen) {
+    setRole(session);
     entry.hidden = true;
     appShell.hidden = false;
     document.querySelector(`[data-screen="${screen}"]`)?.click();
   }
 
-  entry.querySelector("#public-login-form").addEventListener("submit", (event) => {
+  function loginHelp(email, fallback) {
+    if (email.endsWith("@novatera.org.es")) return "Revisa el email: Novaterra lleva doble r. Usa pmira@novaterra.org.es.";
+    return fallback;
+  }
+
+  entry.querySelector("#public-login-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") || "").trim().toLowerCase();
     const password = String(data.get("password") || "");
     const status = entry.querySelector("#public-login-status");
 
-    // Prototype-only credential gate; replace with Supabase Auth before production.
-    if (!email.includes("@") || password.length < 6) {
-      status.innerHTML = "<strong>Acceso rechazado</strong><span>Credenciales incompletas o no validas.</span>";
+    const session = await window.CredentialsAuth.login(email, password);
+    if (!session) {
+      const message = loginHelp(email, window.CredentialsAuth.getLastError?.() || "Usuario o contrasena no validos.");
+      status.innerHTML = "<strong>Acceso rechazado</strong><span></span>";
+      status.querySelector("span").textContent = message;
       return;
     }
 
-    const account = demoAccounts[email];
-    if (!account) {
-      status.innerHTML = "<strong>Acceso rechazado</strong><span>Usuario no autorizado en esta demo.</span>";
-      return;
-    }
+    showApp(session, session.screen);
+  });
 
-    showApp(account.role, account.screen);
+  entry.querySelector("[data-toggle-password]").addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    const input = entry.querySelector("#public-login-form input[name='password']");
+    const visible = input.type === "text";
+    input.type = visible ? "password" : "text";
+    button.setAttribute("aria-label", visible ? "Mostrar contrasena" : "Ocultar contrasena");
+    button.title = visible ? "Mostrar contrasena" : "Ocultar contrasena";
+    button.innerHTML = `<i data-lucide="${visible ? "eye" : "eye-off"}"></i>`;
+    window.lucide?.createIcons();
   });
 
   entry.querySelector("#public-onboarding-form").addEventListener("submit", async (event) => {
@@ -120,12 +130,12 @@
 
   const hash = window.location.hash;
   const mode = new URLSearchParams(window.location.search).get("v");
-  if (mode === "public-entry" || hash === "#view-welcome" || (hash === "#view-dashboard" && !sessionStorage.getItem("prototype-role"))) {
+  const session = window.CredentialsAuth.getSession();
+  const requested = hash.startsWith("#view-") ? hash.replace("#view-", "") : "";
+  const target = session ? initialScreen(session, requested) : "";
+  if (mode === "public-entry" || hash === "#view-welcome" || !session || !window.CredentialsAuth.canAccess(target || "dashboard", session)) {
     showPublic();
   } else {
-    const role = hash.includes("platform") || hash.includes("operations") ? "superadmin" : sessionStorage.getItem("prototype-role") || "entity";
-    setRole(role);
-    entry.hidden = true;
-    appShell.hidden = false;
+    showApp(session, target);
   }
 })();
