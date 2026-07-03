@@ -13,11 +13,11 @@
     { agent: "Revision documental", tools: [["leer_documento_autorizado", "Drive pendiente"], ["extraer_requisitos", "En desarrollo"]] },
     { agent: "Borrador de memoria", tools: [["generar_borrador_word", "Demo"], ["rellenar_memoria_con_evidencias", "En desarrollo"]] }
   ];
-  const detectedFacts = [
-    { fact: "Actua en Comunitat Valenciana", origin: "Web publica autorizada", tool: "leer_web_publica_entidad", status: "Pendiente", use: "No usable aun", evidence: "URL entidad", tone: "warning" },
-    { fact: "Programas de empleo e insercion", origin: "Perfil publico + entrevista", tool: "extraer_hechos_publicos", status: "Pendiente", use: "Matching cuando se apruebe", evidence: "Texto detectado", tone: "warning" },
-    { fact: "Acompanamiento individual", origin: "Entrevista guiada", tool: "registrar_respuesta_admin", status: "Sin aprobar", use: "Borradores cuando se valide", evidence: "Respuesta pendiente", tone: "review" },
-    { fact: "Casos personales", origin: "Documento sensible", tool: "detectar_datos_personales", status: "Bloqueado", use: "No usar", evidence: "Sin exponer", tone: "danger" }
+  const contextPermissions = [
+    { context: "Perfil publico de Novaterra", source: "Web publica autorizada", status: "Usable", use: "Radar y encaje", action: "Ver fuente", tone: "safe" },
+    { context: "Respuestas internas de la entidad", source: "Entrevista guiada", status: "Pendiente", use: "No usar aun", action: "Aprobar respuestas", tone: "warning" },
+    { context: "Documentos privados", source: "Drive/SharePoint no conectado", status: "No conectado", use: "No usar", action: "Conectar fuente", tone: "review" },
+    { context: "Datos personales o sensibles", source: "Politica de privacidad", status: "Bloqueado", use: "No usar", action: "Ver politica", tone: "danger" }
   ];
 
   const badge = (text, tone) => `<span class="badge ${tone}">${text}</span>`;
@@ -92,8 +92,8 @@
               <span>Forma juridica, territorio, colectivos y programas.</span>
             </div>
             <div>
-              <header>${contextStatus("clock-3", "Pendiente de validar", "warning", "No se usa hasta que una persona autorizada lo apruebe.")}<strong>Hechos detectados pendientes</strong><span title="Pendiente de validacion humana"><i data-lucide="info"></i></span></header>
-              <span>Los asistentes los han propuesto desde tools concretas. Revisa la tabla inferior antes de permitir su uso.</span>
+              <header>${contextStatus("clock-3", "Pendiente de validar", "warning", "No se usa hasta que una persona autorizada lo apruebe.")}<strong>Contexto interno pendiente</strong><span title="Pendiente de validacion humana"><i data-lucide="info"></i></span></header>
+              <span>Respuestas internas, documentos y datos privados no se usan hasta que la entidad los apruebe expresamente.</span>
             </div>
             <div>
               <header>${contextStatus("lock-keyhole", "Bloqueado", "danger", "Queda fuera del analisis y de los borradores.")}<strong>Datos personales o sensibles</strong><span title="Bloqueado para IA"><i data-lucide="info"></i></span></header>
@@ -102,16 +102,17 @@
           </div>
         </article>
         <article class="panel">
-          <div class="panel-heading"><div><p class="eyebrow">Validacion humana</p><h2>Hechos detectados antes de usarse</h2></div></div>
+          <div class="panel-heading"><div><p class="eyebrow">Permisos de contexto</p><h2>Que puede usar la IA ahora</h2></div></div>
+          <p class="section-note">Esta tabla no contiene casos reales ni datos personales. Resume el estado de autorizacion de cada tipo de contexto.</p>
           <div class="fact-review-table">
-            <div class="fact-review-head"><span>Hecho</span><span>Origen / tool</span><span>Estado</span><span>Uso</span><span>Acciones</span></div>
-            ${detectedFacts.map((row) => `
+            <div class="fact-review-head"><span>Contexto</span><span>Origen</span><span>Estado</span><span>Uso permitido</span><span>Siguiente accion</span></div>
+            ${contextPermissions.map((row) => `
               <div class="fact-review-row">
-                <strong>${row.fact}<small>${row.evidence}</small></strong>
-                <span>${row.origin}<small>${row.tool}</small></span>
+                <strong>${row.context}</strong>
+                <span>${row.source}</span>
                 ${badge(row.status, row.tone)}
                 <span>${row.use}</span>
-                <div class="mini-actions"><button type="button" title="Ver evidencia"><i data-lucide="file-search"></i></button><button type="button" title="Aprobar o editar" ${row.tone === "danger" ? "disabled" : ""}><i data-lucide="check"></i></button></div>
+                <div class="mini-actions"><button type="button" title="${row.action}"><i data-lucide="${row.tone === "safe" ? "file-search" : row.tone === "danger" ? "shield-alert" : "clipboard-check"}"></i><span class="sr-only">${row.action}</span></button></div>
               </div>`).join("")}
           </div>
         </article>
