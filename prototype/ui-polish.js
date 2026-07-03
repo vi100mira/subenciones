@@ -133,6 +133,8 @@
   function sortValue(item, key) {
     if (key === "deadline") return item.deadlineEnd || item.deadline || "";
     if (key === "score") return Number(item.score || 0);
+    if (key === "candidate") return candidateSortValue(item);
+    if (key === "status") return statusSortValue(item);
     return compactText(item[key]).toLowerCase();
   }
 
@@ -173,6 +175,38 @@
     } catch {
       return null;
     }
+  }
+
+  function candidateSortValue(item) {
+    if (gridState.scope === "discarded") return "5-no candidata";
+    if (gridState.scope === "archived") return "6-archivada";
+    const selection = candidateSelection();
+    const docs = documentState(item.id);
+    if (selection.activeId === item.id && docs?.projectState === "active") return "0-proyecto";
+    if (selection.activeId === item.id && docs) return "1-docs listas";
+    if (selection.activeId === item.id) return "2-docs pendientes";
+    if (selection.selectedIds.includes(item.id)) return "3-preseleccionada";
+    return "4-preseleccionar";
+  }
+
+  function statusLabel(item) {
+    if (item.entityFit?.status === "discarded") return "Descartada";
+    if (item.entityFit?.status === "archived") return "Archivada";
+    if (item.deadlineStatus === "uncertain") return "Plazo incierto";
+    if (item.deadlineStatus === "closed") return "Cerrada";
+    return "Abierta";
+  }
+
+  function statusSortValue(item) {
+    const order = {
+      "Abierta": "0",
+      "Plazo incierto": "1",
+      "Cerrada": "2",
+      "Descartada": "3",
+      "Archivada": "4"
+    };
+    const label = statusLabel(item);
+    return `${order[label] || "9"}-${compactText(item.entityFit?.reason || item.amount || "Sin importe").toLowerCase()}`;
   }
 
   function candidateCell(item) {
@@ -260,7 +294,7 @@
         <td>${window.deadlineTrace ? window.deadlineTrace.cell(item) : `${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span>`}</td>
         <td>${item.theme}<span>${item.territory}</span></td>
         <td>${candidateCell(item)}</td>
-        <td>${item.entityFit?.status === "discarded" ? "Descartada" : item.entityFit?.status === "archived" ? "Archivada" : item.deadlineStatus === "uncertain" ? "Plazo incierto" : item.deadlineStatus === "closed" ? "Cerrada" : "Abierta"}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
+        <td>${statusLabel(item)}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
         <td>${gridActions(item)}</td>
       </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">No hay oportunidades con estos filtros.</td></tr>`;
     grid.innerHTML = `
@@ -271,8 +305,8 @@
           <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
           <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
-          <th>Candidatura</th>
-          <th>Estado</th><th>Acciones</th>
+          <th aria-sort="${sortAria("candidate")}"><button data-grid-sort="candidate">Candidatura ${sortMark("candidate")}</button></th>
+          <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Acciones</th>
         </tr></thead>
         <tbody>${body}</tbody>
       </table>`;
