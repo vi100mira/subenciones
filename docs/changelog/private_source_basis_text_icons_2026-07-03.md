@@ -15,7 +15,8 @@ Separate the action concepts shown in the opportunity grid: public official API 
 - `npm run check:stability` passes.
 - Rendered grid check found the Fundacion Iberdrola private row with actions `Ver`, `Bases/convocatoria privada`, and `Texto fuente privada usado`.
 - Rendered grid check confirmed that the private row does not expose `API oficial`.
+- Follow-up: private seed rows now expose compact program characteristics in the grid and detail modal even when their bases are still pending capture.
 
 ## Residual Risk
 
-Only the Iberdrola private row has located evidence in this pass. Other private funders still remain editorial candidates until their bases/source text are captured and reviewed.
+Only the Iberdrola private row has located bases/source text in this pass. Other private funders now show program characteristics, but still remain editorial candidates until their bases/source text are captured and reviewed.

@@ -19,6 +19,27 @@ const PRIVATE_EVIDENCE = {
   }
 };
 
+const PRIVATE_FEATURES = {
+  "fundacion-once-inserta": ["Empleo y discapacidad", "Itinerarios/convenios", "Inclusion laboral"],
+  "fundacion-adecco-empleo": ["Riesgo de exclusion", "Orientacion y empleo", "Colaboracion empresarial"],
+  "fundacion-mapfre-social": ["Proyectos sociales", "Empleo inclusivo", "Hasta 40.000 EUR"],
+  "fundacion-mutua-madrilena-accion": ["Entidades no lucrativas", "Accion social", "Convocatoria anual"],
+  "fundacion-iberdrola-social": ["Entidades sin animo de lucro", "Proyecto anual", "Hasta 40.000 EUR"],
+  "fundacion-endesa-empleo": ["Formacion para empleo", "Competencias digitales", "Empresa/fundacion"],
+  "fundacion-telefonica-digital": ["Inclusion digital", "Colectivos vulnerables", "Competencias digitales"],
+  "santander-fundacion-social": ["Educacion y empleo", "Iniciativas sociales", "Proyecto/convenio"],
+  "bbva-accion-social": ["Inclusion financiera", "Empleo", "Obra social bancaria"],
+  "caixabank-accion-social": ["Accion territorial", "Entidades locales", "Hasta 50.000 EUR"],
+  "fundacion-bancaja-social": ["Comunitat Valenciana", "Proyectos sociales", "Segun bases"],
+  "ibercaja-proyectos-sociales": ["Insercion laboral", "Entidades sociales", "Ventana anual"],
+  "unicaja-fundacion-social": ["Programas sociales", "No lucrativas", "Plazo por confirmar"],
+  "cajamar-social": ["Desarrollo local", "Territorio", "Por convenio"],
+  "fundacion-randstad-empleabilidad": ["Empleabilidad", "Colectivos vulnerables", "Insercion laboral"],
+  "fundacion-repsol-social": ["Inclusion social", "Energia/sostenibilidad", "Ventana anual"],
+  "fundacion-naturgy-vulnerabilidad": ["Vulnerabilidad energetica", "Accion social", "Por convenio"],
+  "fundacion-orange-digital": ["Inclusion digital", "Autonomia", "Proyecto social"]
+};
+
 window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-mapfre-social", "Ayudas a proyectos sociales y empleo inclusivo", "Fundacion MAPFRE", "Fundacion corporativa", "Inclusion social", "Estatal", "Convocatoria por verificar", "Media", 78, "Hasta 40.000 EUR"],
   ["fundacion-mutua-madrilena-accion", "Programa de accion social para entidades sin animo de lucro", "Fundacion Mutua Madrilena", "Fundacion corporativa", "Accion social", "Estatal", "Ventana anual por confirmar", "Media", 76, "Segun linea"],
@@ -55,6 +76,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
     score,
     amount,
     theme,
+    programFeatures: PRIVATE_FEATURES[id] || [theme, funderType, amount],
     basesUrl: privateEvidence.basesUrl || "",
     sourceTextLabel: privateEvidence.sourceTextLabel || "Texto fuente privada usado",
     extractedText: privateEvidence.extractedText || "",

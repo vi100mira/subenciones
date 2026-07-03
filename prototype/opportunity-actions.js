@@ -16,6 +16,7 @@ function openOpportunityModal(id, mode) {
   const body = isText ? `<p>${(item.extractedText || "No hay texto extraido disponible.").slice(0, 2400)}</p>` : `
     <p>${item.source} - ${item.territory}. ${modalScoreLabel(item.score)} (${item.score}/100 estimado, no elegibilidad).</p>
     ${window.deadlineTrace ? window.deadlineTrace.panelFromTrace(window.deadlineTrace.build(item)) : ""}
+    ${item.programFeatures?.length ? `<h3>Caracteristicas del programa</h3><ul>${item.programFeatures.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
     <h3>Por que puede encajar</h3><ul>${item.fit.map((x) => `<li>${x}</li>`).join("")}</ul>
     <h3>Riesgos</h3><ul>${item.risks.map((x) => `<li>${x}</li>`).join("")}</ul>
     <h3>Evidencia</h3><ul>${item.evidence.map((x) => `<li>${x}</li>`).join("")}</ul>`;

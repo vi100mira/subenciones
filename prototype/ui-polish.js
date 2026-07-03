@@ -212,6 +212,11 @@
       </div>`;
   }
 
+  function programFeatures(item) {
+    if (!item.programFeatures?.length || item.sourceScope === "Publica oficial") return "";
+    return `<small class="grid-program-features">${item.programFeatures.slice(0, 3).join(" · ")}</small>`;
+  }
+
   function renderGridPagination(totalRows) {
     const holder = document.querySelector("#opportunity-pagination");
     if (!holder) return;
@@ -249,7 +254,7 @@
     const rows = filteredRows.slice((gridState.page - 1) * gridState.pageSize, gridState.page * gridState.pageSize);
     const body = rows.length ? rows.map((item) => `
       <tr class="${item.id === selectedId ? "is-selected" : ""}" data-row-opportunity="${item.id}">
-        <td><button class="grid-title" data-grid-opportunity="${item.id}">${item.title}</button><span>${item.organism || item.source}</span></td>
+        <td><button class="grid-title" data-grid-opportunity="${item.id}">${item.title}</button><span>${item.organism || item.source}</span>${programFeatures(item)}</td>
         <td>${item.source}</td>
         <td><strong>${item.score}</strong><span>${item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja"}</span></td>
         <td>${window.deadlineTrace ? window.deadlineTrace.cell(item) : `${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span>`}</td>
