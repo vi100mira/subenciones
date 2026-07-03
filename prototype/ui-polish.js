@@ -165,8 +165,9 @@
     return compactText(item[key]);
   }
 
-  function matchesColumnFilters(item) {
+  function matchesColumnFilters(item, exceptKey = "") {
     return filterColumns.every(([key]) => {
+      if (key === exceptKey) return true;
       const term = compactText(gridState.filters[key]).toLowerCase();
       return !term || filterValue(item, key).toLowerCase().includes(term);
     });
@@ -174,7 +175,7 @@
 
   function filterOptions(rows, key) {
     const options = new Set();
-    rows.forEach((item) => {
+    rows.filter((item) => matchesColumnFilters(item, key)).forEach((item) => {
       if (key === "score") {
         options.add(priorityLabel(item));
         options.add(String(item.score));
@@ -190,6 +191,10 @@
       }
     });
     return [...options].map(compactText).filter(Boolean).sort((a, b) => a.localeCompare(b, "es"));
+  }
+
+  function hasColumnFilters() {
+    return filterColumns.some(([key]) => compactText(gridState.filters[key]));
   }
 
   function sortMark(key) {
@@ -341,6 +346,7 @@
         <button class="ghost-action" data-grid-page="prev" type="button" ${gridState.page <= 1 ? "disabled" : ""}>Anterior</button>
         <span>Pagina ${gridState.page}/${maxPage}</span>
         <button class="ghost-action" data-grid-page="next" type="button" ${gridState.page >= maxPage ? "disabled" : ""}>Siguiente</button>
+        ${hasColumnFilters() ? `<button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>` : ""}
       </div>
       <small>BDNS publico cargado: ${publicLoaded}/${publicPotential}. Esta tabla pagina las filas visibles tras filtros, territorio y fuentes privadas abiertas.</small>`;
   }
@@ -364,6 +370,9 @@
     const maxPage = Math.max(1, Math.ceil(filteredRows.length / gridState.pageSize));
     gridState.page = Math.min(gridState.page, maxPage);
     const rows = filteredRows.slice((gridState.page - 1) * gridState.pageSize, gridState.page * gridState.pageSize);
+    const emptyMessage = hasColumnFilters()
+      ? `No hay oportunidades con esta combinacion. <button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>`
+      : "No hay oportunidades con estos filtros.";
     const body = rows.length ? rows.map((item) => `
       <tr class="${item.id === selectedId ? "is-selected" : ""}" data-row-opportunity="${item.id}">
         <td><button class="grid-title" data-grid-opportunity="${item.id}">${item.title}</button><span>${item.organism || item.source}</span>${programFeatures(item)}</td>
@@ -374,7 +383,7 @@
         <td>${candidateCell(item)}</td>
         <td>${statusLabel(item)}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
         <td>${gridActions(item)}</td>
-      </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">No hay oportunidades con estos filtros.</td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">${emptyMessage}</td></tr>`;
     grid.innerHTML = `
       <table>
         <thead><tr>
@@ -511,6 +520,12 @@
       const entityScope = event.target.closest("[data-entity-scope]");
       const fitChart = event.target.closest("[data-fit-chart]");
       const gridPage = event.target.closest("[data-grid-page]");
+      const clearFilters = event.target.closest("[data-grid-clear-filters]");
+      if (clearFilters) {
+        gridState.filters = {};
+        gridState.page = 1;
+        renderOpportunityGrid();
+      }
       if (gridPage) {
         gridState.page += gridPage.dataset.gridPage === "next" ? 1 : -1;
         renderOpportunityGrid();

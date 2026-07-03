@@ -37,3 +37,11 @@
   box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
   outline: none;
 }
+
+.grid-clear-inline {
+  margin-left: 8px;
+}
+
+.grid-empty .grid-clear-inline {
+  margin-top: 8px;
+}

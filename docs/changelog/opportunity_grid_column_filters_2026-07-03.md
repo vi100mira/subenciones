@@ -4,6 +4,8 @@
 
 Add operational per-column filtering to the opportunity grid so users can type inside each header concept and also pick from available values. `Acciones` remains unfiltered.
 
+Follow-up: make suggested options depend on the other active column filters, so the UI does not offer combinations that look valid but collapse the grid to zero rows. Add an explicit clear-filters action.
+
 ## Files Touched
 
 - `prototype/ui-polish.js`
@@ -17,7 +19,9 @@ Add operational per-column filtering to the opportunity grid so users can type i
 - Rendered grid check confirms datalist options are generated for filtered columns.
 - Rendered grid check confirms filtering by source, status, and territory reduces rows and updates pagination.
 - Visual screenshot check confirms the filter row renders as a compact table header row.
+- Follow-up rendered local check confirms `BDNS/SNPSAP` no longer offers `Accion social` as a suggested `Ambito` option when incompatible.
+- Follow-up rendered local check confirms manual zero-result combinations show `Limpiar filtros` and clearing restores the 592-row grid.
 
 ## Residual Risk
 
-Filters are client-side prototype behavior over currently loaded rows. They do not persist user preferences and do not change backend retrieval, tenant isolation, or evidence handling.
+Filters are client-side prototype behavior over currently loaded rows. They do not persist user preferences and do not change backend retrieval, tenant isolation, or evidence handling. They now avoid most invalid combinations through dependent suggestions, but manually typed text can still produce zero rows and is recoverable through `Limpiar filtros`.
