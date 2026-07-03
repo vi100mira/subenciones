@@ -4,9 +4,9 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import WebSocket from "ws";
-import { fail, ok } from "../src/apiResponse";
-import { logInfo, logWarn } from "../src/logger";
-import { getSupabaseAdmin, isPlatformAdminEmail } from "../src/supabaseAdmin";
+import { fail, ok } from "../src/apiResponse.js";
+import { logInfo, logWarn } from "../src/logger.js";
+import { getSupabaseAdmin, isPlatformAdminEmail } from "../src/supabaseAdmin.js";
 
 function loadLocalEnv() {
   const file = resolve(process.cwd(), ".env.local");

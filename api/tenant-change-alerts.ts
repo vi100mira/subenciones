@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fail, ok } from "../src/apiResponse";
-import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin";
+import { fail, ok } from "../src/apiResponse.js";
+import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
 
 const ALERT_STATUSES = new Set(["new", "seen", "reviewing", "resolved", "dismissed"]);
 

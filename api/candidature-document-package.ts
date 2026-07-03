@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { put } from "@vercel/blob";
 import { createHash } from "node:crypto";
-import { fail, ok } from "../src/apiResponse";
-import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin";
-import { logError, logInfo } from "../src/logger";
+import { fail, ok } from "../src/apiResponse.js";
+import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { logError, logInfo } from "../src/logger.js";
 
 type DocumentSection = { title?: unknown; lines?: unknown };
 type PackageDocument = { id?: unknown; title?: unknown; filename?: unknown; sections?: unknown };

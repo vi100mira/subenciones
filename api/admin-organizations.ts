@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fail, ok } from "../src/apiResponse";
-import { getSupabaseAdmin, requirePlatformAdmin } from "../src/supabaseAdmin";
+import { fail, ok } from "../src/apiResponse.js";
+import { getSupabaseAdmin, requirePlatformAdmin } from "../src/supabaseAdmin.js";
 
 function slugify(value: string) {
   return value

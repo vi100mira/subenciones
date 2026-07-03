@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fail, ok } from "../src/apiResponse";
-import { getSupabaseAdmin } from "../src/supabaseAdmin";
+import { fail, ok } from "../src/apiResponse.js";
+import { getSupabaseAdmin } from "../src/supabaseAdmin.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import { fail } from "../src/apiResponse";
-import { logError, logInfo } from "../src/logger";
-import { requireSourcePermission } from "../src/supabaseAdmin";
+import { fail } from "../src/apiResponse.js";
+import { logError, logInfo } from "../src/logger.js";
+import { requireSourcePermission } from "../src/supabaseAdmin.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
