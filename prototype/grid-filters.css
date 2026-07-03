@@ -1,0 +1,39 @@
+.opportunity-grid .grid-filter-row th {
+  top: 39px;
+  padding-top: 6px;
+  padding-bottom: 8px;
+  background: #f4fbf8;
+  text-transform: none;
+}
+
+.grid-filter {
+  display: grid;
+  gap: 4px;
+  min-width: 116px;
+}
+
+.grid-filter span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.grid-filter input {
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid #bfd1cc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #14231f;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.grid-filter input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+  outline: none;
+}

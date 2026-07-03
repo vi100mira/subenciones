@@ -49,7 +49,16 @@
     }).observe(list, { childList: true });
   }
 
-  const gridState = { sort: "score", dir: "desc", query: "", scope: "active", page: 1, pageSize: 15 };
+  const gridState = { sort: "score", dir: "desc", query: "", scope: "active", page: 1, pageSize: 15, filters: {} };
+  const filterColumns = [
+    ["title", "Convocatoria"],
+    ["source", "Fuente"],
+    ["score", "Prioridad"],
+    ["deadline", "Plazo"],
+    ["theme", "Ambito"],
+    ["candidate", "Candidatura"],
+    ["status", "Estado"]
+  ];
   const candidateKey = "workspace-candidates-v1";
   const documentBlobKey = "tenant-document-blob-demo-v1";
 
@@ -130,12 +139,57 @@
     return String(value || "").replace(/\s+/g, " ").trim();
   }
 
+  function escapeAttr(value) {
+    return compactText(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
+  }
+
+  function priorityLabel(item) {
+    return item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja";
+  }
+
   function sortValue(item, key) {
     if (key === "deadline") return item.deadlineEnd || item.deadline || "";
     if (key === "score") return Number(item.score || 0);
     if (key === "candidate") return candidateSortValue(item);
     if (key === "status") return statusSortValue(item);
     return compactText(item[key]).toLowerCase();
+  }
+
+  function filterValue(item, key) {
+    if (key === "title") return compactText([item.title, item.organism || item.source, ...(item.programFeatures || [])].join(" "));
+    if (key === "score") return `${item.score} ${priorityLabel(item)}`;
+    if (key === "deadline") return compactText([item.deadline, item.deadlineConfidence].join(" "));
+    if (key === "theme") return compactText([item.theme, item.territory].join(" "));
+    if (key === "candidate") return candidateLabel(item);
+    if (key === "status") return compactText([statusLabel(item), item.entityFit?.reason || item.amount || "Sin importe"].join(" "));
+    return compactText(item[key]);
+  }
+
+  function matchesColumnFilters(item) {
+    return filterColumns.every(([key]) => {
+      const term = compactText(gridState.filters[key]).toLowerCase();
+      return !term || filterValue(item, key).toLowerCase().includes(term);
+    });
+  }
+
+  function filterOptions(rows, key) {
+    const options = new Set();
+    rows.forEach((item) => {
+      if (key === "score") {
+        options.add(priorityLabel(item));
+        options.add(String(item.score));
+      } else if (key === "theme") {
+        options.add(item.theme);
+        options.add(item.territory);
+      } else if (key === "status") {
+        options.add(statusLabel(item));
+      } else if (key === "candidate") {
+        options.add(candidateLabel(item));
+      } else {
+        options.add(filterValue(item, key));
+      }
+    });
+    return [...options].map(compactText).filter(Boolean).sort((a, b) => a.localeCompare(b, "es"));
   }
 
   function sortMark(key) {
@@ -189,6 +243,18 @@
     return "4-preseleccionar";
   }
 
+  function candidateLabel(item) {
+    if (gridState.scope === "discarded") return "No candidata";
+    if (gridState.scope === "archived") return "Archivada";
+    const selection = candidateSelection();
+    const docs = documentState(item.id);
+    if (selection.activeId === item.id && docs?.projectState === "active") return "Proyecto";
+    if (selection.activeId === item.id && docs) return "Docs listas";
+    if (selection.activeId === item.id) return "Docs pendientes";
+    if (selection.selectedIds.includes(item.id)) return "Preseleccionada";
+    return "Preseleccionar";
+  }
+
   function statusLabel(item) {
     if (item.entityFit?.status === "discarded") return "Descartada";
     if (item.entityFit?.status === "archived") return "Archivada";
@@ -223,6 +289,16 @@
     }
     if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Preparar</button></div>`;
     return `<div class="candidate-state"><button class="ghost-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button">Preseleccionar</button></div>`;
+  }
+
+  function renderFilterHeaders(optionRows) {
+    const cells = filterColumns.map(([key, label]) => {
+      const listId = `grid-filter-options-${key}`;
+      const value = gridState.filters[key] || "";
+      const options = filterOptions(optionRows, key).slice(0, 80).map((option) => `<option value="${escapeAttr(option)}"></option>`).join("");
+      return `<th><label class="grid-filter"><span>${label}</span><input data-grid-filter="${key}" list="${listId}" value="${escapeAttr(value)}" placeholder="Filtrar..." autocomplete="off" /><datalist id="${listId}">${options}</datalist></label></th>`;
+    }).join("");
+    return `<tr class="grid-filter-row">${cells}<th></th></tr>`;
   }
 
   function selectGridOpportunity(id) {
@@ -274,9 +350,11 @@
     if (!grid) return;
     const selectedId = typeof state !== "undefined" ? state.selectedOpportunityId : "";
     const query = gridState.query.toLowerCase();
-    const filteredRows = scopeRows()
+    const baseRows = scopeRows()
       .filter(matchesFilter)
-      .filter((item) => !query || [item.title, item.source, item.theme, item.territory, item.organism].some((value) => compactText(value).toLowerCase().includes(query)))
+      .filter((item) => !query || [item.title, item.source, item.theme, item.territory, item.organism].some((value) => compactText(value).toLowerCase().includes(query)));
+    const filteredRows = baseRows
+      .filter(matchesColumnFilters)
       .sort((a, b) => {
         const av = sortValue(a, gridState.sort);
         const bv = sortValue(b, gridState.sort);
@@ -307,7 +385,7 @@
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
           <th aria-sort="${sortAria("candidate")}"><button data-grid-sort="candidate">Candidatura ${sortMark("candidate")}</button></th>
           <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Acciones</th>
-        </tr></thead>
+        </tr>${renderFilterHeaders(baseRows)}</thead>
         <tbody>${body}</tbody>
       </table>`;
     renderGridPagination(filteredRows.length);
@@ -470,6 +548,14 @@
         if (candidateAction.dataset.candidateAction === "activate" && window.openWorkspaceAnalysis?.(id)) return;
         if (candidateAction.dataset.candidateAction === "open" && typeof showScreen === "function") showScreen("workspace");
       }
+    });
+    document.addEventListener("input", (event) => {
+      const filter = event.target.closest("[data-grid-filter]");
+      if (!filter) return;
+      gridState.filters[filter.dataset.gridFilter] = filter.value;
+      gridState.page = 1;
+      renderOpportunityGrid();
+      document.querySelector(`[data-grid-filter="${filter.dataset.gridFilter}"]`)?.focus();
     });
     document.addEventListener("keydown", (event) => {
       const entityScope = event.target.closest?.("[data-entity-scope]");
