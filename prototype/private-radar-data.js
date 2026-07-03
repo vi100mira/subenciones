@@ -1,22 +1,126 @@
-const PRIVATE_EVIDENCE = {
-  "fundacion-iberdrola-social": {
-    basesUrl: "https://www.fundacioniberdrolaespana.org/accion-social/programa-social",
+function privateEvidence(url, title, text, basis = "fuente/programa privado") {
+  return {
+    basesUrl: url,
     sourceTextLabel: "Texto fuente privada usado",
-    extractedText:
-      "Fundacion Iberdrola Espana - Programa Social / Futuro con Energia. La pagina de accion social describe una convocatoria privada para entidades sin animo de lucro legalmente constituidas en Espana, con un proyecto por entidad, duracion maxima de un ano y aportacion de hasta 40.000 EUR. La convocatoria privada indica que las bases y el formulario se consultan en la web de la fundacion; requiere verificar edicion vigente, plazo final y criterios antes de recomendar a un tenant.",
-    documents: [
-      {
-        title: "Programa Social - Fundacion Iberdrola Espana",
-        description: "Pagina de convocatoria privada y bases del financiador.",
-        url: "https://www.fundacioniberdrolaespana.org/accion-social/programa-social"
-      }
-    ],
+    extractedText: text,
+    documents: [{ title, description: `Pagina oficial del financiador: ${basis}.`, url }],
     evidence: [
-      "Fuente privada abierta: pagina oficial del Programa Social de Fundacion Iberdrola Espana.",
-      "La pagina del financiador contiene bases/convocatoria y condiciones de participacion; no es API publica BDNS.",
+      `Fuente privada abierta localizada: ${title}.`,
+      `Tipo de evidencia: ${basis}; no es API publica BDNS.`,
       "Requiere revision editorial de plataforma para confirmar edicion, plazo y texto vigente."
     ]
-  }
+  };
+}
+
+const PRIVATE_EVIDENCE = {
+  "fundacion-mapfre-social": privateEvidence(
+    "https://www.fundacionmapfre.org/premios-ayudas/convocatorias/convocatoria-ayudas-proyectos-sociales/",
+    "Convocatoria de Ayudas a Proyectos Sociales - Fundacion MAPFRE",
+    "Fundacion MAPFRE describe una convocatoria dirigida a entidades sociales para apoyar iniciativas de empleabilidad de personas con discapacidad intelectual o problemas de salud mental y proyectos vinculados a enfermedades raras. La fuente debe revisarse para confirmar edicion vigente, plazo y requisitos aplicables al tenant.",
+    "convocatoria privada con bases"
+  ),
+  "fundacion-mutua-madrilena-accion": privateEvidence(
+    "https://www.fundacionmutua.es/accion-social/ayudas-proyectos-sociales/convocatoria-anual/",
+    "Convocatoria anual de ayudas a proyectos sociales - Fundacion Mutua Madrilena",
+    "Fundacion Mutua Madrilena publica una convocatoria anual de ayudas a proyectos de accion social para entidades sin animo de lucro, con dotacion economica y solicitud online. Requiere confirmar plazo, bases y colectivos prioritarios de la edicion vigente.",
+    "convocatoria privada con bases"
+  ),
+  "fundacion-iberdrola-social": privateEvidence(
+    "https://www.fundacioniberdrolaespana.org/accion-social/programa-social",
+    "Programa Social - Fundacion Iberdrola Espana",
+    "Fundacion Iberdrola Espana - Programa Social / Futuro con Energia. La pagina de accion social describe una convocatoria privada para entidades sin animo de lucro legalmente constituidas en Espana, con un proyecto por entidad, duracion maxima de un ano y aportacion de hasta 40.000 EUR. Requiere verificar edicion vigente, plazo final y criterios antes de recomendar a un tenant.",
+    "programa privado con bases"
+  ),
+  "fundacion-endesa-empleo": privateEvidence(
+    "https://www.endesa.com/es/prensa/sala-de-prensa/noticias/social/fundacion-endesa-caritas-formacion-sector-electrico-jovenes-situacion-vulnerabilidad",
+    "Fundacion Endesa y Caritas - formacion para empleo",
+    "Fundacion Endesa y Caritas han desarrollado formacion en el sector electrico para jovenes en situacion de vulnerabilidad, orientada a mejorar empleabilidad y acceso a oportunidades laborales. Es una fuente de programa/alianza, pendiente de confirmar convocatoria abierta o bases reutilizables.",
+    "programa/alianza privada"
+  ),
+  "fundacion-telefonica-digital": privateEvidence(
+    "https://www.fundaciontelefonica.com/",
+    "Fundacion Telefonica - empleabilidad y vulnerabilidad digital",
+    "Fundacion Telefonica declara como retos sociales la empleabilidad, la educacion y la vulnerabilidad social y digital, trabajando mediante alianzas con entidades. Es fuente de programa privado abierto; requiere confirmar convocatoria, colaboracion o bases concretas antes de recomendar.",
+    "programa privado abierto"
+  ),
+  "santander-fundacion-social": privateEvidence(
+    "https://www.fundacionbancosantander.com/es/accion-social/santander-ayuda",
+    "Santander Ayuda - Fundacion Banco Santander",
+    "Santander Ayuda impulsa proyectos de organizaciones sociales, con convocatorias tematicas y ayuda maxima por proyecto. La pagina indica convocatorias cerradas o futuras segun edicion; requiere revisar plazo y bases vigentes.",
+    "convocatoria privada con bases"
+  ),
+  "bbva-accion-social": privateEvidence(
+    "https://www.bbvaassetmanagement.com/es/actualidad/ganadores-convocatoria-solidaria-bbva-futuro-2026/",
+    "Convocatoria Solidaria BBVA Futuro 2026",
+    "BBVA Asset Management publica la Convocatoria Solidaria BBVA Futuro 2026 y sus proyectos seleccionados, con zonas territoriales y ayudas para proyectos sociales, ambientales y de empleo de colectivos vulnerables. Requiere confirmar futuras ediciones y bases aplicables.",
+    "convocatoria privada"
+  ),
+  "caixabank-accion-social": privateEvidence(
+    "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
+    "Convocatoria Social Comunitat Valenciana - Fundacion la Caixa",
+    "La Convocatoria Social Comunitat Valenciana colabora con entidades sociales que desarrollan proyectos en la Comunitat Valenciana para personas en situacion de vulnerabilidad, con fechas de apertura/cierre por edicion. Requiere confirmar si la oportunidad debe atribuirse a Fundacion la Caixa o a accion territorial CaixaBank.",
+    "convocatoria privada territorial"
+  ),
+  "fundacion-bancaja-social": privateEvidence(
+    "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
+    "13a Convocatoria Fundacion Bancaja - CaixaBank Capaces",
+    "Fundacion Bancaja y CaixaBank Capaces dirige ayudas a proyectos de inclusion social y laboral de personas con discapacidad en Comunitat Valenciana, con dotacion economica y convocatoria territorial. Requiere revisar plazo, bases y entidad elegible.",
+    "convocatoria privada con bases"
+  ),
+  "ibercaja-proyectos-sociales": privateEvidence(
+    "https://www.fundacionibercaja.es/convocatorias/",
+    "Convocatorias - Fundacion Ibercaja",
+    "Fundacion Ibercaja publica convocatorias de ayudas para responder a necesidades de empleabilidad, educacion y accion social, apoyando proyectos de entidades sin animo de lucro. Requiere seleccionar convocatoria concreta y bases vigentes.",
+    "convocatorias privadas"
+  ),
+  "unicaja-fundacion-social": privateEvidence(
+    "https://www.fundacionunicaja.com/convocatoria-accion-social/",
+    "Convocatoria Accion Social - Fundacion Unicaja",
+    "Fundacion Unicaja publica una convocatoria de accion social para proyectos e iniciativas que favorezcan la inclusion social de personas y colectivos en situacion de vulnerabilidad, con plazo y descarga de bases por edicion.",
+    "convocatoria privada con bases"
+  ),
+  "cajamar-social": privateEvidence(
+    "https://www.cajamar.es/es/comun/informacion-corporativa/fondo-social/",
+    "Fondo Social Cooperativo - Cajamar",
+    "Cajamar describe su Fondo Social Cooperativo orientado a economia social, cooperativismo, formacion, investigacion aplicada y actividades socioculturales o asistenciales en su entorno de actuacion. Es fuente de programa social, pendiente de convocatoria concreta.",
+    "programa/fondo social privado"
+  ),
+  "fundacion-once-inserta": privateEvidence(
+    "https://www.fundaciononce.es/es/que-hacemos/inserta-e-inserta-innovacion",
+    "Inserta e Inserta Innovacion - Fundacion ONCE",
+    "Fundacion ONCE presenta Inserta Empleo como entidad especializada en formacion y empleo de personas con discapacidad, dirigida a personas que buscan trabajo o quieren potenciar habilidades. Requiere confirmar si procede por convenio, programa o convocatoria concreta.",
+    "programa privado abierto"
+  ),
+  "fundacion-adecco-empleo": privateEvidence(
+    "https://fundacionadecco.org/programas-de-empleo-para-personas-en-riesgo-de-exclusion/",
+    "Programas de empleo para personas en riesgo de exclusion - Fundacion Adecco",
+    "Fundacion Adecco realiza proyectos de integracion laboral con personas en riesgo de exclusion apoyados por empresas, incluyendo mujeres, mayores de 45 anos, jovenes sin experiencia, inmigrantes y otros colectivos. Requiere confirmar modelo de colaboracion o convocatoria.",
+    "programa privado abierto"
+  ),
+  "fundacion-randstad-empleabilidad": privateEvidence(
+    "https://www.randstad.es/fundacion-randstad/talento/",
+    "Talento y empleo para personas con discapacidad - Fundacion Randstad",
+    "Fundacion Randstad ofrece programas de orientacion, formacion e integracion para personas con discapacidad, incluyendo competencias digitales y acompanamiento al empleo. Requiere confirmar si la entidad puede participar via convenio, derivacion o convocatoria.",
+    "programa privado abierto"
+  ),
+  "fundacion-repsol-social": privateEvidence(
+    "https://www.fundacionrepsol.com/es/",
+    "Fundacion Repsol - transicion energetica e impacto social",
+    "Fundacion Repsol impulsa proyectos de transicion energetica con impacto social mediante innovacion y tecnologia. Es fuente de programa privado; requiere localizar convocatoria concreta o via de colaboracion para entidades sociales.",
+    "programa privado abierto"
+  ),
+  "fundacion-naturgy-vulnerabilidad": privateEvidence(
+    "https://www.fundacionnaturgy.org/actualidad-1/",
+    "Fundacion Naturgy - vulnerabilidad energetica y accion social",
+    "Fundacion Naturgy trabaja vulnerabilidad energetica con entidades como Cruz Roja y Caritas, incluyendo fondo solidario, escuela de energia y eficiencia energetica en hogares o centros sociales. Requiere confirmar convocatoria o acuerdo aplicable.",
+    "programa privado abierto"
+  ),
+  "fundacion-orange-digital": privateEvidence(
+    "https://fundacionorange.es/mujer-y-tecnologia/edyta/",
+    "Programa EDYTA - Fundacion Orange",
+    "Fundacion Orange describe EDYTA como programa nacional de educacion y transformacion digital para mujeres y asociaciones del tercer sector que trabajan con colectivos femeninos en riesgo de exclusion y baja empleabilidad. Requiere confirmar convocatoria de entidades o colaboracion vigente.",
+    "programa privado abierto"
+  )
 };
 
 const PRIVATE_FEATURES = {
