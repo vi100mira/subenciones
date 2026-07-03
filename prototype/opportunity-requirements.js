@@ -517,11 +517,11 @@
     let docs = readDocumentPackage(pack.id);
     if (docs?.docs?.length && docs.templateVersion !== documentTemplateVersion) docs = ensureDocumentPackage(pack);
     const isProject = docs?.projectState === "active";
-    flow.insertAdjacentHTML("afterbegin", `
+    const packageMarkup = `
       <article class="panel requirements-workspace" id="documentary-agent-package">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">${isProject ? "Proyecto activo" : "Candidatura en preparacion"}</p>
+            <p class="eyebrow">${isProject ? "Proyecto activo" : "Expediente seleccionado"}</p>
             <h2>${pack.title}</h2>
           </div>
           ${badge(isProject ? "Proyecto" : docs ? "Documentacion preparada" : "Preseleccionada", isProject ? "safe" : docs ? "warning" : "review")}
@@ -572,7 +572,10 @@
           ${panel("draft", `<div class="compact-draft">${outline()}</div>`)}
         </div>
       </article>
-    `);
+    `;
+    const anchor = flow.querySelector("#workspace-detail-anchor");
+    if (anchor) anchor.innerHTML = packageMarkup;
+    else flow.insertAdjacentHTML("afterbegin", packageMarkup);
     window.lucide?.createIcons();
   }
 

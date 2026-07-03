@@ -1832,6 +1832,43 @@ body.sidebar-collapsed .sidebar-note {
   margin-top: 14px;
 }
 
+.candidate-state-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.candidate-state-flow span {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.candidate-state-flow strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: #eef6f3;
+  color: var(--green);
+}
+
+.candidate-state-flow .is-current {
+  border-color: rgba(0, 106, 99, 0.35);
+  background: #effaf6;
+  color: var(--green);
+}
+
 .candidate-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1840,6 +1877,11 @@ body.sidebar-collapsed .sidebar-note {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #ffffff;
+}
+
+.candidate-card.is-current {
+  border-color: rgba(0, 106, 99, 0.55);
+  box-shadow: inset 3px 0 0 var(--teal);
 }
 
 .candidate-card.is-active {
@@ -1868,6 +1910,11 @@ body.sidebar-collapsed .sidebar-note {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.workspace-detail-anchor {
+  display: grid;
+  gap: 18px;
 }
 
 .grid-empty {
@@ -1983,6 +2030,7 @@ body.sidebar-collapsed .sidebar-note {
   .entity-contract-grid,
   .entity-agent-grid,
   .tool-map,
+  .candidate-state-flow,
   .project-stage,
   .document-agent-actions,
   .requirements-summary,

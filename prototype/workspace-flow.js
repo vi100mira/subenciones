@@ -51,9 +51,10 @@
     const activeDocs = documentState(active?.id);
     const activeState = activeDocs?.projectState === "active" ? "Proyecto activo" : activeDocs ? "Documentacion preparada" : "Documentacion pendiente";
     return [
-      { item: active, state: activeState, tone: activeDocs?.projectState === "active" ? "safe" : "warning", note: activeDocs ? "Paquete Word preparado; falta revision humana antes de uso externo." : "Debe preparar documentacion Word antes de activar como proyecto." },
+      { item: active, active: true, state: activeState, tone: activeDocs?.projectState === "active" ? "safe" : "warning", note: activeDocs ? "Paquete Word preparado; falta revision humana antes de uso externo." : "Debe preparar documentacion Word antes de activar como proyecto." },
       ...[...alternatives, ...fallback].slice(0, 3).map((item, index) => ({
         item,
+        active: false,
         state: index === 0 ? "En evaluacion" : "Preseleccionada",
         tone: index === 0 ? "warning" : "review",
         note: index === 0 ? "Requiere confirmar plazo y requisitos." : "Guardada para comparar antes de decidir."
@@ -63,18 +64,30 @@
 
   function card(entry) {
     return `
-      <article class="candidate-card ${entry.state === "Proyecto activo" || entry.state === "Documentacion preparada" ? "is-active" : ""}">
+      <article class="candidate-card ${entry.active ? "is-current" : ""} ${entry.state === "Proyecto activo" || entry.state === "Documentacion preparada" ? "is-active" : ""}">
         <div>
           <strong>${entry.item.title}</strong>
           <span>${entry.item.source} - ${entry.item.deadline} - ${entry.item.deadlineConfidence}</span>
         </div>
         <div>
+          ${entry.active ? '<span class="badge safe">Expediente abierto</span>' : ""}
           <span class="badge ${entry.tone}">${entry.state}</span>
           ${entry.watched ? '<span class="badge safe">Avisos activos</span>' : ""}
-          <button class="ghost-action" data-workspace-open="${entry.item.id}" type="button">Ver</button>
+          <button class="ghost-action" data-workspace-open="${entry.item.id}" type="button">${entry.active ? "Ver detalle" : "Abrir expediente"}</button>
         </div>
         <p>${entry.note} ${entry.watched ? "Se avisara si cambian plazo, bases o criterios." : ""}</p>
       </article>`;
+  }
+
+  function stateFlow() {
+    return `
+      <div class="candidate-state-flow" aria-label="Flujo de una candidatura">
+        <span><strong>1</strong> Radar</span>
+        <span class="is-current"><strong>2</strong> Preseleccion</span>
+        <span><strong>3</strong> Documentacion Word</span>
+        <span><strong>4</strong> Proyecto activo</span>
+        <span><strong>5</strong> Presentacion revisada</span>
+      </div>`;
   }
 
   function renderWorkspaceFlow() {
@@ -88,18 +101,20 @@
         <article class="panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Preseleccion humana</p>
-              <h2>Candidaturas candidatas</h2>
+              <p class="eyebrow">Bandeja de candidaturas</p>
+              <h2>Candidaturas en seguimiento</h2>
             </div>
             <span class="badge review">${selected.length} en seguimiento</span>
           </div>
+          ${stateFlow()}
           <div class="plain-note">
-            <strong>Como llega aqui</strong>
-              <span>El radar propone oportunidades; una persona las preselecciona. Para pasar a proyecto, el agente documental prepara Word y una persona lo revisa.</span>
+            <strong>Como se avanza</strong>
+              <span>El radar propone oportunidades; una persona abre uno o varios expedientes. Cada expediente pasa a documentacion Word y solo se activa como proyecto tras revision humana.</span>
           </div>
           <div class="watch-note"><strong>Seguimiento de cambios</strong><span>Las candidaturas activas quedan vigiladas contra cambios de plazo, bases, criterios y canal de presentacion.</span></div>
           <div class="candidate-list">${selected.map(card).join("")}</div>
         </article>
+        <div id="workspace-detail-anchor" class="workspace-detail-anchor" aria-live="polite"></div>
         <div class="workbench">
           <article class="panel">
             <div class="panel-heading">
