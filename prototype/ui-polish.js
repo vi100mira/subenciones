@@ -147,6 +147,14 @@
     return item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja";
   }
 
+  function operationalAreaLabel(item) {
+    const text = compactText([item.theme, item.title, ...(item.programFeatures || [])].join(" ")).toLowerCase();
+    if (text.includes("servicios sociales") || text.includes("promocion social") || text.includes("promoción social") || text.includes("accion social") || text.includes("acción social") || text.includes("accion comunitaria") || text.includes("inclusion social") || text.includes("inclusión social")) return "Accion social";
+    if (text.includes("empleo") || text.includes("desempleo") || text.includes("insercion laboral") || text.includes("inserción laboral")) return "Empleo";
+    if (text.includes("educacion") || text.includes("educación") || text.includes("competencias digitales") || text.includes("inclusion digital") || text.includes("inclusión digital")) return "Educacion y digital";
+    return "";
+  }
+
   function sortValue(item, key) {
     if (key === "deadline") return item.deadlineEnd || item.deadline || "";
     if (key === "score") return Number(item.score || 0);
@@ -159,7 +167,7 @@
     if (key === "title") return compactText([item.title, item.organism || item.source, ...(item.programFeatures || [])].join(" "));
     if (key === "score") return `${item.score} ${priorityLabel(item)}`;
     if (key === "deadline") return compactText([item.deadline, item.deadlineConfidence].join(" "));
-    if (key === "theme") return compactText([item.theme, item.territory].join(" "));
+    if (key === "theme") return compactText([item.theme, item.territory, operationalAreaLabel(item)].join(" "));
     if (key === "candidate") return candidateLabel(item);
     if (key === "status") return compactText([statusLabel(item), item.entityFit?.reason || item.amount || "Sin importe"].join(" "));
     return compactText(item[key]);
@@ -182,6 +190,7 @@
       } else if (key === "theme") {
         options.add(item.theme);
         options.add(item.territory);
+        options.add(operationalAreaLabel(item));
       } else if (key === "status") {
         options.add(statusLabel(item));
       } else if (key === "candidate") {

@@ -21,6 +21,7 @@ Follow-up: make suggested options depend on the other active column filters, so 
 - Visual screenshot check confirms the filter row renders as a compact table header row.
 - Follow-up rendered local check confirms `BDNS/SNPSAP` no longer offers `Accion social` as a suggested `Ambito` option when incompatible.
 - Follow-up rendered local check confirms manual zero-result combinations show `Limpiar filtros` and clearing restores the 592-row grid.
+- Follow-up rendered tenant check confirms the 191 live rows include 171 public `BDNS/SNPSAP` rows; filtering `BDNS/SNPSAP` + `Accion social` now returns 107 public rows instead of zero by treating `Servicios Sociales y Promoción Social` as the same operational area.
 
 ## Residual Risk
 
