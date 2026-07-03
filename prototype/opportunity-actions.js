@@ -12,6 +12,7 @@ function openOpportunityModal(id, mode) {
   const item = currentOpportunities().find((entry) => entry.id === id);
   if (!item) return;
   const isText = mode === "text";
+  const textTitle = item.sourceTextLabel || "Texto original usado";
   const body = isText ? `<p>${(item.extractedText || "No hay texto extraido disponible.").slice(0, 2400)}</p>` : `
     <p>${item.source} - ${item.territory}. ${modalScoreLabel(item.score)} (${item.score}/100 estimado, no elegibilidad).</p>
     ${window.deadlineTrace ? window.deadlineTrace.panelFromTrace(window.deadlineTrace.build(item)) : ""}
@@ -21,7 +22,7 @@ function openOpportunityModal(id, mode) {
   document.body.insertAdjacentHTML("beforeend", `
     <div class="modal-backdrop" data-close-modal>
       <article class="modal" role="dialog" aria-modal="true">
-        <div class="panel-heading"><h2>${isText ? "Texto original usado" : "Analisis legible"}</h2><button class="icon-button" data-close-modal>×</button></div>
+        <div class="panel-heading"><h2>${isText ? textTitle : "Analisis legible"}</h2><button class="icon-button" data-close-modal>×</button></div>
         <strong>${item.title}</strong>${body}
       </article>
     </div>`);

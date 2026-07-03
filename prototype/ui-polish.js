@@ -6,7 +6,9 @@
     "Anexar": "paperclip",
     "Ver analisis": "scan-search",
     "Bases": "scale",
+    "Bases/convocatoria": "scale",
     "Ver texto original usado": "file-text",
+    "Texto fuente privada usado": "file-text",
     "API oficial": "external-link"
   };
 
@@ -197,12 +199,16 @@
   }
 
   function gridActions(item) {
+    const isPublicOfficial = (item.sourceScope || "").includes("Publica oficial") || item.source === "BDNS/SNPSAP";
+    const basesLabel = isPublicOfficial ? "Bases reguladoras" : "Bases/convocatoria privada";
+    const textLabel = item.sourceTextLabel || (isPublicOfficial ? "Texto original usado" : "Texto fuente privada usado");
+    const officialLabel = isPublicOfficial ? "API oficial BDNS" : "Fuente externa";
     return `
       <div class="opportunity-toolbar grid-actions">
         <button class="icon-action" data-grid-opportunity="${item.id}" title="Ver" aria-label="Ver"><i data-lucide="eye"></i><span class="sr-only">Ver</span></button>
-        ${item.basesUrl ? `<a class="icon-action" href="${item.basesUrl}" target="_blank" rel="noreferrer" title="Bases" aria-label="Bases"><i data-lucide="scale"></i><span class="sr-only">Bases</span></a>` : ""}
-        ${item.extractedText ? `<button class="icon-action" data-grid-text="${item.id}" title="Ver texto original usado" aria-label="Ver texto original usado"><i data-lucide="file-text"></i><span class="sr-only">Ver texto original usado</span></button>` : ""}
-        ${item.officialUrl ? `<a class="icon-action" href="${item.officialUrl}" target="_blank" rel="noreferrer" title="API oficial" aria-label="API oficial"><i data-lucide="external-link"></i><span class="sr-only">API oficial</span></a>` : ""}
+        ${item.basesUrl ? `<a class="icon-action" href="${item.basesUrl}" target="_blank" rel="noreferrer" title="${basesLabel}" aria-label="${basesLabel}"><i data-lucide="scale"></i><span class="sr-only">${basesLabel}</span></a>` : ""}
+        ${item.extractedText ? `<button class="icon-action" data-grid-text="${item.id}" title="${textLabel}" aria-label="${textLabel}"><i data-lucide="file-text"></i><span class="sr-only">${textLabel}</span></button>` : ""}
+        ${item.officialUrl ? `<a class="icon-action" href="${item.officialUrl}" target="_blank" rel="noreferrer" title="${officialLabel}" aria-label="${officialLabel}"><i data-lucide="external-link"></i><span class="sr-only">${officialLabel}</span></a>` : ""}
       </div>`;
   }
 

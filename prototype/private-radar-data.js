@@ -1,3 +1,24 @@
+const PRIVATE_EVIDENCE = {
+  "fundacion-iberdrola-social": {
+    basesUrl: "https://www.fundacioniberdrolaespana.org/accion-social/programa-social",
+    sourceTextLabel: "Texto fuente privada usado",
+    extractedText:
+      "Fundacion Iberdrola Espana - Programa Social / Futuro con Energia. La pagina de accion social describe una convocatoria privada para entidades sin animo de lucro legalmente constituidas en Espana, con un proyecto por entidad, duracion maxima de un ano y aportacion de hasta 40.000 EUR. La convocatoria privada indica que las bases y el formulario se consultan en la web de la fundacion; requiere verificar edicion vigente, plazo final y criterios antes de recomendar a un tenant.",
+    documents: [
+      {
+        title: "Programa Social - Fundacion Iberdrola Espana",
+        description: "Pagina de convocatoria privada y bases del financiador.",
+        url: "https://www.fundacioniberdrolaespana.org/accion-social/programa-social"
+      }
+    ],
+    evidence: [
+      "Fuente privada abierta: pagina oficial del Programa Social de Fundacion Iberdrola Espana.",
+      "La pagina del financiador contiene bases/convocatoria y condiciones de participacion; no es API publica BDNS.",
+      "Requiere revision editorial de plataforma para confirmar edicion, plazo y texto vigente."
+    ]
+  }
+};
+
 window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-mapfre-social", "Ayudas a proyectos sociales y empleo inclusivo", "Fundacion MAPFRE", "Fundacion corporativa", "Inclusion social", "Estatal", "Convocatoria por verificar", "Media", 78, "Hasta 40.000 EUR"],
   ["fundacion-mutua-madrilena-accion", "Programa de accion social para entidades sin animo de lucro", "Fundacion Mutua Madrilena", "Fundacion corporativa", "Accion social", "Estatal", "Ventana anual por confirmar", "Media", 76, "Segun linea"],
@@ -17,32 +38,39 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-repsol-social", "Proyectos sociales vinculados a energia e inclusion", "Fundacion Repsol", "Empresa / fundacion", "Inclusion y sostenibilidad", "Estatal", "Ventana anual por confirmar", "Baja", 67, "Por confirmar"],
   ["fundacion-naturgy-vulnerabilidad", "Programas contra vulnerabilidad energetica", "Fundacion Naturgy", "Empresa / fundacion", "Vulnerabilidad energetica", "Estatal", "Convocatoria por verificar", "Media", 68, "Por convenio"],
   ["fundacion-orange-digital", "Inclusion digital y autonomia de colectivos vulnerables", "Fundacion Orange", "Empresa / fundacion", "Inclusion digital", "Estatal", "Plazo por confirmar", "Baja", 65, "Por proyecto"]
-].map(([id, title, source, funderType, theme, territory, deadline, deadlineConfidence, score, amount]) => ({
-  id,
-  canonicalKey: id,
-  title,
-  source,
-  territory,
-  deadline,
-  deadlineStatus: deadlineConfidence === "Alta" ? "open" : "uncertain",
-  deadlineConfidence,
-  sourceScope: "Privada abierta",
-  funderType,
-  evidenceQuality: "Fuente privada abierta pendiente de verificacion editorial",
-  score,
-  amount,
-  theme,
-  fit: [
-    `Puede encajar con entidades del tercer sector por ${theme.toLowerCase()}.`,
-    "Requiere confirmar bases vigentes, territorio y si admite entidades no lucrativas."
-  ],
-  risks: [
-    "Plazo o criterios no confirmados por el prototipo.",
-    "La plataforma debe guardar evidencia antes de recomendarla a un tenant."
-  ],
-  evidence: [
-    "Radar privado abierto: financiador identificado como candidato de seguimiento.",
-    "Pendiente de captura de bases, hash de pagina y revision humana de plataforma."
-  ],
-  internalFacts: ["Corpus plataforma", "Sin datos privados tenant", "Revision editorial pendiente"]
-}));
+].map(([id, title, source, funderType, theme, territory, deadline, deadlineConfidence, score, amount]) => {
+  const privateEvidence = PRIVATE_EVIDENCE[id] || {};
+  return {
+    id,
+    canonicalKey: id,
+    title,
+    source,
+    territory,
+    deadline,
+    deadlineStatus: deadlineConfidence === "Alta" ? "open" : "uncertain",
+    deadlineConfidence,
+    sourceScope: "Privada abierta",
+    funderType,
+    evidenceQuality: privateEvidence.basesUrl ? "Fuente privada abierta con bases localizadas" : "Fuente privada abierta pendiente de verificacion editorial",
+    score,
+    amount,
+    theme,
+    basesUrl: privateEvidence.basesUrl || "",
+    sourceTextLabel: privateEvidence.sourceTextLabel || "Texto fuente privada usado",
+    extractedText: privateEvidence.extractedText || "",
+    documents: privateEvidence.documents || [],
+    fit: [
+      `Puede encajar con entidades del tercer sector por ${theme.toLowerCase()}.`,
+      "Requiere confirmar bases vigentes, territorio y si admite entidades no lucrativas."
+    ],
+    risks: [
+      "Plazo o criterios no confirmados por el prototipo.",
+      "La plataforma debe guardar evidencia antes de recomendarla a un tenant."
+    ],
+    evidence: privateEvidence.evidence || [
+      "Radar privado abierto: financiador identificado como candidato de seguimiento.",
+      "Pendiente de captura de bases, hash de pagina y revision humana de plataforma."
+    ],
+    internalFacts: ["Corpus plataforma", "Sin datos privados tenant", "Revision editorial pendiente"]
+  };
+});
