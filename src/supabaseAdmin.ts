@@ -3,8 +3,8 @@ import type { WebSocketLikeConstructor } from "@supabase/realtime-js";
 import WebSocket from "ws";
 
 export function getSupabaseAdmin() {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.APP_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.APP_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceRoleKey) {
     throw new Error("SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY son obligatorias en entorno servidor.");

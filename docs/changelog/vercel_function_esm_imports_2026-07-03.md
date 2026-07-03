@@ -15,6 +15,7 @@ Fix Preview authentication and API startup failures caused by extensionless rela
 - `npm run check:stability` passes.
 - New Preview deployed at `https://subvenciones-gp925vuxz-vicentmirabarrachina-3617s-projects.vercel.app`.
 - `/api/auth-session` smoke test with fake credentials now returns controlled JSON: `401 {"ok":false,"error":"Credenciales no validas"}`.
+- Follow-up diagnosis: Preview runtime was receiving a different Supabase project through provider-managed `SUPABASE_*` variables, so the app now prefers `APP_SUPABASE_*` variables for its auth/admin boundary.
 
 ## Residual Risk
 

@@ -21,8 +21,12 @@ function loadLocalEnv() {
 loadLocalEnv();
 
 function getAuthClient() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const url = process.env.APP_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key =
+    process.env.APP_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error("SUPABASE_URL y SUPABASE_ANON_KEY son obligatorias para login.");
   return createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -94,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = data.user;
     const session = data.session;
     if (error || !user?.id || !user.email || !session?.access_token) {
-      logWarn("auth.login_rejected", { email });
+      logWarn("auth.login_rejected", { email, authError: error?.message || "missing session" });
       return res.status(401).json(fail("Credenciales no validas"));
     }
 
