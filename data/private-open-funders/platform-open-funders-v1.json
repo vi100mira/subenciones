@@ -9,7 +9,14 @@
       "Do not include tenant-private emails, PDFs, or relationship-based invitations.",
       "Treat closed but recurring calls as monitorable sources, not active opportunities.",
       "Every accepted source must support versioning, deadline watch, criteria watch, and tenant impact alerts before operational use."
-    ]
+    ],
+    "deep_scan_policy": {
+      "minimum_depth": "same-origin official pages to depth 2 before declaring bases missing",
+      "page_budget_per_source": 10,
+      "priority_links": ["convocatoria", "ayudas", "bases", "pdf", "solicitud", "formulario", "faq", "proyectos sociales"],
+      "homepage_only_status": "needs_human_review",
+      "tenant_private_sources_used": 0
+    }
   },
   "sources": [
     {
