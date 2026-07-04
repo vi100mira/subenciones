@@ -7,7 +7,8 @@
     { name: "Fundacion la Caixa", group: "Privado abierto", territory: "Espana por CCAA", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria si abre", depth: "Profundizar: indice territorial -> ficha -> bases/PDF", doubt: "La fuente es valida; cada linea territorial exige comprobar bases y plazo vigente.", action: "No alertar tenants sin evidencia de convocatoria abierta." },
     { name: "Fundacion ONCE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", depth: "Profundizar: convocatorias -> entidades -> documentacion", doubt: "La fuente es valida; el encaje depende de colectivo, discapacidad y tipo de proyecto.", action: "Versionar cada convocatoria antes de recomendar." },
     { name: "Fundacion MAPFRE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Semanal", depth: "Profundizar: programas -> ayuda concreta -> bases", doubt: "Puede publicar por programas; hay que separar premio, ayuda y convocatoria.", action: "Clasificar tipo de oportunidad antes de activar." },
-    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." }
+    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." },
+    { name: "Ford Espana", group: "Privado relacional", territory: "Comunitat Valenciana / Espana", sourceStatus: "Fuente candidata", connectorStatus: "Revision manual", cadence: "Mensual", depth: "Profundizar: noticia -> programa RSC -> contacto/bases manuales", doubt: "Novaterra acredita apoyo de Centimos Solidarios, pero no hay bases publicas localizadas.", action: "Aceptar solo con aportacion manual o evidencia directa de Ford." }
   ];
 
   const campaigns = [
@@ -91,6 +92,16 @@
             <button class="primary-action" data-analyze-source type="button">Analizar fuente</button>
           </div>
         </details>
+        <details class="source-optional-intake">
+          <summary class="opportunity-topline"><strong>Aportacion manual de bases</strong><span>Subsidiaria si el escaneo no encuentra bases o la web bloquea lectura.</span></summary>
+          <div class="inline-form source-intake">
+            <label><span>Fuente</span><input data-manual-source="name" value="Ford Espana - Centimos Solidarios" /></label>
+            <label><span>URL o PDF</span><input data-manual-source="url" value="https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/" /></label>
+            <label><span>Resumen de bases</span><input data-manual-source="summary" value="Aportacion relacional; faltan bases publicas y plazo." /></label>
+            <label><span>Responsable</span><input data-manual-source="owner" value="Revision plataforma" /></label>
+            <button class="primary-action" data-manual-evidence type="button">Registrar para revision</button>
+          </div>
+        </details>
         <div class="plain-note" id="source-analysis-note">
           <strong>Alta guiada opcional</strong><span>Si anades una URL, el agente valida si es oficial, que duda existe, que cadencia propone y si puede reutilizarse por plataforma.</span>
         </div>
@@ -124,11 +135,15 @@
     document.addEventListener("click", (event) => {
       const tab = event.target.closest('[data-platform-tab="sources"]');
       const analyze = event.target.closest("[data-analyze-source]");
+      const manualEvidence = event.target.closest("[data-manual-evidence]");
       const manage = event.target.closest("[data-source-manage]");
       const review = event.target.closest("[data-review-source]");
       if (tab) switchTab("sources");
       if (analyze) {
         document.querySelector("#source-analysis-note").innerHTML = "<strong>Analisis propuesto</strong><span>Fuente oficial probable. El escaneo profundo seguira enlaces internos hasta profundidad 2 y priorizara convocatorias, bases, PDF, FAQ, solicitud y formulario. Si solo encuentra portada, queda en revision humana.</span>";
+      }
+      if (manualEvidence) {
+        document.querySelector("#source-analysis-note").innerHTML = "<strong>Aportacion registrada</strong><span>Queda como candidato manual: sirve para que una persona revise bases, plazo y legitimidad antes de crear oportunidad o alertar tenants.</span>";
       }
       if (manage && typeof showToast === "function") showToast(`Criterio abierto: ${manage.dataset.sourceManage}`);
       if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta en modo prototipo." : "Fuente pausada sin impacto en tenants.");

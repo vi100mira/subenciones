@@ -15,6 +15,11 @@
       "page_budget_per_source": 10,
       "priority_links": ["convocatoria", "ayudas", "bases", "pdf", "solicitud", "formulario", "faq", "proyectos sociales"],
       "homepage_only_status": "needs_human_review",
+      "manual_fallback": {
+        "allowed_when": ["fetch_blocked", "homepage_only", "needs_human_review"],
+        "required_fields": ["official_url_or_pdf", "call_title", "deadline_text", "basis_summary", "provided_by", "reviewer_note"],
+        "activation_rule": "manual contribution can create a review candidate, never an auto-approved tenant alert"
+      },
       "tenant_private_sources_used": 0
     }
   },
@@ -198,14 +203,45 @@
       "monitoring_cadence": "weekly during active call",
       "watch_fields": ["deadline", "financial instrument", "eligibility", "application form"],
       "initial_action": "Lower priority for classic NGOs; useful for social enterprise or energy-transition pilots."
+    },
+    {
+      "id": "ford-espana-centimos-solidarios",
+      "name": "Ford Espana - Centimos Solidarios",
+      "url": "https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/",
+      "funder_type": "corporate_csr",
+      "themes": ["inclusion sociolaboral", "transformacion digital", "accion local", "empleados"],
+      "territory": "Comunitat Valenciana / Spain",
+      "opportunity_status": "relationship_based_manual_review",
+      "deadline_text": "No public application window located; manual contribution or relationship evidence required",
+      "deadline_confidence": "low",
+      "evidence_quality": "official_beneficiary_publication",
+      "monitoring_cadence": "monthly plus manual notes from tenant relationships",
+      "watch_fields": ["new edition", "employee programme", "beneficiary evidence", "manual bases note"],
+      "initial_action": "Treat as possible relationship-based private funding line. Do not surface as open call without manual evidence from Ford or the tenant."
+    },
+    {
+      "id": "ford-construyendo-juntos-espana",
+      "name": "Ford Espana - Construyendo Juntos",
+      "url": "https://www.fromtheroad.ford.com/es/es/articles/2025/la-iniciativa-ford-construyendo-juntos-arranca-con-una-campana-h",
+      "funder_type": "corporate_csr",
+      "themes": ["seguridad alimentaria", "comunidad", "organizaciones sin animo de lucro", "desarrollo comunitario"],
+      "territory": "Spain",
+      "opportunity_status": "programmatic_monitor",
+      "deadline_text": "Campaign-specific; no grant bases located",
+      "deadline_confidence": "low",
+      "evidence_quality": "official_ford_publication",
+      "monitoring_cadence": "monthly",
+      "watch_fields": ["campaigns", "beneficiary organizations", "application route", "manual evidence"],
+      "initial_action": "Monitor as corporate social programme and require manual review before creating an opportunity."
     }
   ],
   "vuelta_1_metrics": {
-    "sources_reviewed": 12,
-    "accepted_for_catalogue": 12,
+    "sources_reviewed": 14,
+    "accepted_for_catalogue": 14,
     "active_or_open_by_line": 6,
-    "monitor_only": 5,
-    "needs_human_review_before_live": 1,
+    "monitor_only": 7,
+    "needs_human_review_before_live": 3,
+    "manual_intake_candidates": 2,
     "tenant_private_sources_used": 0,
     "scraping_used": false
   }

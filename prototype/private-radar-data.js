@@ -1,6 +1,7 @@
 function privateEvidence(url, title, text, basis = "fuente/programa privado") {
   return {
     basesUrl: url,
+    evidenceType: basis,
     sourceTextLabel: "Texto fuente privada usado",
     extractedText: text,
     documents: [{ title, description: `Pagina oficial del financiador: ${basis}.`, url }],
@@ -120,6 +121,18 @@ const PRIVATE_EVIDENCE = {
     "Programa EDYTA - Fundacion Orange",
     "Fundacion Orange describe EDYTA como programa nacional de educacion y transformacion digital para mujeres y asociaciones del tercer sector que trabajan con colectivos femeninos en riesgo de exclusion y baja empleabilidad. Requiere confirmar convocatoria de entidades o colaboracion vigente.",
     "programa privado abierto"
+  ),
+  "ford-espana-centimos-solidarios": privateEvidence(
+    "https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/",
+    "Centimos Solidarios - Ford Espana y Fundacion Novaterra",
+    "Novaterra publica que Ford Espana, a traves de Centimos Solidarios, apoyo su transformacion digital. Es evidencia de fuente privada relacional; no se han localizado bases publicas ni ventana abierta, por lo que requiere aportacion manual o contacto con Ford antes de convertirlo en oportunidad.",
+    "programa relacional privado"
+  ),
+  "ford-construyendo-juntos": privateEvidence(
+    "https://www.fromtheroad.ford.com/es/es/articles/2025/la-iniciativa-ford-construyendo-juntos-arranca-con-una-campana-h",
+    "Ford Construyendo Juntos - accion comunitaria",
+    "Ford presenta Construyendo Juntos como iniciativa filantropica para apoyar comunidades, colectivos desfavorecidos y organizaciones solidarias sin animo de lucro. La primera campana espanola se orienta a bancos de alimentos; requiere confirmar si existe via de solicitud o solo colaboracion programatica.",
+    "programa RSC privado"
   )
 };
 
@@ -141,7 +154,9 @@ const PRIVATE_FEATURES = {
   "fundacion-randstad-empleabilidad": ["Empleabilidad", "Colectivos vulnerables", "Insercion laboral"],
   "fundacion-repsol-social": ["Inclusion social", "Energia/sostenibilidad", "Ventana anual"],
   "fundacion-naturgy-vulnerabilidad": ["Vulnerabilidad energetica", "Accion social", "Por convenio"],
-  "fundacion-orange-digital": ["Inclusion digital", "Autonomia", "Proyecto social"]
+  "fundacion-orange-digital": ["Inclusion digital", "Autonomia", "Proyecto social"],
+  "ford-espana-centimos-solidarios": ["Relacion empresa", "Inclusion sociolaboral", "Aportacion manual"],
+  "ford-construyendo-juntos": ["RSC corporativa", "Comunidad", "Sin bases publicas"]
 };
 
 window.PRIVATE_OPEN_OPPORTUNITIES = [
@@ -162,7 +177,9 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-randstad-empleabilidad", "Empleabilidad e inclusion laboral de colectivos vulnerables", "Fundacion Randstad", "Fundacion corporativa", "Insercion laboral", "Estatal", "Plazo por confirmar", "Media", 74, "Por proyecto"],
   ["fundacion-repsol-social", "Proyectos sociales vinculados a energia e inclusion", "Fundacion Repsol", "Empresa / fundacion", "Inclusion y sostenibilidad", "Estatal", "Ventana anual por confirmar", "Baja", 67, "Por confirmar"],
   ["fundacion-naturgy-vulnerabilidad", "Programas contra vulnerabilidad energetica", "Fundacion Naturgy", "Empresa / fundacion", "Vulnerabilidad energetica", "Estatal", "Convocatoria por verificar", "Media", 68, "Por convenio"],
-  ["fundacion-orange-digital", "Inclusion digital y autonomia de colectivos vulnerables", "Fundacion Orange", "Empresa / fundacion", "Inclusion digital", "Estatal", "Plazo por confirmar", "Baja", 65, "Por proyecto"]
+  ["fundacion-orange-digital", "Inclusion digital y autonomia de colectivos vulnerables", "Fundacion Orange", "Empresa / fundacion", "Inclusion digital", "Estatal", "Plazo por confirmar", "Baja", 65, "Por proyecto"],
+  ["ford-espana-centimos-solidarios", "Apoyo relacional de Ford Espana a entidades sociales", "Ford Espana", "Empresa / RSC", "Inclusion sociolaboral", "Comunitat Valenciana", "Sin convocatoria publica", "Baja", 63, "Aportacion fija por programa"],
+  ["ford-construyendo-juntos", "Iniciativa comunitaria Ford Construyendo Juntos", "Ford Espana", "Empresa / RSC", "Accion comunitaria", "Estatal", "Campana por verificar", "Baja", 61, "Por campana"]
 ].map(([id, title, source, funderType, theme, territory, deadline, deadlineConfidence, score, amount]) => {
   const privateEvidence = PRIVATE_EVIDENCE[id] || {};
   return {
@@ -176,7 +193,9 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
     deadlineConfidence,
     sourceScope: "Privada abierta",
     funderType,
-    evidenceQuality: privateEvidence.basesUrl ? "Fuente privada abierta con bases localizadas" : "Fuente privada abierta pendiente de verificacion editorial",
+    evidenceQuality: privateEvidence.evidenceType?.includes("relacional") || privateEvidence.evidenceType?.includes("RSC")
+      ? "Fuente privada candidata sin bases publicas; requiere aportacion manual"
+      : privateEvidence.basesUrl ? "Fuente privada abierta con bases localizadas" : "Fuente privada abierta pendiente de verificacion editorial",
     score,
     amount,
     theme,

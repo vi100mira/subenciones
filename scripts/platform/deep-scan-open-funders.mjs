@@ -97,6 +97,17 @@ function classifyPage(url, html) {
   };
 }
 
+function manualFallbackFor(source, status, failures) {
+  if (status === "evidence_candidate") return null;
+  return {
+    reason: status === "fetch_blocked" ? "Automatic fetch was blocked; do not infer that bases are missing." : "Deep scan did not locate a usable bases/call page.",
+    accepted_inputs: ["official_url_or_pdf", "call_title", "deadline_text", "basis_summary", "provided_by", "reviewer_note"],
+    review_status: "manual_review_required",
+    source_hint: source.url,
+    failure_statuses: failures.map((item) => item.status).filter(Boolean)
+  };
+}
+
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
@@ -130,6 +141,7 @@ async function scanSource(source) {
   const best = [...pages].sort((a, b) => b.score - a.score)[0] || null;
   const homepageOnly = pages.length <= 1 && !best?.signals?.length;
   const blocked = pages.length === 0 && failures.length > 0;
+  const status = blocked ? "fetch_blocked" : best?.score >= 6 ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
   return {
     id: source.id,
     name: source.name,
@@ -137,8 +149,9 @@ async function scanSource(source) {
     pages_visited: pages.length,
     page_budget: pageBudget,
     depth_policy: "same-origin BFS, max depth 2, grant/bases/link keywords first",
-    status: blocked ? "fetch_blocked" : best?.score >= 6 ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review",
+    status,
     best_evidence: best,
+    manual_fallback: manualFallbackFor(source, status, failures),
     failures
   };
 }
