@@ -84,11 +84,28 @@
         <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
         <div><strong>Salida al tenant</strong><span>${source.output || source.action}</span></div>
         ${badge(status)}
+        <div class="row-actions"><button class="ghost-action" data-normalize-source="${source.name}" type="button">Normalizar</button></div>
       </div>`;
   }
 
   function stepRow(step) {
     return `<div><strong>${step.title}</strong><span>${step.detail}</span></div>`;
+  }
+
+  function privateSources() {
+    return sources.filter((source) => source.group.includes("Privado"));
+  }
+
+  function normalizationDetail(source = privateSources()[0]) {
+    return `
+      <div class="source-control-row">
+        <div><strong>Fuente seleccionada</strong><span>${source.name} - ${source.territory}</span></div>
+        <div><strong>1. Entrada oficial</strong><span>Confirmar que la pagina pertenece al financiador y no es una noticia secundaria.</span></div>
+        <div><strong>2. Bases claras</strong><span>${source.basis || "Localizar PDF, ficha o formulario con requisitos verificables."}</span></div>
+        <div><strong>3. Estado operativo</strong><span>${source.doubt}</span></div>
+        <div><strong>4. Decision humana</strong><span>${source.output || source.action}</span></div>
+      </div>
+      <div class="plain-note"><strong>Resultado de normalizar</strong><span>No se crea una oportunidad viva hasta tener fuente oficial, bases o URL de verificacion, plazo/estado y aprobacion humana de plataforma.</span></div>`;
   }
 
   function renderPanel() {
@@ -134,7 +151,8 @@
         </div>
         <article>
           <div class="panel-heading"><div><p class="eyebrow">Privadas abiertas</p><h2>Normalizacion de fuentes</h2></div><span class="badge review">No publica tenants automaticamente</span></div>
-          <div class="source-control-list">${sources.filter((source) => source.group.includes("Privado")).map(normalizationRow).join("")}</div>
+          <div class="source-control-list">${privateSources().map(normalizationRow).join("")}</div>
+          <div id="source-normalization-detail">${normalizationDetail()}</div>
         </article>
         <div class="two-column source-manager-columns">
           <article>
@@ -167,6 +185,7 @@
       const tab = event.target.closest('[data-platform-tab="sources"]');
       const analyze = event.target.closest("[data-analyze-source]");
       const manualEvidence = event.target.closest("[data-manual-evidence]");
+      const normalize = event.target.closest("[data-normalize-source]");
       const manage = event.target.closest("[data-source-manage]");
       const review = event.target.closest("[data-review-source]");
       if (tab) switchTab("sources");
@@ -175,6 +194,11 @@
       }
       if (manualEvidence) {
         document.querySelector("#source-analysis-note").innerHTML = "<strong>Aportacion registrada</strong><span>Queda como candidato manual: sirve para que una persona revise bases, plazo y legitimidad antes de crear oportunidad o alertar tenants.</span>";
+      }
+      if (normalize) {
+        const source = sources.find((item) => item.name === normalize.dataset.normalizeSource);
+        document.querySelector("#source-normalization-detail").innerHTML = normalizationDetail(source);
+        if (typeof showToast === "function") showToast(`Ficha de normalizacion abierta: ${normalize.dataset.normalizeSource}`);
       }
       if (manage && typeof showToast === "function") showToast(`Criterio abierto: ${manage.dataset.sourceManage}`);
       if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta en modo prototipo." : "Fuente pausada sin impacto en tenants.");
