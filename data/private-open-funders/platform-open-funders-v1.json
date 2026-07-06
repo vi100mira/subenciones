@@ -22,7 +22,13 @@
       },
       "basis_verification": {
         "clear_basis_requires": ["official page or PDF", "call title", "deadline or explicit closed status", "eligible applicant text", "application channel or form"],
+        "confidence_levels": {
+          "high": "Curated official basis URL or exact official document with source-specific token match.",
+          "medium": "Same-origin official page/PDF with enough call, deadline or source-token evidence for human review.",
+          "low": "Possible evidence, but likely index, neighboring call, news item, or insufficiently matched document."
+        },
         "human_verification_url_required_when": ["basis confidence is low", "AI cannot identify bases", "only homepage or news item was found"],
+        "curated_basis_priority": "When a human-reviewed source supplies basis_url and navigation_path, that final document overrides other same-domain PDFs discovered during crawling.",
         "discarded": "Not relevant, duplicate, insufficient evidence, blocked without manual support, or not a grant/funding line.",
         "archived": "Previously live or evidence-backed candidate that is closed, resolved, expired, or kept for historical traceability."
       },
@@ -133,13 +139,13 @@
       "funder_type": "foundation",
       "themes": ["discapacidad", "accesibilidad", "inclusion", "entidades sociales"],
       "territory": "Spain",
-      "opportunity_status": "open",
-      "deadline_text": "2026-01-26 to 2026-06-30 12:00 peninsular time",
+      "opportunity_status": "closed_monitor_next",
+      "deadline_text": "2026-01-26 to 2026-06-30 12:00 peninsular time; closed as of 2026-07-06",
       "deadline_confidence": "high",
       "evidence_quality": "official_direct",
-      "monitoring_cadence": "daily until close, then weekly for resolution or next call",
+      "monitoring_cadence": "weekly for resolution or next call",
       "watch_fields": ["deadline", "forms", "procedure", "submission mailbox", "documentation"],
-      "initial_action": "Mark as critical-deadline source; tenants with disability-related preferences should receive near-deadline alerts."
+      "initial_action": "Archive as closed for 2026; monitor for resolution or next edition before alerting tenants."
     },
     {
       "id": "fundacion-once-empleo-publico",
@@ -280,7 +286,7 @@
   "vuelta_1_metrics": {
     "sources_reviewed": 15,
     "accepted_for_catalogue": 15,
-    "active_or_open_by_line": 6,
+    "active_or_open_by_line": 5,
     "monitor_only": 8,
     "archived_with_evidence": 1,
     "needs_human_review_before_live": 3,

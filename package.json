@@ -16,6 +16,7 @@
     "platform:import-bdns-radar": "node scripts/platform/import-bdns-radar.mjs",
     "platform:import-open-funders": "node scripts/platform/import-open-funders.mjs",
     "platform:deep-scan-open-funders": "node scripts/platform/deep-scan-open-funders.mjs",
+    "platform:verify-source-evidence": "node scripts/platform/verify-source-evidence-contract.mjs",
     "platform:detect-open-funder-changes": "node scripts/platform/detect-open-funder-changes.mjs",
     "platform:generate-tenant-alerts": "node scripts/platform/generate-tenant-change-alerts.mjs",
     "platform:run-alert-e2e": "node scripts/platform/run-alert-e2e.mjs",

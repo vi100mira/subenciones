@@ -18,6 +18,7 @@ const linkTerms = [
 ];
 
 const closedTerms = ["cerrada", "cerrado", "finalizada", "finalizado", "resuelta", "resuelto", "fuera de plazo"];
+const weakTokens = new Set(["fundacion", "convocatoria", "convocatorias", "proyectos", "sociales", "ayudas", "bases", "programa", "programas", "espana"]);
 
 function normalizeUrl(value, base) {
   try {
@@ -73,6 +74,24 @@ function scoreUrl(url, label = "") {
   return linkTerms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0);
 }
 
+function plain(value = "") {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function sourceTokens(source) {
+  return [...new Set(plain([source.id, source.name, source.territory, source.url, ...(source.themes || [])].join(" "))
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 4 && !weakTokens.has(token)))];
+}
+
+function evidenceTokenMatches(source, page) {
+  const haystack = plain(`${page?.url || ""} ${page?.title || ""} ${page?.navigation_path?.map((item) => item.label).join(" ") || ""}`);
+  return sourceTokens(source).filter((token) => haystack.includes(token));
+}
+
 function linksFrom(html, base, origin) {
   const links = [];
   for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
@@ -120,10 +139,30 @@ function classifyPage(url, html) {
   };
 }
 
-function evidenceRank(page) {
+function evidenceRank(page, source) {
   const haystack = `${page.url} ${page.title}`.toLowerCase();
   const basisDocument = page.signals?.includes("pdf") || /bases|base|convocatoria/.test(haystack);
-  return page.score + (page.curated_basis ? 100 : 0) + (basisDocument ? 8 : 0) + (page.signals?.includes("pdf") ? 10 : 0);
+  const matches = source ? evidenceTokenMatches(source, page).length : 0;
+  return page.score + (page.curated_basis ? 100 : 0) + (basisDocument ? 8 : 0) + (page.signals?.includes("pdf") ? 10 : 0) + Math.min(matches, 4);
+}
+
+function basisConfidence(source, best, statusFacts) {
+  if (!best) return { level: "none", reason: "No usable official page or document reached." };
+  const matches = evidenceTokenMatches(source, best);
+  if (best.curated_basis) {
+    return {
+      level: "high",
+      reason: "Curated official bases URL wins over neighboring same-domain PDFs.",
+      matched_tokens: matches
+    };
+  }
+  if (best.signals?.includes("pdf") && matches.length >= 2) {
+    return { level: "medium", reason: "PDF candidate is same-origin and matches source-specific tokens.", matched_tokens: matches };
+  }
+  if (best.signals?.includes("bases_or_call") && (best.signals?.includes("deadline") || Object.keys(statusFacts).length)) {
+    return { level: "medium", reason: "Official page includes call/bases and date or status evidence.", matched_tokens: matches };
+  }
+  return { level: "low", reason: "Evidence exists but may be an index, neighboring call, or insufficiently matched page.", matched_tokens: matches };
 }
 
 function manualFallbackFor(source, status, failures) {
@@ -201,14 +240,16 @@ async function scanSource(source) {
     queue.sort((a, b) => b.score - a.score);
   }
 
-  const best = [...pages].sort((a, b) => evidenceRank(b) - evidenceRank(a))[0] || null;
+  const best = [...pages].sort((a, b) => evidenceRank(b, source) - evidenceRank(a, source))[0] || null;
   const extractedStatusFacts = pages.find((page) => page.status_facts && Object.keys(page.status_facts).length)?.status_facts || {};
   const statusFacts = { ...extractedStatusFacts, ...(source.status_facts || {}) };
+  const confidence = basisConfidence(source, best, statusFacts);
   const homepageOnly = pages.length <= 1 && !best?.signals?.length;
   const blocked = pages.length === 0 && failures.length > 0;
   const factsClosed = /cerrad|finalizad|resuelt|fuera de plazo/i.test(Object.values(statusFacts).join(" "));
   const closed = shouldArchiveClosed(source, best) || factsClosed;
-  const status = blocked ? "fetch_blocked" : best?.score >= 6 && closed ? "closed_archive_candidate" : best?.score >= 6 ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
+  const usableEvidence = best?.score >= 6 && confidence.level !== "low";
+  const status = blocked ? "fetch_blocked" : usableEvidence && closed ? "closed_archive_candidate" : usableEvidence ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
   return {
     id: source.id,
     name: source.name,
@@ -221,6 +262,7 @@ async function scanSource(source) {
     verification_url: best?.url || source.url,
     navigation_path: best?.navigation_path || [{ url: source.url, label: source.name }],
     best_evidence: best,
+    basis_confidence: confidence,
     status_facts: statusFacts,
     manual_fallback: manualFallbackFor(source, status, failures),
     failures

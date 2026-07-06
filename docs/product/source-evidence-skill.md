@@ -22,6 +22,15 @@ Guide grant-source analysis so every public or private-open opportunity is backe
 - Closed private-open calls with clear bases should be archived with evidence, not discarded and not shown as live opportunities.
 - If AI cannot verify that the page is bases, show the best verification URL to a human.
 
+## Confidence Gates
+
+- `High`: human-curated official `basis_url` with navigation path, or exact official document with strong source-token match.
+- `Medium`: same-origin page or PDF with call/bases language plus deadline/status evidence and enough source-specific match for human review.
+- `Low`: possible evidence, but likely an index, neighboring call, news item, or insufficiently matched document.
+- Low-confidence evidence must not create a live tenant alert. It should become `Revision humana` or manual fallback.
+- A curated `basis_url` always outranks neighboring same-domain PDFs discovered during crawling.
+- An active/open status with a past ISO deadline is invalid until the source is reclassified as archived or monitor-only.
+
 ## Manual Fallback
 
 Use manual intake when:
@@ -62,3 +71,7 @@ Every source analysis should return:
 - bases confidence;
 - manual fallback fields when required;
 - reason for discard or archive when applicable.
+
+## Verification
+
+Run `npm run platform:verify-source-evidence -- --today=YYYY-MM-DD` after changing the private-open catalogue or evidence rules. The verifier checks URL shape, curated bases, navigation paths, closed-status facts and active sources with past deadlines.
