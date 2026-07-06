@@ -10,6 +10,8 @@ Clarify that private-open funder variability is handled from Superadmin as sourc
 - `prototype/platform-source-manager.js`: adds a per-source Normalizar action that opens a guided normalization card with the source, official-entry check, basis evidence check, operational state, and required human decision.
 - `prototype/platform-source-manager.js`: makes the normalization action explicit as `Normalizar fuente` instead of the compact row action menu.
 - `prototype/platform-source-manager.js`: replaces the long normalization page with internal tabs (`Flujo`, `Fuentes`, `Ficha`, `Revision`), an icon-based flow, tooltip titles, and a persisted `Fuente normalizada` state.
+- `prototype/platform-source-manager.js`: changes `Revisar y normalizar` to open a human-review modal with required checks; the source is only marked `Fuente normalizada` after approving all checks.
+- `prototype/platform-source-manager.js`: adds the post-normalization change-monitor agent to the normalized source detail.
 - `prototype/index.html`: cache-busts the platform source manager script so the local browser loads the updated prototype.
 
 ## Verification
@@ -37,6 +39,13 @@ Clarify that private-open funder variability is handled from Superadmin as sourc
   - `Normalizar fuente` on Ford Espana persists it in localStorage and opens the `Ficha` pane.
   - The detail title reads `Fuente normalizada: Ford Espana`.
 - Screenshot saved at `docs/changelog/platform-source-normalization-flow-2026-07-06.png`.
+- Playwright local check against `http://127.0.0.1:4173/index.html?v=20260706-source-normalization-review#view-platform`:
+  - `Revisar y normalizar` opens a modal titled `Normalizar Fundacion ONCE`.
+  - The modal contains four required checks.
+  - If one check is unchecked, approval is blocked and localStorage remains empty.
+  - After approving all checks, the modal closes and the detail title reads `Fuente normalizada: Fundacion ONCE`.
+  - The normalized detail shows `Monitor de cambios privados` and the rule `saltara una alerta revisable`.
+- Screenshot saved at `docs/changelog/platform-source-normalization-review-2026-07-06.png`.
 - Screenshot saved at `docs/changelog/platform-source-normalization-ui-2026-07-06.png`.
 
 ## Residual risks

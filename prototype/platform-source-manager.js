@@ -32,6 +32,12 @@
   ];
   const normalizedKey = "source-normalization.done.v1";
   const normalizationState = { tab: "flow", activeName: "Fundacion ONCE", done: readDone() };
+  const reviewChecks = [
+    ["Fuente oficial", "La URL pertenece al financiador o a su plataforma oficial."],
+    ["Bases localizadas", "Hay bases, ficha o URL de verificacion humana suficiente."],
+    ["Estado y plazo", "La fuente queda clasificada como viva, cerrada, vigilancia o revision."],
+    ["Seguimiento", "El agente de cambios queda activado antes de impactar tenants."]
+  ];
 
   function tone(state) {
     return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" || state === "Patron aprendido" || state === "Fuente normalizada" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" || state === "Requiere humano" ? "warning" : "review";
@@ -90,6 +96,10 @@
     return source.normalization || "Sin analizar";
   }
 
+  function escapeAttr(value) {
+    return String(value || "").replace(/"/g, "&quot;");
+  }
+
   function normalizationRow(source) {
     const status = displayStatus(source);
     const selected = source.name === normalizationState.activeName ? " is-selected" : "";
@@ -100,7 +110,7 @@
         <div><strong>Estado</strong><span>${status}</span></div>
         <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
         ${badge(status)}
-        <div><button class="${done ? "ghost-action" : "primary-action"}" data-normalize-source="${source.name}" type="button">${done ? "Ver ficha" : "Normalizar fuente"}</button></div>
+        <div><button class="${done ? "ghost-action" : "primary-action"}" data-normalize-source="${escapeAttr(source.name)}" type="button">${done ? "Ver ficha" : "Revisar y normalizar"}</button></div>
       </div>`;
   }
 
@@ -123,7 +133,63 @@
         <div><strong>3. Estado operativo</strong><span>${source.doubt}</span></div>
         <div><strong>4. Decision humana</strong><span>${source.output || source.action}</span></div>
       </div>
-      <div class="plain-note"><strong>Resultado de normalizar</strong><span>No se crea una oportunidad viva hasta tener fuente oficial, bases o URL de verificacion, plazo/estado y aprobacion humana de plataforma.</span></div>`;
+      <div class="source-control-row">
+        <div><strong>Agente posterior</strong><span>Monitor de cambios privados</span></div>
+        <div><strong>Que vigila</strong><span>Bases, plazo, estado, formulario, FAQ y resoluciones.</span></div>
+        <div><strong>Cuando alerta</strong><span>Si detecta cambio relevante o duda nueva, saltara una alerta revisable.</span></div>
+        <div><strong>Impacto tenant</strong><span>Alerta revisable; nunca envio automatico.</span></div>
+      </div>
+      <div class="plain-note"><strong>Resultado de normalizar</strong><span>No se crea una oportunidad viva hasta tener fuente oficial, bases o URL de verificacion, plazo/estado y aprobacion humana de plataforma. Una vez aprobada, otro agente vigila cambios como en fuentes publicas.</span></div>`;
+  }
+
+  function reviewModal(source) {
+    return `
+      <div class="modal-backdrop" data-close-normalization-review>
+        <article class="modal" role="dialog" aria-modal="true" aria-labelledby="normalization-review-title">
+          <div class="panel-heading">
+            <div><p class="eyebrow">Revision humana</p><h2 id="normalization-review-title">Normalizar ${source.name}</h2></div>
+            <button class="icon-button" data-close-normalization-review type="button">X</button>
+          </div>
+          <div class="source-control-row">
+            <div><strong>Fuente</strong><span>${source.group} - ${source.territory}</span></div>
+            <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
+            <div><strong>Estado operativo</strong><span>${source.doubt}</span></div>
+            <div><strong>Salida esperada</strong><span>${source.output || source.action}</span></div>
+          </div>
+          <div class="stack-list">
+            ${reviewChecks.map(([title, detail]) => `
+              <label class="normalization-review-check">
+                <span><input data-normalization-check type="checkbox" checked /> ${title}</span>
+                <span>${detail}</span>
+              </label>`).join("")}
+          </div>
+          <div class="plain-note"><strong>Despues de aprobar</strong><span>La fuente queda normalizada y pasa a vigilancia de cambios. Si cambian bases, plazo, estado o canal de solicitud, saltara una alerta revisable antes de impactar tenants.</span></div>
+          <div class="button-row">
+            <button class="primary-action" data-approve-normalization="${escapeAttr(source.name)}" type="button">Aprobar normalizacion</button>
+            <button class="ghost-action" data-close-normalization-review type="button">Cancelar</button>
+          </div>
+        </article>
+      </div>`;
+  }
+
+  function openReviewModal(source) {
+    document.querySelector("[data-close-normalization-review]")?.remove();
+    document.body.insertAdjacentHTML("beforeend", reviewModal(source));
+  }
+
+  function closeReviewModal() {
+    document.querySelector("[data-close-normalization-review]")?.remove();
+  }
+
+  function approveSource(sourceName) {
+    const source = sources.find((item) => item.name === sourceName);
+    normalizationState.activeName = source.name;
+    normalizationState.done.add(source.name);
+    normalizationState.tab = "detail";
+    saveDone();
+    closeReviewModal();
+    renderNormalizationShell();
+    if (typeof showToast === "function") showToast(`Fuente normalizada: ${source.name}`);
   }
 
   function stepRow(step) {
@@ -146,7 +212,7 @@
       </div>
       <section data-normalization-pane="flow" ${normalizationState.tab === "flow" ? "" : "hidden"}>
         <div class="normalization-flow">${normalizationSteps.map(stepRow).join("")}</div>
-        <div class="plain-note"><strong>Como se usa</strong><span>Elige una fuente, pulsa Normalizar fuente y comprueba que cambia a Fuente normalizada. El radar del tenant solo consume fuentes aprobadas y oportunidades concretas con evidencia.</span><button class="primary-action" data-normalization-tab="sources" type="button">Elegir fuente</button></div>
+        <div class="plain-note"><strong>Como se usa</strong><span>Elige una fuente, abre la revision, confirma los puntos y aprueba. Solo entonces cambia a Fuente normalizada y queda bajo vigilancia de cambios.</span><button class="primary-action" data-normalization-tab="sources" type="button">Elegir fuente</button></div>
       </section>
       <section data-normalization-pane="sources" ${normalizationState.tab === "sources" ? "" : "hidden"}>
         <div class="source-control-list">${privateSources().map(normalizationRow).join("")}</div>
@@ -183,8 +249,11 @@
       .normalization-step span { margin-top:6px; color:var(--muted); line-height:1.4; }
       .normalization-step .info-dot { position:absolute; top:10px; right:10px; }
       .source-control-row.is-selected { border-color:var(--teal); box-shadow:0 0 0 2px rgba(0,116,105,.12); }
+      .normalization-review-check { display:grid; grid-template-columns:220px 1fr; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+      .normalization-review-check span:first-child { color:var(--ink); font-weight:800; }
+      .normalization-review-check span:last-child { color:var(--muted); line-height:1.4; }
       @media (max-width: 1180px) { .normalization-flow { grid-template-columns:repeat(2,minmax(0,1fr)); } .normalization-hero { flex-direction:column; } }
-      @media (max-width: 560px) { .normalization-flow { grid-template-columns:1fr; } }
+      @media (max-width: 560px) { .normalization-flow, .normalization-review-check { grid-template-columns:1fr; } }
     </style>`);
   }
 
@@ -212,6 +281,8 @@
       const analyze = event.target.closest("[data-analyze-source]");
       const manualEvidence = event.target.closest("[data-manual-evidence]");
       const normalize = event.target.closest("[data-normalize-source]");
+      const approve = event.target.closest("[data-approve-normalization]");
+      const closeReview = event.target.closest("[data-close-normalization-review]");
       const manage = event.target.closest("[data-source-manage]");
       const review = event.target.closest("[data-review-source]");
       if (tab) switchTab("sources");
@@ -224,12 +295,25 @@
       }
       if (normalize) {
         const source = sources.find((item) => item.name === normalize.dataset.normalizeSource);
-        normalizationState.activeName = source.name;
-        normalizationState.done.add(source.name);
-        normalizationState.tab = "detail";
-        saveDone();
-        renderNormalizationShell();
-        if (typeof showToast === "function") showToast(`Fuente normalizada: ${normalize.dataset.normalizeSource}`);
+        if (displayStatus(source) === "Fuente normalizada") {
+          normalizationState.activeName = source.name;
+          normalizationState.tab = "detail";
+          renderNormalizationShell();
+        } else {
+          openReviewModal(source);
+        }
+      }
+      if (approve) {
+        const unchecked = [...document.querySelectorAll("[data-normalization-check]")].some((check) => !check.checked);
+        if (unchecked) {
+          if (typeof showToast === "function") showToast("Falta confirmar todos los puntos de revision.");
+          return;
+        }
+        approveSource(approve.dataset.approveNormalization);
+      }
+      if (closeReview) {
+        if (closeReview.classList.contains("modal-backdrop") && event.target !== closeReview) return;
+        closeReviewModal();
       }
       if (manage && typeof showToast === "function") showToast(`Criterio abierto: ${manage.dataset.sourceManage}`);
       if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta en modo prototipo." : "Fuente pausada sin impacto en tenants.");
