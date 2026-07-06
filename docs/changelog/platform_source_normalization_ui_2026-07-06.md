@@ -9,6 +9,7 @@ Clarify that private-open funder variability is handled from Superadmin as sourc
 - `prototype/platform-source-manager.js`: adds a Normalizacion platform tab with method steps, private-source normalization states, basis evidence status, and tenant output rules.
 - `prototype/platform-source-manager.js`: adds a per-source Normalizar action that opens a guided normalization card with the source, official-entry check, basis evidence check, operational state, and required human decision.
 - `prototype/platform-source-manager.js`: makes the normalization action explicit as `Normalizar fuente` instead of the compact row action menu.
+- `prototype/platform-source-manager.js`: replaces the long normalization page with internal tabs (`Flujo`, `Fuentes`, `Ficha`, `Revision`), an icon-based flow, tooltip titles, and a persisted `Fuente normalizada` state.
 - `prototype/index.html`: cache-busts the platform source manager script so the local browser loads the updated prototype.
 
 ## Verification
@@ -30,6 +31,12 @@ Clarify that private-open funder variability is handled from Superadmin as sourc
   - No normalization action is rendered as `...`.
   - Ford Espana opens `Ficha de normalizacion abierta: Ford Espana`.
 - Screenshot saved at `docs/changelog/platform-source-normalization-action-2026-07-06.png`.
+- Playwright local check against `http://127.0.0.1:4173/index.html?v=20260706-source-normalization-flow#view-platform`:
+  - Initial view opens on the visual `Flujo` pane with four icon steps and no source rows visible.
+  - `Elegir fuente` opens the sources pane.
+  - `Normalizar fuente` on Ford Espana persists it in localStorage and opens the `Ficha` pane.
+  - The detail title reads `Fuente normalizada: Ford Espana`.
+- Screenshot saved at `docs/changelog/platform-source-normalization-flow-2026-07-06.png`.
 - Screenshot saved at `docs/changelog/platform-source-normalization-ui-2026-07-06.png`.
 
 ## Residual risks

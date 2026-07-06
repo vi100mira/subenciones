@@ -25,14 +25,16 @@
   ];
 
   const normalizationSteps = [
-    { title: "1. Identificar fuente", detail: "Confirmar web oficial, tipo de financiador, territorio y si es indice o convocatoria concreta." },
-    { title: "2. Encontrar bases", detail: "Seguir navegacion interna hasta ficha, documentos, PDF, FAQ, solicitud o formulario verificable." },
-    { title: "3. Decidir estado", detail: "Viva, cerrada, archivada, descartada o revision humana; nunca viva sin bases claras." },
-    { title: "4. Publicar al radar", detail: "Solo tras evidencia, ruta de navegacion y aprobacion humana de plataforma." }
+    { icon: "search-check", title: "1. Fuente oficial", detail: "Confirmar web oficial, financiador, territorio y si es indice o convocatoria concreta.", tip: "Si la URL no pertenece al financiador, no se normaliza." },
+    { icon: "file-search", title: "2. Bases claras", detail: "Seguir ficha, documentos, PDF, FAQ, solicitud o formulario verificable.", tip: "Sin bases o URL verificable no hay oportunidad viva." },
+    { icon: "traffic-cone", title: "3. Estado", detail: "Clasificar viva, cerrada, archivada, descartada o revision humana.", tip: "Cerrada se archiva; dudosa queda en revision." },
+    { icon: "shield-check", title: "4. Aprobacion", detail: "Activar radar solo con evidencia, ruta y decision humana.", tip: "El tenant no recibe nada automaticamente." }
   ];
+  const normalizedKey = "source-normalization.done.v1";
+  const normalizationState = { tab: "flow", activeName: "Fundacion ONCE", done: readDone() };
 
   function tone(state) {
-    return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" || state === "Patron aprendido" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" || state === "Requiere humano" ? "warning" : "review";
+    return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" || state === "Patron aprendido" || state === "Fuente normalizada" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" || state === "Requiere humano" ? "warning" : "review";
   }
 
   function badge(text) {
@@ -75,21 +77,31 @@
       </div>`;
   }
 
-  function normalizationRow(source) {
-    const status = source.normalization || "Sin analizar";
-    return `
-      <div class="source-control-row">
-        <div><strong>${source.name}</strong><span>${source.group} - ${source.territory}</span></div>
-        <div><strong>Normalizacion</strong><span>${status}</span></div>
-        <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
-        <div><strong>Salida al tenant</strong><span>${source.output || source.action}</span></div>
-        ${badge(status)}
-        <div><strong>Accion</strong><span><button class="primary-action" data-normalize-source="${source.name}" type="button">Normalizar fuente</button></span></div>
-      </div>`;
+  function readDone() {
+    try { return new Set(JSON.parse(localStorage.getItem(normalizedKey) || "[]")); } catch { return new Set(); }
   }
 
-  function stepRow(step) {
-    return `<div><strong>${step.title}</strong><span>${step.detail}</span></div>`;
+  function saveDone() {
+    localStorage.setItem(normalizedKey, JSON.stringify([...normalizationState.done]));
+  }
+
+  function displayStatus(source) {
+    if (normalizationState.done.has(source.name) || source.normalization === "Patron aprendido") return "Fuente normalizada";
+    return source.normalization || "Sin analizar";
+  }
+
+  function normalizationRow(source) {
+    const status = displayStatus(source);
+    const selected = source.name === normalizationState.activeName ? " is-selected" : "";
+    const done = status === "Fuente normalizada";
+    return `
+      <div class="source-control-row${selected}" data-normalization-row="${source.name}">
+        <div><strong>${source.name}</strong><span>${source.group} - ${source.territory}</span></div>
+        <div><strong>Estado</strong><span>${status}</span></div>
+        <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
+        ${badge(status)}
+        <div><button class="${done ? "ghost-action" : "primary-action"}" data-normalize-source="${source.name}" type="button">${done ? "Ver ficha" : "Normalizar fuente"}</button></div>
+      </div>`;
   }
 
   function privateSources() {
@@ -97,10 +109,12 @@
   }
 
   function normalizationDetail(source = privateSources()[0]) {
+    const status = displayStatus(source);
+    const done = status === "Fuente normalizada";
     return `
       <div class="plain-note">
-        <strong>Ficha de normalizacion abierta: ${source.name}</strong>
-        <span>Revisa estos cuatro puntos. Si falta uno, la fuente no debe salir como oportunidad viva para ningun tenant.</span>
+        <strong>${done ? "Fuente normalizada" : "Ficha de normalizacion abierta"}: ${source.name}</strong>
+        <span>${done ? "La fuente queda lista como patron controlado de plataforma. Cualquier oportunidad concreta seguira necesitando evidencia y revision humana." : "Revisa estos cuatro puntos. Si falta uno, la fuente no debe salir como oportunidad viva para ningun tenant."}</span>
       </div>
       <div class="source-control-row">
         <div><strong>Fuente</strong><span>${source.territory}</span></div>
@@ -112,66 +126,72 @@
       <div class="plain-note"><strong>Resultado de normalizar</strong><span>No se crea una oportunidad viva hasta tener fuente oficial, bases o URL de verificacion, plazo/estado y aprobacion humana de plataforma.</span></div>`;
   }
 
+  function stepRow(step) {
+    return `<div class="normalization-step" title="${step.tip}"><i data-lucide="${step.icon}"></i><strong>${step.title}</strong><span>${step.detail}</span><button class="info-dot" title="${step.tip}" type="button">i</button></div>`;
+  }
+
+  function normalizationShell() {
+    const activeSource = privateSources().find((source) => source.name === normalizationState.activeName) || privateSources()[0];
+    const doneCount = privateSources().filter((source) => displayStatus(source) === "Fuente normalizada").length;
+    return `
+      <div class="normalization-hero">
+        <div><p class="eyebrow">Privadas abiertas</p><h2>Normalizacion de fuentes</h2><span>Resuelve una fuente antes de que pueda alimentar oportunidades de tenants.</span></div>
+        <div class="source-state-line">${badge(`${doneCount} normalizadas`)}${badge("Revision humana obligatoria")}</div>
+      </div>
+      <div class="segmented normalization-tabs" aria-label="Pasos de normalizacion">
+        <button class="${normalizationState.tab === "flow" ? "is-selected" : ""}" data-normalization-tab="flow" type="button"><i data-lucide="workflow"></i> Flujo</button>
+        <button class="${normalizationState.tab === "sources" ? "is-selected" : ""}" data-normalization-tab="sources" type="button"><i data-lucide="library"></i> Fuentes</button>
+        <button class="${normalizationState.tab === "detail" ? "is-selected" : ""}" data-normalization-tab="detail" type="button"><i data-lucide="clipboard-check"></i> Ficha</button>
+        <button class="${normalizationState.tab === "review" ? "is-selected" : ""}" data-normalization-tab="review" type="button"><i data-lucide="user-check"></i> Revision</button>
+      </div>
+      <section data-normalization-pane="flow" ${normalizationState.tab === "flow" ? "" : "hidden"}>
+        <div class="normalization-flow">${normalizationSteps.map(stepRow).join("")}</div>
+        <div class="plain-note"><strong>Como se usa</strong><span>Elige una fuente, pulsa Normalizar fuente y comprueba que cambia a Fuente normalizada. El radar del tenant solo consume fuentes aprobadas y oportunidades concretas con evidencia.</span><button class="primary-action" data-normalization-tab="sources" type="button">Elegir fuente</button></div>
+      </section>
+      <section data-normalization-pane="sources" ${normalizationState.tab === "sources" ? "" : "hidden"}>
+        <div class="source-control-list">${privateSources().map(normalizationRow).join("")}</div>
+      </section>
+      <section data-normalization-pane="detail" ${normalizationState.tab === "detail" ? "" : "hidden"} id="source-normalization-detail">${normalizationDetail(activeSource)}</section>
+      <section data-normalization-pane="review" ${normalizationState.tab === "review" ? "" : "hidden"}>
+        <div class="stack-list">${reviews.map(reviewRow).join("")}</div>
+      </section>`;
+  }
+
+  function renderNormalizationShell() {
+    const shell = document.querySelector("#source-normalization-shell");
+    if (!shell) return;
+    shell.innerHTML = normalizationShell();
+    window.lucide?.createIcons();
+  }
+
+  function switchNormalizationTab(tabName) {
+    normalizationState.tab = tabName;
+    renderNormalizationShell();
+  }
+
+  function installNormalizationStyles() {
+    if (document.querySelector("#source-normalization-styles")) return;
+    document.head.insertAdjacentHTML("beforeend", `<style id="source-normalization-styles">
+      .normalization-hero { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:12px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#f8fbfa; }
+      .normalization-hero h2 { margin:2px 0 4px; }
+      .normalization-tabs { margin-bottom:12px; }
+      .normalization-tabs button { display:inline-flex; gap:6px; align-items:center; }
+      .normalization-flow { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+      .normalization-step { position:relative; min-height:118px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+      .normalization-step svg { width:24px; height:24px; color:var(--teal-dark); margin-bottom:10px; }
+      .normalization-step strong, .normalization-step span { display:block; }
+      .normalization-step span { margin-top:6px; color:var(--muted); line-height:1.4; }
+      .normalization-step .info-dot { position:absolute; top:10px; right:10px; }
+      .source-control-row.is-selected { border-color:var(--teal); box-shadow:0 0 0 2px rgba(0,116,105,.12); }
+      @media (max-width: 1180px) { .normalization-flow { grid-template-columns:repeat(2,minmax(0,1fr)); } .normalization-hero { flex-direction:column; } }
+      @media (max-width: 560px) { .normalization-flow { grid-template-columns:1fr; } }
+    </style>`);
+  }
+
   function renderPanel() {
     return `
       <article class="panel platform-source-panel" data-platform-pane="sources" hidden>
-        <div class="panel-heading">
-          <div><p class="eyebrow">Mapa de cobertura</p><h2>Fuentes y expansion</h2></div>
-          <span class="badge safe">Rol plataforma</span>
-        </div>
-        <div class="source-coverage-grid">
-          <div><strong>Publico estatal</strong><span>BDNS como columna vertebral nacional.</span></div>
-          <div><strong>Territorial</strong><span>GVA, DOGV, BOP, LABORA y ampliables.</span></div>
-          <div><strong>Privado abierto</strong><span>Fundaciones, bancos, obra social, RSC.</span></div>
-          <div><strong>Normalizacion</strong><span>Patrones aprendidos antes de activar impacto en tenants.</span></div>
-        </div>
-        <div class="source-control-row">
-          ${normalizationSteps.map(stepRow).join("")}
-        </div>
-        <div class="plain-note source-guidance"><strong>Como leer los estados</strong><span>Fuente oficial valida la entidad emisora. En privadas abiertas, el agente debe profundizar en enlaces internos de convocatorias, bases, PDF, FAQ y solicitud; si solo llega a portada, queda en revision.</span></div>
-        <div class="plain-note source-guidance"><strong>Descartada vs archivada</strong><span>Descartada: no encaja, es duplicada o no tiene evidencia suficiente. Archivada: fue candidata o convocatoria real, pero esta cerrada, resuelta o caducada y se conserva como historico.</span></div>
-        <details class="source-optional-intake">
-          <summary class="opportunity-topline"><strong>Agregar fuente manual</strong><span>Opcional: el sistema tambien investiga y propone fuentes.</span></summary>
-          <div class="inline-form source-intake">
-            <label><span>Nombre fuente</span><input data-new-source="name" value="Nueva fuente territorial" /></label>
-            <label><span>Tipo</span><select data-new-source="type"><option>Territorial</option><option>Fundacion</option><option>Banco / obra social</option><option>Empresa / RSC</option><option>Federacion</option></select></label>
-            <label><span>URL oficial</span><input data-new-source="url" value="https://www.gva.es" /></label>
-            <label><span>Territorio</span><input data-new-source="territory" value="Comunitat Valenciana" /></label>
-            <button class="primary-action" data-analyze-source type="button">Analizar fuente</button>
-          </div>
-        </details>
-        <details class="source-optional-intake">
-          <summary class="opportunity-topline"><strong>Aportacion manual de bases</strong><span>Subsidiaria si el escaneo no encuentra bases o la web bloquea lectura.</span></summary>
-          <div class="inline-form source-intake">
-            <label><span>Fuente</span><input data-manual-source="name" value="Ford Espana - Centimos Solidarios" /></label>
-            <label><span>URL o PDF</span><input data-manual-source="url" value="https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/" /></label>
-            <label><span>Resumen de bases</span><input data-manual-source="summary" value="Aportacion relacional; faltan bases publicas y plazo." /></label>
-            <label><span>Responsable</span><input data-manual-source="owner" value="Revision plataforma" /></label>
-            <button class="primary-action" data-manual-evidence type="button">Registrar para revision</button>
-          </div>
-        </details>
-        <div class="plain-note" id="source-analysis-note">
-          <strong>Alta guiada opcional</strong><span>Si anades una URL, el agente valida si es oficial, que duda existe, que cadencia propone y si puede reutilizarse por plataforma.</span>
-        </div>
-        <article>
-          <div class="panel-heading"><div><p class="eyebrow">Privadas abiertas</p><h2>Normalizacion de fuentes</h2></div><span class="badge review">No publica tenants automaticamente</span></div>
-          <div class="source-control-list">${privateSources().map(normalizationRow).join("")}</div>
-          <div id="source-normalization-detail">${normalizationDetail()}</div>
-        </article>
-        <div class="two-column source-manager-columns">
-          <article>
-            <div class="panel-heading"><div><p class="eyebrow">Biblioteca</p><h2>Fuentes monitorizadas</h2></div></div>
-            <div class="source-library-grid">${sources.map(sourceRow).join("")}</div>
-          </article>
-          <article>
-            <div class="panel-heading"><div><p class="eyebrow">Campanas</p><h2>Ampliacion controlada</h2></div></div>
-            <div class="stack-list">${campaigns.map(campaignRow).join("")}</div>
-          </article>
-        </div>
-        <article>
-          <div class="panel-heading"><div><p class="eyebrow">Revision humana</p><h2>Cola de fuentes y cambios</h2></div></div>
-          <div class="stack-list">${reviews.map(reviewRow).join("")}</div>
-        </article>
+        <div id="source-normalization-shell">${normalizationShell()}</div>
       </article>`;
   }
 
@@ -183,16 +203,19 @@
   function install() {
     const tabs = document.querySelector("#platform .segmented");
     if (!tabs || document.querySelector('[data-platform-tab="sources"]')) return;
+    installNormalizationStyles();
     tabs.insertAdjacentHTML("beforeend", '<button data-platform-tab="sources">Normalizacion</button>');
     document.querySelector("#platform").insertAdjacentHTML("beforeend", renderPanel());
     document.addEventListener("click", (event) => {
       const tab = event.target.closest('[data-platform-tab="sources"]');
+      const normalizationTab = event.target.closest("[data-normalization-tab]");
       const analyze = event.target.closest("[data-analyze-source]");
       const manualEvidence = event.target.closest("[data-manual-evidence]");
       const normalize = event.target.closest("[data-normalize-source]");
       const manage = event.target.closest("[data-source-manage]");
       const review = event.target.closest("[data-review-source]");
       if (tab) switchTab("sources");
+      if (normalizationTab) switchNormalizationTab(normalizationTab.dataset.normalizationTab);
       if (analyze) {
         document.querySelector("#source-analysis-note").innerHTML = "<strong>Analisis propuesto</strong><span>Fuente oficial probable. El escaneo profundo seguira enlaces internos hasta profundidad 2 y priorizara convocatorias, bases, PDF, FAQ, solicitud y formulario. Si solo encuentra portada, queda en revision humana.</span>";
       }
@@ -201,8 +224,12 @@
       }
       if (normalize) {
         const source = sources.find((item) => item.name === normalize.dataset.normalizeSource);
-        document.querySelector("#source-normalization-detail").innerHTML = normalizationDetail(source);
-        if (typeof showToast === "function") showToast(`Ficha de normalizacion abierta: ${normalize.dataset.normalizeSource}`);
+        normalizationState.activeName = source.name;
+        normalizationState.done.add(source.name);
+        normalizationState.tab = "detail";
+        saveDone();
+        renderNormalizationShell();
+        if (typeof showToast === "function") showToast(`Fuente normalizada: ${normalize.dataset.normalizeSource}`);
       }
       if (manage && typeof showToast === "function") showToast(`Criterio abierto: ${manage.dataset.sourceManage}`);
       if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta en modo prototipo." : "Fuente pausada sin impacto en tenants.");
