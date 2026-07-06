@@ -66,18 +66,34 @@
     return [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
   }
 
+  function privateArchivedRows() {
+    return privateOpenRows()
+      .filter((item) => item.deadlineStatus === "closed")
+      .map((item) => ({
+        ...item,
+        entityFit: {
+          status: "archived",
+          reason: "Archivada por plazo cerrado; conserva ficha y bases para trazabilidad."
+        }
+      }));
+  }
+
+  function privateActiveRows() {
+    return privateOpenRows().filter((item) => item.deadlineStatus !== "closed");
+  }
+
   function publicRows() {
     return document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
   }
 
   function radarOpportunities() {
     const rows = publicRows();
-    return rows.length ? [...rows, ...privateOpenRows()] : window.MOCK.opportunities;
+    return rows.length ? [...rows, ...privateActiveRows()] : window.MOCK.opportunities;
   }
 
   function scopeRows() {
     if (gridState.scope === "discarded") return window.RADAR_ENTITY_DISCARDED || [];
-    if (gridState.scope === "archived") return window.RADAR_DEADLINE_ARCHIVED || [];
+    if (gridState.scope === "archived") return [...(window.RADAR_DEADLINE_ARCHIVED || []), ...privateArchivedRows()];
     return radarOpportunities();
   }
 
@@ -94,7 +110,7 @@
     return {
       active: radarOpportunities().length,
       discarded: Number(fit.entityDiscardedCount || 0),
-      archived: Number(fit.entityArchivedClosedCount || 0)
+      archived: Number(fit.entityArchivedClosedCount || 0) + privateArchivedRows().length
     };
   }
 

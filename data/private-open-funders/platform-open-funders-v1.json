@@ -46,6 +46,42 @@
       "initial_action": "Monitor territory map and create one canonical opportunity per territory when dates and bases are explicit."
     },
     {
+      "id": "fundacion-la-caixa-comunitat-valenciana-2026",
+      "name": "Fundacion la Caixa - Convocatoria Social Comunitat Valenciana 2026",
+      "url": "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
+      "basis_url": "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf",
+      "funder_type": "foundation",
+      "themes": ["accion social", "vulnerabilidad", "territorial", "comunitat valenciana"],
+      "territory": "Comunitat Valenciana",
+      "opportunity_status": "closed",
+      "deadline_text": "Apertura: 2026-02-24 12:00; cierre: 2026-03-26 17:00; resolucion prevista: octubre 2026",
+      "deadline_confidence": "high",
+      "status_facts": {
+        "status": "Cerrada",
+        "opening": "24 de febrero de 2026, a las 12 h",
+        "closing": "26 de marzo de 2026, a las 17 h",
+        "expected_resolution": "octubre de 2026"
+      },
+      "navigation_path": [
+        {
+          "url": "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
+          "label": "Ficha territorial con estado y fechas clave"
+        },
+        {
+          "url": "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
+          "label": "Documentacion de interes > Bases de la convocatoria"
+        },
+        {
+          "url": "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf",
+          "label": "Descargar PDF de bases"
+        }
+      ],
+      "evidence_quality": "official_direct",
+      "monitoring_cadence": "weekly until resolution, monthly until next edition",
+      "watch_fields": ["estado", "apertura", "cierre", "bases PDF", "guia", "manual", "resolucion"],
+      "initial_action": "Archive as closed with bases evidence; monitor for resolution and next territorial edition."
+    },
+    {
       "id": "fundacion-mutua-ayudas-accion-social",
       "name": "Fundacion Mutua Madrilena - Ayudas a Proyectos de Accion Social",
       "url": "https://www.fundacionmutua.es/accion-social/ayudas-proyectos-sociales/",
@@ -242,10 +278,11 @@
     }
   ],
   "vuelta_1_metrics": {
-    "sources_reviewed": 14,
-    "accepted_for_catalogue": 14,
+    "sources_reviewed": 15,
+    "accepted_for_catalogue": 15,
     "active_or_open_by_line": 6,
-    "monitor_only": 7,
+    "monitor_only": 8,
+    "archived_with_evidence": 1,
     "needs_human_review_before_live": 3,
     "manual_intake_candidates": 2,
     "tenant_private_sources_used": 0,

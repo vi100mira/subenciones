@@ -18,6 +18,8 @@ Guide grant-source analysis so every public or private-open opportunity is backe
 - Prioritize links containing: convocatoria, ayudas, bases, PDF, solicitud, formulario, FAQ, proyectos sociales.
 - Clear bases require: official page or PDF, call title, deadline or closed status, eligible applicant text, and application channel or form.
 - Return the navigation path to the bases: start page, intermediate page, final page or PDF.
+- When a funder publishes a territorial call page plus separate documentation cards, keep both: the status page where dates were found and the final bases PDF where conditions are defined.
+- Closed private-open calls with clear bases should be archived with evidence, not discarded and not shown as live opportunities.
 - If AI cannot verify that the page is bases, show the best verification URL to a human.
 
 ## Manual Fallback
@@ -56,6 +58,7 @@ Every source analysis should return:
 - verification URL;
 - navigation path;
 - best evidence;
+- status facts such as official state, opening date, closing date and expected resolution when present;
 - bases confidence;
 - manual fallback fields when required;
 - reason for discard or archive when applicable.

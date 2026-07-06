@@ -56,12 +56,30 @@ const PRIVATE_EVIDENCE = {
     "BBVA Asset Management publica la Convocatoria Solidaria BBVA Futuro 2026 y sus proyectos seleccionados, con zonas territoriales y ayudas para proyectos sociales, ambientales y de empleo de colectivos vulnerables. Requiere confirmar futuras ediciones y bases aplicables.",
     "convocatoria privada"
   ),
-  "caixabank-accion-social": privateEvidence(
-    "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
-    "Convocatoria Social Comunitat Valenciana - Fundacion la Caixa",
-    "La Convocatoria Social Comunitat Valenciana colabora con entidades sociales que desarrollan proyectos en la Comunitat Valenciana para personas en situacion de vulnerabilidad, con fechas de apertura/cierre por edicion. Requiere confirmar si la oportunidad debe atribuirse a Fundacion la Caixa o a accion territorial CaixaBank.",
-    "convocatoria privada territorial"
-  ),
+  "caixabank-accion-social": {
+    basesUrl: "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf",
+    officialUrl: "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana",
+    evidenceType: "convocatoria privada territorial con bases PDF",
+    sourceTextLabel: "Ficha y bases oficiales usadas",
+    extractedText: "Fundacion la Caixa publica la Convocatoria de Proyectos Sociales Comunitat Valenciana 2026. La ficha oficial marca Estado: cerrada; apertura: 24 de febrero de 2026 a las 12 h; cierre: 26 de marzo de 2026 a las 17 h; fecha prevista de resolucion: octubre de 2026. La documentacion de interes contiene Bases de la convocatoria con PDF oficial.",
+    documents: [
+      {
+        title: "Ficha oficial - Convocatoria Social Comunitat Valenciana 2026",
+        description: "Pagina territorial donde se localizaron estado, fechas clave y documentacion.",
+        url: "https://fundacionlacaixa.org/es/convocatorias-sociales-com-valenciana"
+      },
+      {
+        title: "Bases de la convocatoria - PDF",
+        description: "Documento oficial descargable desde la seccion Documentacion de interes.",
+        url: "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf"
+      }
+    ],
+    evidence: [
+      "Ficha oficial localizada: Convocatoria de Proyectos Sociales Comunitat Valenciana 2026.",
+      "Estado oficial: cerrada; cierre detectado el 26 de marzo de 2026 a las 17 h.",
+      "Bases PDF localizadas navegando desde la ficha territorial a Documentacion de interes > Bases de la convocatoria."
+    ]
+  },
   "fundacion-bancaja-social": privateEvidence(
     "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
     "13a Convocatoria Fundacion Bancaja - CaixaBank Capaces",
@@ -146,7 +164,7 @@ const PRIVATE_FEATURES = {
   "fundacion-telefonica-digital": ["Inclusion digital", "Colectivos vulnerables", "Competencias digitales"],
   "santander-fundacion-social": ["Educacion y empleo", "Iniciativas sociales", "Proyecto/convenio"],
   "bbva-accion-social": ["Inclusion financiera", "Empleo", "Obra social bancaria"],
-  "caixabank-accion-social": ["Accion territorial", "Entidades locales", "Hasta 50.000 EUR"],
+  "caixabank-accion-social": ["Cerrada 26/03/2026", "Bases PDF localizadas", "Archivo con evidencia"],
   "fundacion-bancaja-social": ["Comunitat Valenciana", "Proyectos sociales", "Segun bases"],
   "ibercaja-proyectos-sociales": ["Insercion laboral", "Entidades sociales", "Ventana anual"],
   "unicaja-fundacion-social": ["Programas sociales", "No lucrativas", "Plazo por confirmar"],
@@ -167,7 +185,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-telefonica-digital", "Inclusion digital y empleabilidad para colectivos vulnerables", "Fundacion Telefonica", "Empresa / fundacion", "Competencias digitales", "Estatal", "Convocatoria por verificar", "Media", 74, "Por convenio"],
   ["santander-fundacion-social", "Programa Santander de apoyo a iniciativas sociales", "Banco Santander / fundacion", "Banco / obra social", "Educacion y empleo", "Estatal", "Ventana anual por confirmar", "Media", 73, "Por proyecto"],
   ["bbva-accion-social", "Ayudas privadas para inclusion financiera y empleo", "BBVA / accion social", "Banco / obra social", "Inclusion social", "Estatal", "Plazo por confirmar", "Baja", 69, "Por confirmar"],
-  ["caixabank-accion-social", "Accion social territorial para entidades locales", "CaixaBank / accion social", "Banco / obra social", "Accion comunitaria", "Comunitat Valenciana", "Convocatoria por verificar", "Media", 77, "Hasta 50.000 EUR"],
+  ["caixabank-accion-social", "Convocatoria Social Comunitat Valenciana 2026", "Fundacion la Caixa", "Fundacion bancaria", "Accion comunitaria", "Comunitat Valenciana", "Cerrada - cierre 26/03/2026 17 h", "Alta", 77, "Hasta 50.000 EUR"],
   ["fundacion-bancaja-social", "Convocatoria de proyectos sociales Comunitat Valenciana", "Fundacion Bancaja", "Fundacion bancaria", "Accion social", "Comunitat Valenciana", "Plazo por confirmar", "Media", 75, "Segun bases"],
   ["ibercaja-proyectos-sociales", "Proyectos sociales y empleabilidad para entidades", "Fundacion Ibercaja", "Fundacion bancaria", "Insercion laboral", "Estatal", "Ventana anual por confirmar", "Media", 70, "Por proyecto"],
   ["unicaja-fundacion-social", "Ayudas a programas sociales de entidades no lucrativas", "Fundacion Unicaja", "Fundacion bancaria", "Inclusion social", "Estatal", "Plazo por confirmar", "Baja", 66, "Por confirmar"],
@@ -189,7 +207,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
     source,
     territory,
     deadline,
-    deadlineStatus: deadlineConfidence === "Alta" ? "open" : "uncertain",
+    deadlineStatus: /cerrad|fuera de plazo|caducad|resuelt/i.test(deadline) ? "closed" : deadlineConfidence === "Alta" ? "open" : "uncertain",
     deadlineConfidence,
     sourceScope: "Privada abierta",
     funderType,
@@ -204,6 +222,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
     sourceTextLabel: privateEvidence.sourceTextLabel || "Texto fuente privada usado",
     extractedText: privateEvidence.extractedText || "",
     documents: privateEvidence.documents || [],
+    officialUrl: privateEvidence.officialUrl || "",
     fit: [
       `Puede encajar con entidades del tercer sector por ${theme.toLowerCase()}.`,
       "Requiere confirmar bases vigentes, territorio y si admite entidades no lucrativas."
