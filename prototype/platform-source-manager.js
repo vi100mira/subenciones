@@ -84,7 +84,7 @@
         <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
         <div><strong>Salida al tenant</strong><span>${source.output || source.action}</span></div>
         ${badge(status)}
-        <div class="row-actions"><button class="ghost-action" data-normalize-source="${source.name}" type="button">Normalizar</button></div>
+        <div><strong>Accion</strong><span><button class="primary-action" data-normalize-source="${source.name}" type="button">Normalizar fuente</button></span></div>
       </div>`;
   }
 
@@ -98,8 +98,12 @@
 
   function normalizationDetail(source = privateSources()[0]) {
     return `
+      <div class="plain-note">
+        <strong>Ficha de normalizacion abierta: ${source.name}</strong>
+        <span>Revisa estos cuatro puntos. Si falta uno, la fuente no debe salir como oportunidad viva para ningun tenant.</span>
+      </div>
       <div class="source-control-row">
-        <div><strong>Fuente seleccionada</strong><span>${source.name} - ${source.territory}</span></div>
+        <div><strong>Fuente</strong><span>${source.territory}</span></div>
         <div><strong>1. Entrada oficial</strong><span>Confirmar que la pagina pertenece al financiador y no es una noticia secundaria.</span></div>
         <div><strong>2. Bases claras</strong><span>${source.basis || "Localizar PDF, ficha o formulario con requisitos verificables."}</span></div>
         <div><strong>3. Estado operativo</strong><span>${source.doubt}</span></div>
