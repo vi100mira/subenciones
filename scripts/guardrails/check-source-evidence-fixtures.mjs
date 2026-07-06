@@ -2,6 +2,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const expectedCaixaBasis = "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf";
+const expectedBancajaBasis = "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf";
 const catalog = JSON.parse(fs.readFileSync("data/private-open-funders/platform-open-funders-v1.json", "utf8"));
 const failures = [];
 
@@ -33,6 +34,19 @@ assert(caixaPrivateRow?.title === "Convocatoria Social Comunitat Valenciana 2026
 assert(caixaPrivateRow?.deadlineStatus === "closed", "Private row must be closed, not live or uncertain");
 assert(caixaPrivateRow?.basesUrl === expectedCaixaBasis, "Private row bases action must open the exact bases PDF");
 assert(caixaPrivateRow?.documents?.some((doc) => doc.url === caixaPrivateRow.officialUrl), "Private row must keep the official status page as evidence");
+
+const bancajaSource = catalog.sources.find((source) => source.id === "fundacion-bancaja-social");
+assert(Boolean(bancajaSource), "Missing curated Bancaja Capaces source");
+assert(bancajaSource?.basis_url === expectedBancajaBasis, "Bancaja curated source must point to the exact Capaces bases PDF");
+assert(bancajaSource?.navigation_path?.at(-1)?.url === expectedBancajaBasis, "Bancaja navigation path must end at the exact bases PDF");
+assert(bancajaSource?.status_facts?.status === "Agotado plazo", "Bancaja source must preserve the official exhausted-deadline status");
+assert(bancajaSource?.status_facts?.closing?.includes("20 de mayo"), "Bancaja source must preserve the May 20 closing date");
+
+const bancajaPrivateRow = privateRows().find((row) => row.id === "fundacion-bancaja-social");
+assert(Boolean(bancajaPrivateRow), "Missing Bancaja private opportunity row");
+assert(bancajaPrivateRow?.deadlineStatus === "closed", "Bancaja private row must be closed, not live or uncertain");
+assert(bancajaPrivateRow?.basesUrl === expectedBancajaBasis, "Bancaja private row bases action must open the exact bases PDF");
+assert(bancajaPrivateRow?.officialUrl === bancajaSource?.url, "Bancaja private row must keep the official status page as evidence");
 
 if (failures.length) {
   console.error("Source evidence fixture check failed:");

@@ -80,12 +80,36 @@ const PRIVATE_EVIDENCE = {
       "Bases PDF localizadas navegando desde la ficha territorial a Documentacion de interes > Bases de la convocatoria."
     ]
   },
-  "fundacion-bancaja-social": privateEvidence(
-    "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
-    "13a Convocatoria Fundacion Bancaja - CaixaBank Capaces",
-    "Fundacion Bancaja y CaixaBank Capaces dirige ayudas a proyectos de inclusion social y laboral de personas con discapacidad en Comunitat Valenciana, con dotacion economica y convocatoria territorial. Requiere revisar plazo, bases y entidad elegible.",
-    "convocatoria privada con bases"
-  ),
+  "fundacion-bancaja-social": {
+    basesUrl: "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf",
+    officialUrl: "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
+    applicationUrl: "https://convocatoriasbancaja.es/capaces2026",
+    evidenceType: "convocatoria privada territorial con bases PDF",
+    sourceTextLabel: "Ficha y bases oficiales usadas",
+    extractedText: "Fundacion Bancaja y CaixaBank publican la 13a Convocatoria Capaces para entidades sociales de la Comunitat Valenciana que trabajan con personas con discapacidad y/o dependencia. La ficha oficial marca Estado: agotado plazo; permite solicitudes online; el plazo indicado llega hasta el 20 de mayo; la ayuda maxima es de 20.000 EUR y los proyectos seleccionados se preveian a finales de junio.",
+    documents: [
+      {
+        title: "Ficha oficial - 13a Convocatoria Fundacion Bancaja CaixaBank Capaces",
+        description: "Pagina oficial donde se localizaron estado, plazo, importe, inscripcion y documentos.",
+        url: "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/"
+      },
+      {
+        title: "Inscripcion online - Capaces 2026",
+        description: "Canal de solicitud enlazado desde la ficha oficial.",
+        url: "https://convocatoriasbancaja.es/capaces2026"
+      },
+      {
+        title: "Bases convocatoria - PDF",
+        description: "Documento oficial descargable desde la seccion Documentos.",
+        url: "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf"
+      }
+    ],
+    evidence: [
+      "Ficha oficial localizada: 13a Convocatoria Fundacion Bancaja - CaixaBank Capaces.",
+      "Estado oficial: agotado plazo; plazo hasta el 20 de mayo.",
+      "Bases PDF e inscripcion online localizadas desde la ficha oficial."
+    ]
+  },
   "ibercaja-proyectos-sociales": privateEvidence(
     "https://www.fundacionibercaja.es/convocatorias/",
     "Convocatorias - Fundacion Ibercaja",
@@ -165,7 +189,7 @@ const PRIVATE_FEATURES = {
   "santander-fundacion-social": ["Educacion y empleo", "Iniciativas sociales", "Proyecto/convenio"],
   "bbva-accion-social": ["Inclusion financiera", "Empleo", "Obra social bancaria"],
   "caixabank-accion-social": ["Cerrada 26/03/2026", "Bases PDF localizadas", "Archivo con evidencia"],
-  "fundacion-bancaja-social": ["Comunitat Valenciana", "Proyectos sociales", "Segun bases"],
+  "fundacion-bancaja-social": ["Agotado plazo 20/05/2026", "Bases PDF localizadas", "Hasta 20.000 EUR"],
   "ibercaja-proyectos-sociales": ["Insercion laboral", "Entidades sociales", "Ventana anual"],
   "unicaja-fundacion-social": ["Programas sociales", "No lucrativas", "Plazo por confirmar"],
   "cajamar-social": ["Desarrollo local", "Territorio", "Por convenio"],
@@ -186,7 +210,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["santander-fundacion-social", "Programa Santander de apoyo a iniciativas sociales", "Banco Santander / fundacion", "Banco / obra social", "Educacion y empleo", "Estatal", "Ventana anual por confirmar", "Media", 73, "Por proyecto"],
   ["bbva-accion-social", "Ayudas privadas para inclusion financiera y empleo", "BBVA / accion social", "Banco / obra social", "Inclusion social", "Estatal", "Plazo por confirmar", "Baja", 69, "Por confirmar"],
   ["caixabank-accion-social", "Convocatoria Social Comunitat Valenciana 2026", "Fundacion la Caixa", "Fundacion bancaria", "Accion comunitaria", "Comunitat Valenciana", "Cerrada - cierre 26/03/2026 17 h", "Alta", 77, "Hasta 50.000 EUR"],
-  ["fundacion-bancaja-social", "Convocatoria de proyectos sociales Comunitat Valenciana", "Fundacion Bancaja", "Fundacion bancaria", "Accion social", "Comunitat Valenciana", "Plazo por confirmar", "Media", 75, "Segun bases"],
+  ["fundacion-bancaja-social", "13a Convocatoria Fundacion Bancaja CaixaBank Capaces", "Fundacion Bancaja", "Fundacion bancaria", "Discapacidad y dependencia", "Comunitat Valenciana", "Cerrada - agotado plazo 20/05/2026", "Alta", 75, "Hasta 20.000 EUR"],
   ["ibercaja-proyectos-sociales", "Proyectos sociales y empleabilidad para entidades", "Fundacion Ibercaja", "Fundacion bancaria", "Insercion laboral", "Estatal", "Ventana anual por confirmar", "Media", 70, "Por proyecto"],
   ["unicaja-fundacion-social", "Ayudas a programas sociales de entidades no lucrativas", "Fundacion Unicaja", "Fundacion bancaria", "Inclusion social", "Estatal", "Plazo por confirmar", "Baja", 66, "Por confirmar"],
   ["cajamar-social", "Iniciativas sociales y desarrollo territorial", "Grupo Cooperativo Cajamar", "Banca cooperativa / obra social", "Desarrollo local", "Comunitat Valenciana", "Convocatoria por verificar", "Baja", 64, "Por convenio"],

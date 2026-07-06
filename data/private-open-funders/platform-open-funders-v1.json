@@ -118,6 +118,42 @@
       "initial_action": "Split by line before ingestion because MAPFRE groups several calls under one funder area."
     },
     {
+      "id": "fundacion-bancaja-social",
+      "name": "Fundacion Bancaja - CaixaBank Capaces 2026",
+      "url": "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
+      "basis_url": "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf",
+      "application_url": "https://convocatoriasbancaja.es/capaces2026",
+      "funder_type": "banking_foundation",
+      "themes": ["discapacidad", "dependencia", "inclusion social", "comunitat valenciana"],
+      "territory": "Comunitat Valenciana",
+      "opportunity_status": "closed",
+      "deadline_text": "Estado: agotado plazo; solicitudes hasta 2026-05-20; seleccion prevista finales de junio; ayuda maxima 20.000 EUR",
+      "deadline_confidence": "high",
+      "status_facts": {
+        "status": "Agotado plazo",
+        "closing": "20 de mayo de 2026",
+        "expected_resolution": "finales de junio de 2026"
+      },
+      "navigation_path": [
+        {
+          "url": "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
+          "label": "Ficha oficial con estado, plazo, importe y documentos"
+        },
+        {
+          "url": "https://www.fundacionbancaja.es/convocatoria/13a-convocatoria-fundacion-bancaja-caixabank-capaces/",
+          "label": "Documentos > Bases convocatoria"
+        },
+        {
+          "url": "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf",
+          "label": "Bases convocatoria PDF"
+        }
+      ],
+      "evidence_quality": "official_direct",
+      "monitoring_cadence": "weekly until selection, monthly until next edition",
+      "watch_fields": ["estado", "plazo", "bases PDF", "inscripcion", "importe maximo", "seleccion"],
+      "initial_action": "Archive as closed with bases evidence; monitor for selected projects or next edition."
+    },
+    {
       "id": "fundacion-ibercaja-convocatorias",
       "name": "Fundacion Ibercaja - Convocatorias",
       "url": "https://www.fundacionibercaja.es/convocatorias/",
@@ -284,11 +320,11 @@
     }
   ],
   "vuelta_1_metrics": {
-    "sources_reviewed": 15,
-    "accepted_for_catalogue": 15,
+    "sources_reviewed": 16,
+    "accepted_for_catalogue": 16,
     "active_or_open_by_line": 5,
-    "monitor_only": 8,
-    "archived_with_evidence": 1,
+    "monitor_only": 9,
+    "archived_with_evidence": 2,
     "needs_human_review_before_live": 3,
     "manual_intake_candidates": 2,
     "tenant_private_sources_used": 0,
