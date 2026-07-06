@@ -4,11 +4,11 @@
     { name: "DOGV / GVA", group: "Territorial", territory: "Comunitat Valenciana", sourceStatus: "Fuente oficial", connectorStatus: "Conector pendiente", cadence: "Diaria tras conector", doubt: "Falta confirmar pagina indice, campos de plazo y si la oportunidad vive en HTML o PDF.", action: "Resolver regla de extraccion antes de activar alertas." },
     { name: "BOP Valencia", group: "Territorial", territory: "Valencia", sourceStatus: "Fuente oficial", connectorStatus: "Conector pendiente", cadence: "Semanal tras conector", doubt: "Fuente aceptada, pero falta patron estable para detectar ayudas entre boletines.", action: "Definir regla territorial y prueba con evidencia." },
     { name: "LABORA", group: "Territorial", territory: "Comunitat Valenciana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", doubt: "Sin duda bloqueante para empleo e insercion; requiere versionar cambios de bases.", action: "Mantener deteccion barata y revision humana si cambia." },
-    { name: "Fundacion la Caixa", group: "Privado abierto", territory: "Espana por CCAA", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria si abre", depth: "Profundizar: indice territorial -> ficha -> bases/PDF", doubt: "La fuente es valida; cada linea territorial exige comprobar bases y plazo vigente.", action: "No alertar tenants sin evidencia de convocatoria abierta." },
-    { name: "Fundacion ONCE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", depth: "Profundizar: convocatorias -> entidades -> documentacion", doubt: "La fuente es valida; el encaje depende de colectivo, discapacidad y tipo de proyecto.", action: "Versionar cada convocatoria antes de recomendar." },
-    { name: "Fundacion MAPFRE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Semanal", depth: "Profundizar: programas -> ayuda concreta -> bases", doubt: "Puede publicar por programas; hay que separar premio, ayuda y convocatoria.", action: "Clasificar tipo de oportunidad antes de activar." },
-    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." },
-    { name: "Ford Espana", group: "Privado relacional", territory: "Comunitat Valenciana / Espana", sourceStatus: "Fuente candidata", connectorStatus: "Revision manual", cadence: "Mensual", depth: "Profundizar: noticia -> programa RSC -> contacto/bases manuales", doubt: "Novaterra acredita apoyo de Centimos Solidarios, pero no hay bases publicas localizadas.", action: "Aceptar solo con aportacion manual o evidencia directa de Ford." }
+    { name: "Fundacion la Caixa", group: "Privado abierto", territory: "Espana por CCAA", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria si abre", normalization: "Patron aprendido", basis: "Bases oficiales localizadas", output: "Archivar cerradas y vigilar nuevas territoriales", depth: "Profundizar: indice territorial -> ficha -> bases/PDF", doubt: "La fuente es valida; cada linea territorial exige comprobar bases y plazo vigente.", action: "No alertar tenants sin evidencia de convocatoria abierta." },
+    { name: "Fundacion ONCE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", normalization: "En normalizacion", basis: "Convocatorias separadas por linea", output: "Versionar cada convocatoria antes de recomendar", depth: "Profundizar: convocatorias -> entidades -> documentacion", doubt: "La fuente es valida; el encaje depende de colectivo, discapacidad y tipo de proyecto.", action: "Versionar cada convocatoria antes de recomendar." },
+    { name: "Fundacion MAPFRE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Semanal", normalization: "En normalizacion", basis: "Pendiente separar programas y ayudas", output: "Crear oportunidad solo por linea con bases", depth: "Profundizar: programas -> ayuda concreta -> bases", doubt: "Puede publicar por programas; hay que separar premio, ayuda y convocatoria.", action: "Clasificar tipo de oportunidad antes de activar." },
+    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", normalization: "Vigilancia", basis: "Fuente recurrente cerrada o entre ediciones", output: "Alertar solo nueva edicion abierta", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." },
+    { name: "Ford Espana", group: "Privado relacional", territory: "Comunitat Valenciana / Espana", sourceStatus: "Fuente candidata", connectorStatus: "Revision manual", cadence: "Mensual", normalization: "Requiere humano", basis: "Sin bases publicas localizadas", output: "No crear oportunidad sin aportacion manual", depth: "Profundizar: noticia -> programa RSC -> contacto/bases manuales", doubt: "Novaterra acredita apoyo de Centimos Solidarios, pero no hay bases publicas localizadas.", action: "Aceptar solo con aportacion manual o evidencia directa de Ford." }
   ];
 
   const campaigns = [
@@ -24,8 +24,15 @@
     { title: "BOP Valencia pendiente de conector", doubt: "La fuente es oficial, pero no hay patron de ayuda social fiable entre boletines.", decision: "Crear conector territorial o dejar en vigilancia sin alertas.", state: "Bloqueada" }
   ];
 
+  const normalizationSteps = [
+    { title: "1. Identificar fuente", detail: "Confirmar web oficial, tipo de financiador, territorio y si es indice o convocatoria concreta." },
+    { title: "2. Encontrar bases", detail: "Seguir navegacion interna hasta ficha, documentos, PDF, FAQ, solicitud o formulario verificable." },
+    { title: "3. Decidir estado", detail: "Viva, cerrada, archivada, descartada o revision humana; nunca viva sin bases claras." },
+    { title: "4. Publicar al radar", detail: "Solo tras evidencia, ruta de navegacion y aprobacion humana de plataforma." }
+  ];
+
   function tone(state) {
-    return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" ? "warning" : "review";
+    return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" || state === "Patron aprendido" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" || state === "Requiere humano" ? "warning" : "review";
   }
 
   function badge(text) {
@@ -68,6 +75,22 @@
       </div>`;
   }
 
+  function normalizationRow(source) {
+    const status = source.normalization || "Sin analizar";
+    return `
+      <div class="source-control-row">
+        <div><strong>${source.name}</strong><span>${source.group} - ${source.territory}</span></div>
+        <div><strong>Normalizacion</strong><span>${status}</span></div>
+        <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
+        <div><strong>Salida al tenant</strong><span>${source.output || source.action}</span></div>
+        ${badge(status)}
+      </div>`;
+  }
+
+  function stepRow(step) {
+    return `<div><strong>${step.title}</strong><span>${step.detail}</span></div>`;
+  }
+
   function renderPanel() {
     return `
       <article class="panel platform-source-panel" data-platform-pane="sources" hidden>
@@ -79,7 +102,10 @@
           <div><strong>Publico estatal</strong><span>BDNS como columna vertebral nacional.</span></div>
           <div><strong>Territorial</strong><span>GVA, DOGV, BOP, LABORA y ampliables.</span></div>
           <div><strong>Privado abierto</strong><span>Fundaciones, bancos, obra social, RSC.</span></div>
-          <div><strong>Revision</strong><span>Cola humana antes de activar impacto en tenants.</span></div>
+          <div><strong>Normalizacion</strong><span>Patrones aprendidos antes de activar impacto en tenants.</span></div>
+        </div>
+        <div class="source-control-row">
+          ${normalizationSteps.map(stepRow).join("")}
         </div>
         <div class="plain-note source-guidance"><strong>Como leer los estados</strong><span>Fuente oficial valida la entidad emisora. En privadas abiertas, el agente debe profundizar en enlaces internos de convocatorias, bases, PDF, FAQ y solicitud; si solo llega a portada, queda en revision.</span></div>
         <div class="plain-note source-guidance"><strong>Descartada vs archivada</strong><span>Descartada: no encaja, es duplicada o no tiene evidencia suficiente. Archivada: fue candidata o convocatoria real, pero esta cerrada, resuelta o caducada y se conserva como historico.</span></div>
@@ -106,6 +132,10 @@
         <div class="plain-note" id="source-analysis-note">
           <strong>Alta guiada opcional</strong><span>Si anades una URL, el agente valida si es oficial, que duda existe, que cadencia propone y si puede reutilizarse por plataforma.</span>
         </div>
+        <article>
+          <div class="panel-heading"><div><p class="eyebrow">Privadas abiertas</p><h2>Normalizacion de fuentes</h2></div><span class="badge review">No publica tenants automaticamente</span></div>
+          <div class="source-control-list">${sources.filter((source) => source.group.includes("Privado")).map(normalizationRow).join("")}</div>
+        </article>
         <div class="two-column source-manager-columns">
           <article>
             <div class="panel-heading"><div><p class="eyebrow">Biblioteca</p><h2>Fuentes monitorizadas</h2></div></div>
@@ -131,7 +161,7 @@
   function install() {
     const tabs = document.querySelector("#platform .segmented");
     if (!tabs || document.querySelector('[data-platform-tab="sources"]')) return;
-    tabs.insertAdjacentHTML("beforeend", '<button data-platform-tab="sources">Fuentes</button>');
+    tabs.insertAdjacentHTML("beforeend", '<button data-platform-tab="sources">Normalizacion</button>');
     document.querySelector("#platform").insertAdjacentHTML("beforeend", renderPanel());
     document.addEventListener("click", (event) => {
       const tab = event.target.closest('[data-platform-tab="sources"]');
