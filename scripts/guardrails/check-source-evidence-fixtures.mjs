@@ -4,6 +4,8 @@ import vm from "node:vm";
 const expectedCaixaBasis = "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf";
 const expectedBancajaBasis = "https://www.fundacionbancaja.es/wp-content/uploads/2026/04/Bases-13a-Convocatoria-Capaces.pdf";
 const catalog = JSON.parse(fs.readFileSync("data/private-open-funders/platform-open-funders-v1.json", "utf8"));
+const intakeTemplate = JSON.parse(fs.readFileSync("data/private-open-funders/source-intake-template-v1.json", "utf8"));
+const methodology = fs.readFileSync("docs/product/private-open-entity-search-methodology.md", "utf8");
 const failures = [];
 
 function assert(condition, message) {
@@ -47,6 +49,17 @@ assert(Boolean(bancajaPrivateRow), "Missing Bancaja private opportunity row");
 assert(bancajaPrivateRow?.deadlineStatus === "closed", "Bancaja private row must be closed, not live or uncertain");
 assert(bancajaPrivateRow?.basesUrl === expectedBancajaBasis, "Bancaja private row bases action must open the exact bases PDF");
 assert(bancajaPrivateRow?.officialUrl === bancajaSource?.url, "Bancaja private row must keep the official status page as evidence");
+
+assert(methodology.includes("Unseen Entity Protocol"), "Private-open methodology must define the unseen entity protocol");
+assert(methodology.includes("Search Stop Conditions"), "Private-open methodology must define search stop conditions");
+assert(methodology.includes("Data Contract"), "Private-open methodology must define the data contract");
+assert(intakeTemplate.schema === "private_open_source_intake_v1", "Private-open intake template schema is missing or wrong");
+for (const field of ["id", "name", "url", "opportunity_status", "deadline_text", "basis_confidence", "navigation_path"]) {
+  assert(Object.hasOwn(intakeTemplate.source || {}, field), `Private-open intake template missing source.${field}`);
+}
+for (const required of ["official source URL", "navigation path", "human review decision"]) {
+  assert(intakeTemplate.required_before_tenant_alert?.includes(required), `Private-open intake template missing tenant-alert requirement: ${required}`);
+}
 
 if (failures.length) {
   console.error("Source evidence fixture check failed:");

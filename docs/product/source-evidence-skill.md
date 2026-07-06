@@ -13,6 +13,7 @@ Guide grant-source analysis so every public or private-open opportunity is backe
 
 ## Private-Open Sources
 
+- For funders not handled before, follow `docs/product/private-open-entity-search-methodology.md` and start from `data/private-open-funders/source-intake-template-v1.json`.
 - Start only from official funder pages, official documents, or public beneficiary evidence.
 - Search same-origin links to depth 2 before declaring bases missing.
 - Prioritize links containing: convocatoria, ayudas, bases, PDF, solicitud, formulario, FAQ, proyectos sociales.
@@ -75,3 +76,4 @@ Every source analysis should return:
 ## Verification
 
 Run `npm run platform:verify-source-evidence -- --today=YYYY-MM-DD` after changing the private-open catalogue or evidence rules. The verifier checks URL shape, curated bases, navigation paths, closed-status facts and active sources with past deadlines.
+Run `npm run check:evidence` after adding an important new private-open pattern or fixture.

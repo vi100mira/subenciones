@@ -1,0 +1,69 @@
+{
+  "schema": "private_open_source_intake_v1",
+  "purpose": "Template for researching a private-open funder or call that is not yet handled by the platform catalogue.",
+  "privacy_scope": "platform_public_or_private_open_only",
+  "tenant_private_sources_allowed": false,
+  "source": {
+    "id": "",
+    "name": "",
+    "url": "",
+    "funder_type": "",
+    "themes": [],
+    "territory": "",
+    "opportunity_status": "monitor_only",
+    "deadline_text": "",
+    "deadline_confidence": "low",
+    "evidence_quality": "unverified",
+    "basis_confidence": "none",
+    "basis_url": "",
+    "application_url": "",
+    "status_facts": {
+      "status": "",
+      "opening": "",
+      "closing": "",
+      "expected_resolution": ""
+    },
+    "navigation_path": [
+      {
+        "url": "",
+        "label": "Official entry point"
+      }
+    ],
+    "watch_fields": [
+      "estado",
+      "plazo",
+      "bases",
+      "canal de solicitud"
+    ],
+    "manual_fallback": {
+      "required": false,
+      "reason": "",
+      "provided_by": "",
+      "reviewer_note": "",
+      "review_status": "not_required"
+    },
+    "initial_action": "Classify as live, human review, archived, discarded or monitor-only after evidence review."
+  },
+  "required_before_tenant_alert": [
+    "official source URL",
+    "concrete call title",
+    "deadline or official closed status",
+    "basis URL or official rule page",
+    "navigation path",
+    "application channel",
+    "human review decision"
+  ],
+  "allowed_lifecycle_statuses": [
+    "viva",
+    "revision_humana",
+    "archivada",
+    "descartada",
+    "monitor_only"
+  ],
+  "confidence_levels": [
+    "high",
+    "medium",
+    "low",
+    "none"
+  ]
+}
