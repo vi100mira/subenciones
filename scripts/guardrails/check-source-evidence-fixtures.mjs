@@ -1,0 +1,43 @@
+import fs from "node:fs";
+import vm from "node:vm";
+
+const expectedCaixaBasis = "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf";
+const catalog = JSON.parse(fs.readFileSync("data/private-open-funders/platform-open-funders-v1.json", "utf8"));
+const failures = [];
+
+function assert(condition, message) {
+  if (!condition) failures.push(message);
+}
+
+function privateRows() {
+  const code = fs.readFileSync("prototype/private-radar-data.js", "utf8");
+  const sandbox = { window: {} };
+  vm.createContext(sandbox);
+  vm.runInContext(code, sandbox, { filename: "prototype/private-radar-data.js" });
+  return sandbox.window.PRIVATE_OPEN_OPPORTUNITIES || [];
+}
+
+const caixaSource = catalog.sources.find((source) => source.id === "fundacion-la-caixa-comunitat-valenciana-2026");
+assert(Boolean(caixaSource), "Missing curated La Caixa Comunitat Valenciana source");
+assert(caixaSource?.basis_url === expectedCaixaBasis, "La Caixa curated source must point to the exact 2026 bases PDF");
+assert(caixaSource?.navigation_path?.at(-1)?.url === expectedCaixaBasis, "La Caixa navigation path must end at the exact bases PDF");
+assert(caixaSource?.status_facts?.status === "Cerrada", "La Caixa source must preserve the official closed status");
+assert(caixaSource?.status_facts?.closing?.includes("26 de marzo de 2026"), "La Caixa source must preserve the closing date");
+
+const onceGeneral = catalog.sources.find((source) => source.id === "fundacion-once-convocatoria-general");
+assert(onceGeneral?.opportunity_status !== "open", "ONCE general 2026 must not be active after its 2026-06-30 deadline");
+
+const caixaPrivateRow = privateRows().find((row) => row.id === "caixabank-accion-social");
+assert(Boolean(caixaPrivateRow), "Missing La Caixa private opportunity row");
+assert(caixaPrivateRow?.title === "Convocatoria Social Comunitat Valenciana 2026", "Private row must show the concrete La Caixa call title");
+assert(caixaPrivateRow?.deadlineStatus === "closed", "Private row must be closed, not live or uncertain");
+assert(caixaPrivateRow?.basesUrl === expectedCaixaBasis, "Private row bases action must open the exact bases PDF");
+assert(caixaPrivateRow?.documents?.some((doc) => doc.url === caixaPrivateRow.officialUrl), "Private row must keep the official status page as evidence");
+
+if (failures.length) {
+  console.error("Source evidence fixture check failed:");
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exit(1);
+}
+
+console.log("Source evidence fixture check passed.");
