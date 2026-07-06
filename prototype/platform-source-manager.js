@@ -4,11 +4,11 @@
     { name: "DOGV / GVA", group: "Territorial", territory: "Comunitat Valenciana", sourceStatus: "Fuente oficial", connectorStatus: "Conector pendiente", cadence: "Diaria tras conector", doubt: "Falta confirmar pagina indice, campos de plazo y si la oportunidad vive en HTML o PDF.", action: "Resolver regla de extraccion antes de activar alertas." },
     { name: "BOP Valencia", group: "Territorial", territory: "Valencia", sourceStatus: "Fuente oficial", connectorStatus: "Conector pendiente", cadence: "Semanal tras conector", doubt: "Fuente aceptada, pero falta patron estable para detectar ayudas entre boletines.", action: "Definir regla territorial y prueba con evidencia." },
     { name: "LABORA", group: "Territorial", territory: "Comunitat Valenciana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", doubt: "Sin duda bloqueante para empleo e insercion; requiere versionar cambios de bases.", action: "Mantener deteccion barata y revision humana si cambia." },
-    { name: "Fundacion la Caixa", group: "Privado abierto", territory: "Espana por CCAA", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria si abre", normalization: "Patron aprendido", basis: "Bases oficiales localizadas", output: "Archivar cerradas y vigilar nuevas territoriales", depth: "Profundizar: indice territorial -> ficha -> bases/PDF", doubt: "La fuente es valida; cada linea territorial exige comprobar bases y plazo vigente.", action: "No alertar tenants sin evidencia de convocatoria abierta." },
-    { name: "Fundacion ONCE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", normalization: "En normalizacion", basis: "Convocatorias separadas por linea", output: "Versionar cada convocatoria antes de recomendar", depth: "Profundizar: convocatorias -> entidades -> documentacion", doubt: "La fuente es valida; el encaje depende de colectivo, discapacidad y tipo de proyecto.", action: "Versionar cada convocatoria antes de recomendar." },
-    { name: "Fundacion MAPFRE", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Semanal", normalization: "En normalizacion", basis: "Pendiente separar programas y ayudas", output: "Crear oportunidad solo por linea con bases", depth: "Profundizar: programas -> ayuda concreta -> bases", doubt: "Puede publicar por programas; hay que separar premio, ayuda y convocatoria.", action: "Clasificar tipo de oportunidad antes de activar." },
-    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", normalization: "Vigilancia", basis: "Fuente recurrente cerrada o entre ediciones", output: "Alertar solo nueva edicion abierta", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." },
-    { name: "Ford Espana", group: "Privado relacional", territory: "Comunitat Valenciana / Espana", sourceStatus: "Fuente candidata", connectorStatus: "Revision manual", cadence: "Mensual", normalization: "Requiere humano", basis: "Sin bases publicas localizadas", output: "No crear oportunidad sin aportacion manual", depth: "Profundizar: noticia -> programa RSC -> contacto/bases manuales", doubt: "Novaterra acredita apoyo de Centimos Solidarios, pero no hay bases publicas localizadas.", action: "Aceptar solo con aportacion manual o evidencia directa de Ford." }
+    { name: "Fundacion la Caixa", group: "Privado abierto", territory: "Espana por CCAA", url: "https://fundacionlacaixa.org/es/convocatorias-sociales", basisUrl: "https://fundacionlacaixa.org/documents/d/guest/convocatoria-social-comunitat-valenciana-2026-bases-pdf", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria si abre", normalization: "Patron aprendido", basis: "Bases oficiales localizadas", output: "Archivar cerradas y vigilar nuevas territoriales", depth: "Profundizar: indice territorial -> ficha -> bases/PDF", doubt: "La fuente es valida; cada linea territorial exige comprobar bases y plazo vigente.", action: "No alertar tenants sin evidencia de convocatoria abierta." },
+    { name: "Fundacion ONCE", group: "Privado abierto", territory: "Espana", url: "https://www.fundaciononce.es/es/convocatorias-de-ayudas/para-entidades/convocatoria-general", verificationUrl: "https://www.fundaciononce.es/es/convocatorias-de-ayudas/para-entidades/convocatoria-empleo-publico", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Diaria", normalization: "En normalizacion", basis: "Convocatorias separadas por linea", output: "Versionar cada convocatoria antes de recomendar", depth: "Profundizar: convocatorias -> entidades -> documentacion", doubt: "La fuente es valida; el encaje depende de colectivo, discapacidad y tipo de proyecto.", action: "Versionar cada convocatoria antes de recomendar." },
+    { name: "Fundacion MAPFRE", group: "Privado abierto", territory: "Espana", url: "https://www.fundacionmapfre.org/premios-ayudas/convocatorias/", sourceStatus: "Fuente oficial", connectorStatus: "Monitor activo", cadence: "Semanal", normalization: "En normalizacion", basis: "Pendiente separar programas y ayudas", output: "Crear oportunidad solo por linea con bases", depth: "Profundizar: programas -> ayuda concreta -> bases", doubt: "Puede publicar por programas; hay que separar premio, ayuda y convocatoria.", action: "Clasificar tipo de oportunidad antes de activar." },
+    { name: "Fundacion Mutua Madrilena", group: "Privado abierto", territory: "Espana", url: "https://www.fundacionmutua.es/accion-social/ayudas-proyectos-sociales/", sourceStatus: "Fuente oficial", connectorStatus: "Solo vigilancia", cadence: "Semanal", normalization: "Vigilancia", basis: "Fuente recurrente cerrada o entre ediciones", output: "Alertar solo nueva edicion abierta", depth: "Profundizar: edicion anual -> bases -> solicitud", doubt: "Fuente recurrente; no siempre hay convocatoria viva.", action: "Alertar solo nueva edicion abierta." },
+    { name: "Ford Espana", group: "Privado relacional", territory: "Comunitat Valenciana / Espana", url: "https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/", sourceStatus: "Fuente candidata", connectorStatus: "Revision manual", cadence: "Mensual", normalization: "Requiere humano", basis: "Sin bases publicas localizadas", output: "No crear oportunidad sin aportacion manual", depth: "Profundizar: noticia -> programa RSC -> contacto/bases manuales", doubt: "Novaterra acredita apoyo de Centimos Solidarios, pero no hay bases publicas localizadas.", action: "Aceptar solo con aportacion manual o evidencia directa de Ford." }
   ];
 
   const campaigns = [
@@ -32,12 +32,14 @@
   ];
   const normalizedKey = "source-normalization.done.v1";
   const normalizationState = { tab: "flow", activeName: "Fundacion ONCE", done: readDone() };
-  const reviewChecks = [
-    ["Fuente oficial", "La URL pertenece al financiador o a su plataforma oficial."],
-    ["Bases localizadas", "Hay bases, ficha o URL de verificacion humana suficiente."],
-    ["Estado y plazo", "La fuente queda clasificada como viva, cerrada, vigilancia o revision."],
-    ["Seguimiento", "El agente de cambios queda activado antes de impactar tenants."]
-  ];
+  function reviewChecks(source) {
+    return [
+      ["Fuente oficial", "La URL pertenece al financiador o a su plataforma oficial."],
+      [source.basisUrl ? "Bases localizadas" : "URL de verificacion humana", source.basisUrl ? "Hay bases, ficha o documento oficial suficiente." : "No hay bases curadas; se aprueba solo como patron vigilado y cualquier oportunidad requerira verificacion humana."],
+      ["Estado y plazo", "La fuente queda clasificada como viva, cerrada, vigilancia o revision."],
+      ["Seguimiento", "El agente de cambios queda activado antes de impactar tenants."]
+    ];
+  }
 
   function tone(state) {
     return state === "Operativa" || state === "Monitor activo" || state === "Fuente oficial" || state === "En seguimiento" || state === "Patron aprendido" || state === "Fuente normalizada" ? "safe" : state === "Critica" || state === "Requiere criterio" || state === "Conector pendiente" || state === "Requiere humano" ? "warning" : "review";
@@ -121,10 +123,16 @@
   function normalizationDetail(source = privateSources()[0]) {
     const status = displayStatus(source);
     const done = status === "Fuente normalizada";
+    const evidenceUrl = source.basisUrl || source.verificationUrl || source.url;
+    const evidenceLabel = source.basisUrl ? "Abrir bases normalizadas" : "Abrir URL de verificacion";
     return `
       <div class="plain-note">
         <strong>${done ? "Fuente normalizada" : "Ficha de normalizacion abierta"}: ${source.name}</strong>
         <span>${done ? "La fuente queda lista como patron controlado de plataforma. Cualquier oportunidad concreta seguira necesitando evidencia y revision humana." : "Revisa estos cuatro puntos. Si falta uno, la fuente no debe salir como oportunidad viva para ningun tenant."}</span>
+        <div class="button-row">
+          <a class="ghost-action" href="${source.url}" target="_blank" rel="noreferrer">Leer fuente oficial</a>
+          <a class="ghost-action" href="${evidenceUrl}" target="_blank" rel="noreferrer">${evidenceLabel}</a>
+        </div>
       </div>
       <div class="source-control-row">
         <div><strong>Fuente</strong><span>${source.territory}</span></div>
@@ -143,6 +151,8 @@
   }
 
   function reviewModal(source) {
+    const evidenceUrl = source.basisUrl || source.verificationUrl || source.url;
+    const evidenceLabel = source.basisUrl ? "Leer bases" : "Abrir URL de verificacion";
     return `
       <div class="modal-backdrop" data-close-normalization-review>
         <article class="modal" role="dialog" aria-modal="true" aria-labelledby="normalization-review-title">
@@ -156,8 +166,16 @@
             <div><strong>Estado operativo</strong><span>${source.doubt}</span></div>
             <div><strong>Salida esperada</strong><span>${source.output || source.action}</span></div>
           </div>
+          <div class="plain-note">
+            <strong>Leer antes de aprobar</strong>
+            <span>Abre estos enlaces y confirma manualmente que lo visto coincide con los checks. Si no puedes leer bases claras, deja la fuente como verificacion humana o vigilancia.</span>
+            <div class="button-row">
+              <a class="primary-action" href="${source.url}" target="_blank" rel="noreferrer">Leer fuente oficial</a>
+              <a class="ghost-action" href="${evidenceUrl}" target="_blank" rel="noreferrer">${evidenceLabel}</a>
+            </div>
+          </div>
           <div class="stack-list">
-            ${reviewChecks.map(([title, detail]) => `
+            ${reviewChecks(source).map(([title, detail]) => `
               <label class="normalization-review-check">
                 <span><input data-normalization-check type="checkbox" checked /> ${title}</span>
                 <span>${detail}</span>
