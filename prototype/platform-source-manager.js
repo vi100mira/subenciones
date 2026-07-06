@@ -82,6 +82,7 @@
           <div><strong>Revision</strong><span>Cola humana antes de activar impacto en tenants.</span></div>
         </div>
         <div class="plain-note source-guidance"><strong>Como leer los estados</strong><span>Fuente oficial valida la entidad emisora. En privadas abiertas, el agente debe profundizar en enlaces internos de convocatorias, bases, PDF, FAQ y solicitud; si solo llega a portada, queda en revision.</span></div>
+        <div class="plain-note source-guidance"><strong>Descartada vs archivada</strong><span>Descartada: no encaja, es duplicada o no tiene evidencia suficiente. Archivada: fue candidata o convocatoria real, pero esta cerrada, resuelta o caducada y se conserva como historico.</span></div>
         <details class="source-optional-intake">
           <summary class="opportunity-topline"><strong>Agregar fuente manual</strong><span>Opcional: el sistema tambien investiga y propone fuentes.</span></summary>
           <div class="inline-form source-intake">

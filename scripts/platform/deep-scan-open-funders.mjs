@@ -15,6 +15,8 @@ const linkTerms = [
   "proyectos-sociales", "accion-social", "programa-social", "entidades"
 ];
 
+const closedTerms = ["cerrada", "cerrado", "finalizada", "finalizado", "resuelta", "resuelto", "fuera de plazo"];
+
 function normalizeUrl(value, base) {
   try {
     const url = new URL(value, base);
@@ -86,19 +88,20 @@ async function fetchText(url) {
 function classifyPage(url, html) {
   const text = stripHtml(html).toLowerCase();
   const urlScore = scoreUrl(url);
-  const hasBasis = /bases|convocatoria|solicitud|formulario|plazo|documentaci[oó]n/.test(text);
-  const hasDeadline = /plazo|fecha|hasta el|abierto|cierre|presentaci[oó]n/.test(text);
-  const hasAmount = /€|eur|euros|dotaci[oó]n|importe|cuant[ií]a/.test(text);
+  const hasBasis = /bases|convocatoria|solicitud|formulario|plazo|documentaci/.test(text);
+  const hasDeadline = /plazo|fecha|hasta el|abierto|cierre|presentaci/.test(text);
+  const hasAmount = /eur|euros|dotaci|importe|cuant/.test(text);
+  const isClosed = closedTerms.some((term) => text.includes(term));
   return {
     url,
     title: titleOf(html),
-    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0),
-    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount"].filter(Boolean)
+    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (isClosed ? 1 : 0),
+    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", isClosed && "closed_or_resolved"].filter(Boolean)
   };
 }
 
 function manualFallbackFor(source, status, failures) {
-  if (status === "evidence_candidate") return null;
+  if (status === "evidence_candidate" || status === "closed_archive_candidate") return null;
   return {
     reason: status === "fetch_blocked" ? "Automatic fetch was blocked; do not infer that bases are missing." : "Deep scan did not locate a usable bases/call page.",
     accepted_inputs: ["official_url_or_pdf", "call_title", "deadline_text", "basis_summary", "provided_by", "reviewer_note"],
@@ -108,10 +111,30 @@ function manualFallbackFor(source, status, failures) {
   };
 }
 
+function recommendationFor(status) {
+  if (status === "evidence_candidate") return "keep_for_human_verification";
+  if (status === "closed_archive_candidate") return "archive_with_evidence";
+  if (status === "fetch_blocked" || status === "homepage_only" || status === "needs_human_review") return "request_manual_verification_url";
+  return "discard_until_new_evidence";
+}
+
+function deadlinePast(text = "") {
+  const dates = [...text.matchAll(/20\d{2}-\d{2}-\d{2}/g)].map((match) => match[0]);
+  if (!dates.length) return false;
+  return new Date(`${dates[dates.length - 1]}T23:59:59Z`) < new Date();
+}
+
+function shouldArchiveClosed(source, best) {
+  const sourceStatus = (source.opportunity_status || "").toLowerCase();
+  if (sourceStatus.includes("closed") || sourceStatus.includes("resolved") || deadlinePast(source.deadline_text)) return true;
+  if (!best?.signals?.includes("closed_or_resolved")) return false;
+  return !sourceStatus.includes("open") && !sourceStatus.includes("mixed") && !sourceStatus.includes("source_index");
+}
+
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
-  const queue = [{ href: start, depth: 0, label: source.name, score: 99 }];
+  const queue = [{ href: start, depth: 0, label: source.name, score: 99, path: [{ url: start, label: source.name }] }];
   const seen = new Set();
   const pages = [];
   const failures = [];
@@ -126,14 +149,16 @@ async function scanSource(source) {
       continue;
     }
     if (fetched.contentType.includes("pdf")) {
-      pages.push({ url: next.href, title: next.label || "PDF", score: 8, signals: ["pdf"] });
+      pages.push({ url: next.href, title: next.label || "PDF", score: 8, signals: ["pdf"], navigation_path: next.path });
       continue;
     }
     const page = classifyPage(next.href, fetched.text);
+    if (next.href === start) page.score += 3;
+    page.navigation_path = next.path;
     pages.push(page);
     if (next.depth >= 2) continue;
     for (const link of linksFrom(fetched.text, next.href, origin).filter((item) => item.score > 0).slice(0, 12)) {
-      queue.push({ ...link, depth: next.depth + 1 });
+      queue.push({ ...link, depth: next.depth + 1, path: [...next.path, { url: link.href, label: link.label || link.href }] });
     }
     queue.sort((a, b) => b.score - a.score);
   }
@@ -141,7 +166,8 @@ async function scanSource(source) {
   const best = [...pages].sort((a, b) => b.score - a.score)[0] || null;
   const homepageOnly = pages.length <= 1 && !best?.signals?.length;
   const blocked = pages.length === 0 && failures.length > 0;
-  const status = blocked ? "fetch_blocked" : best?.score >= 6 ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
+  const closed = shouldArchiveClosed(source, best);
+  const status = blocked ? "fetch_blocked" : best?.score >= 6 && closed ? "closed_archive_candidate" : best?.score >= 6 ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
   return {
     id: source.id,
     name: source.name,
@@ -150,6 +176,9 @@ async function scanSource(source) {
     page_budget: pageBudget,
     depth_policy: "same-origin BFS, max depth 2, grant/bases/link keywords first",
     status,
+    recommendation: recommendationFor(status),
+    verification_url: best?.url || source.url,
+    navigation_path: best?.navigation_path || [{ url: source.url, label: source.name }],
     best_evidence: best,
     manual_fallback: manualFallbackFor(source, status, failures),
     failures

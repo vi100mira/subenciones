@@ -20,6 +20,12 @@
         "required_fields": ["official_url_or_pdf", "call_title", "deadline_text", "basis_summary", "provided_by", "reviewer_note"],
         "activation_rule": "manual contribution can create a review candidate, never an auto-approved tenant alert"
       },
+      "basis_verification": {
+        "clear_basis_requires": ["official page or PDF", "call title", "deadline or explicit closed status", "eligible applicant text", "application channel or form"],
+        "human_verification_url_required_when": ["basis confidence is low", "AI cannot identify bases", "only homepage or news item was found"],
+        "discarded": "Not relevant, duplicate, insufficient evidence, blocked without manual support, or not a grant/funding line.",
+        "archived": "Previously live or evidence-backed candidate that is closed, resolved, expired, or kept for historical traceability."
+      },
       "tenant_private_sources_used": 0
     }
   },
