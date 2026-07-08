@@ -1,15 +1,5 @@
 (function () {
   const flows = {
-    dashboard: {
-      eyebrow: "Lectura rapida",
-      title: "Del radar a la candidatura",
-      steps: [
-        ["scan-search", "Radar", "Fuentes publicas y privadas abiertas con evidencias."],
-        ["filter", "Filtrar", "Territorio, plazo, encaje y dudas visibles."],
-        ["file-check-2", "Candidatura", "Solo se prepara documentacion con revision humana."],
-        ["bell-ring", "Avisos", "Cambios de plazo, bases o criterios quedan vigilados."]
-      ]
-    },
     opportunities: {
       eyebrow: "Decidir con evidencia",
       title: "Como leer una oportunidad",

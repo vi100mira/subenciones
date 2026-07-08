@@ -59,7 +59,6 @@ function renderDashboard() {
     const cls = `${source.scope.includes("privado") || source.scope.includes("curada") || source.kind === "Privativa" ? " private" : ""}${status}`;
     return `<div class="source-node${cls}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
   }).join("");
-  document.querySelector("#source-map").insertAdjacentHTML("afterend", `<div class="plain-note"><strong>Que muestra este panel:</strong><br><span>No son oportunidades ni promete cobertura completa. BDNS tiene carga real parcial; territorial y privado muestran fuentes validadas, semillas o conectores pendientes.</span></div>`);
 }
 
 function renderOpportunities() {
