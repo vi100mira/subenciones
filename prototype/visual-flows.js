@@ -41,16 +41,6 @@
         ["send-horizontal", "Presentar", "La plataforma no presenta ni envia automaticamente."]
       ]
     },
-    audit: {
-      eyebrow: "Trazabilidad",
-      title: "Cada decision deja rastro",
-      steps: [
-        ["history", "Evento", "Acciones, cambios y revisiones quedan registradas."],
-        ["link", "Origen", "Cada recomendacion apunta a evidencia."],
-        ["lock-keyhole", "Dato", "Se conserva la clase de dato usada."],
-        ["download", "Exportar", "Auditoria revisable antes de compartir."]
-      ]
-    },
     operations: {
       eyebrow: "Salud operativa",
       title: "Del conector al coste",
