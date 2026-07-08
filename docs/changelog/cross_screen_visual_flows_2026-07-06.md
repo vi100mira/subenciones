@@ -6,7 +6,8 @@ Reduce cognitive load across the prototype by adding compact icon-based process 
 
 ## Files touched
 
-- `prototype/visual-flows.js`: new reusable visual-flow layer for Dashboard, Oportunidades, Entidad, Asistentes, Candidatura, Auditoria and Operaciones.
+- `prototype/visual-flows.js`: new reusable visual-flow layer for Dashboard, Oportunidades, Entidad, Candidatura, Auditoria and Operaciones.
+- `prototype/visual-flows.js`: removes the Asistentes visual flow after review because that screen already exposes permissions and states in its cards, and the extra guide increased saturation.
 - `prototype/index.html`: loads the new visual-flow layer after existing screen modules.
 
 ## Verification
@@ -18,8 +19,12 @@ Reduce cognitive load across the prototype by adding compact icon-based process 
   - Each checked panel renders four Lucide icons and tooltip-bearing controls.
   - Operations screenshot saved at `docs/changelog/cross-screen-visual-flows-2026-07-06.png`.
 - Additional Playwright check:
-  - Asistentes renders one visual-flow panel with four icons and tooltips.
+  - Asistentes intentionally renders no visual-flow panel.
   - Platform Normalizacion still changes a source to `Fuente normalizada` and persists the normalized source in localStorage.
+- Playwright local check against `http://127.0.0.1:3000/index.html?v=20260708-no-agents-flow`:
+  - Asistentes renders zero visual-flow panels and keeps the prototype state block.
+  - Oportunidades still renders one visual-flow panel with four icons.
+- Screenshot saved at `docs/changelog/agents-without-visual-flow-2026-07-08.png`.
 
 ## Residual risks
 

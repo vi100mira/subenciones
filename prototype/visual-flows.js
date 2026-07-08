@@ -30,16 +30,6 @@
         ["shield-alert", "Bloqueado", "Datos sensibles fuera del analisis."]
       ]
     },
-    agents: {
-      eyebrow: "Asistentes controlados",
-      title: "Permisos antes de actuar",
-      steps: [
-        ["bot", "Agente", "Cada asistente tiene alcance y permisos."],
-        ["key-round", "Acceso", "Usa solo fuentes autorizadas para su tarea."],
-        ["clipboard-list", "Salida", "Genera borrador, alerta o checklist revisable."],
-        ["user-check", "Revision", "Nada se envia sin aprobacion humana."]
-      ]
-    },
     workspace: {
       eyebrow: "Expediente de candidatura",
       title: "Avance sin perder control",
