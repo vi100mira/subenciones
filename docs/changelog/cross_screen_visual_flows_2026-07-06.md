@@ -8,6 +8,7 @@ Reduce cognitive load across the prototype by adding compact icon-based process 
 
 - `prototype/visual-flows.js`: new reusable visual-flow layer for Dashboard, Oportunidades, Entidad, Candidatura, Auditoria and Operaciones.
 - `prototype/visual-flows.js`: removes the Asistentes visual flow after review because that screen already exposes permissions and states in its cards, and the extra guide increased saturation.
+- `prototype/visual-flows.js`: moves the Candidatura visual flow out of the main page into a compact `Guia visual` trigger that opens a modal with the structured graph.
 - `prototype/index.html`: loads the new visual-flow layer after existing screen modules.
 
 ## Verification
@@ -25,6 +26,11 @@ Reduce cognitive load across the prototype by adding compact icon-based process 
   - Asistentes renders zero visual-flow panels and keeps the prototype state block.
   - Oportunidades still renders one visual-flow panel with four icons.
 - Screenshot saved at `docs/changelog/agents-without-visual-flow-2026-07-08.png`.
+- Playwright local check against `http://127.0.0.1:3000/index.html?v=20260708-workspace-flow-modal`:
+  - Candidatura renders no inline visual-flow panel, only one `Guia visual` trigger.
+  - The trigger opens a modal with the four-step candidature graph and closes cleanly.
+  - Oportunidades still keeps its inline visual-flow panel.
+- Screenshot saved at `docs/changelog/workspace-visual-flow-modal-2026-07-08.png`.
 
 ## Residual risks
 
