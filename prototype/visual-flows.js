@@ -20,16 +20,6 @@
         ["folder-plus", "Preseleccionar", "Crear expediente sin enviar nada fuera."]
       ]
     },
-    entity: {
-      eyebrow: "Permisos de contexto",
-      title: "Que puede usar la IA",
-      steps: [
-        ["globe-2", "Publico", "Web autorizada y perfil publico verificable."],
-        ["clipboard-check", "Aprobar", "Hechos internos solo tras validacion humana."],
-        ["database-zap", "Privado", "Drive o documentos separados por tenant."],
-        ["shield-alert", "Bloqueado", "Datos sensibles fuera del analisis."]
-      ]
-    },
     workspace: {
       eyebrow: "Expediente de candidatura",
       title: "Avance sin perder control",
