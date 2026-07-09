@@ -25,6 +25,7 @@
   }
 
   function applyOpportunityActionIcons() {
+    applyOpportunityCandidateState();
     document.querySelectorAll(".opportunity-item .button-row").forEach((row) => {
       row.classList.add("opportunity-toolbar");
       row.querySelectorAll("button, a").forEach((control) => {
@@ -37,6 +38,20 @@
       });
     });
     window.lucide?.createIcons();
+  }
+
+  function applyOpportunityCandidateState() {
+    const selection = candidateSelection();
+    document.querySelectorAll(".opportunity-item").forEach((card, index) => {
+      const item = currentOpportunities()[index];
+      const active = item?.id && selection.activeId === item.id;
+      card.classList.toggle("is-candidate-active", Boolean(active));
+      const button = card.querySelector("[data-opportunity]");
+      if (!button || !active) return;
+      button.removeAttribute("data-opportunity");
+      button.dataset.candidateDetail = item.id;
+      button.textContent = "Ver detalle";
+    });
   }
 
   function watchOpportunityList() {
@@ -68,7 +83,7 @@
 
   function privateArchivedRows() {
     return privateOpenRows()
-      .filter((item) => item.deadlineStatus === "closed")
+      .filter((item) => item.deadlineStatus === "closed" && (document.body.dataset.role === "superadmin" || item.entityFit?.status === "candidate"))
       .map((item) => ({
         ...item,
         entityFit: {
@@ -79,7 +94,7 @@
   }
 
   function privateActiveRows() {
-    return privateOpenRows().filter((item) => item.deadlineStatus !== "closed");
+    return privateOpenRows().filter((item) => item.deadlineStatus !== "closed" && (document.body.dataset.role === "superadmin" || item.entityFit?.status === "candidate"));
   }
 
   function publicRows() {
@@ -286,11 +301,17 @@
   }
 
   function statusLabel(item) {
-    if (item.entityFit?.status === "discarded") return "Descartada";
-    if (item.entityFit?.status === "archived") return "Archivada";
+    const isPlatform = document.body.dataset.role === "superadmin";
+    if (!isPlatform && item.entityFit?.status === "discarded") return "Descartada";
+    if (!isPlatform && item.entityFit?.status === "archived") return "Archivada";
     if (item.deadlineStatus === "uncertain") return "Plazo incierto";
     if (item.deadlineStatus === "closed") return "Cerrada";
     return "Abierta";
+  }
+
+  function statusDetail(item) {
+    if (document.body.dataset.role === "superadmin") return item.amount || item.evidenceQuality || "Sin importe";
+    return item.entityFit?.reason || item.amount || "Sin importe";
   }
 
   function statusSortValue(item) {
@@ -302,7 +323,7 @@
       "Archivada": "4"
     };
     const label = statusLabel(item);
-    return `${order[label] || "9"}-${compactText(item.entityFit?.reason || item.amount || "Sin importe").toLowerCase()}`;
+    return `${order[label] || "9"}-${compactText(statusDetail(item)).toLowerCase()}`;
   }
 
   function candidateCell(item) {
@@ -315,7 +336,7 @@
       const docs = documentState(item.id);
       const label = docs?.projectState === "active" ? "Proyecto" : docs ? "Docs listas" : "Docs pendientes";
       const tone = docs?.projectState === "active" ? "safe" : "warning";
-      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="ghost-action" data-candidate-action="open" data-candidate-id="${item.id}" type="button">Abrir</button></div>`;
+      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="ghost-action" data-candidate-detail="${item.id}" type="button">Ver detalle</button></div>`;
     }
     if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Preparar</button></div>`;
     return `<div class="candidate-state"><button class="ghost-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button">Preseleccionar</button></div>`;
@@ -399,14 +420,14 @@
       ? `No hay oportunidades con esta combinacion. <button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>`
       : "No hay oportunidades con estos filtros.";
     const body = rows.length ? rows.map((item) => `
-      <tr class="${item.id === selectedId ? "is-selected" : ""}" data-row-opportunity="${item.id}">
+      <tr class="${item.id === selectedId ? "is-selected" : ""} ${candidateSelection().activeId === item.id ? "is-candidate-active" : ""}" data-row-opportunity="${item.id}">
         <td><button class="grid-title" data-grid-opportunity="${item.id}">${item.title}</button><span>${item.organism || item.source}</span>${programFeatures(item)}</td>
         <td>${item.source}</td>
         <td><strong>${item.score}</strong><span>${item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja"}</span></td>
         <td>${window.deadlineTrace ? window.deadlineTrace.cell(item) : `${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span>`}</td>
         <td>${item.theme}<span>${item.territory}</span></td>
         <td>${candidateCell(item)}</td>
-        <td>${statusLabel(item)}<span>${item.entityFit?.reason || item.amount || "Sin importe"}</span></td>
+        <td>${statusLabel(item)}<span>${statusDetail(item)}</span></td>
         <td>${gridActions(item)}</td>
       </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">${emptyMessage}</td></tr>`;
     grid.innerHTML = `
@@ -570,7 +591,9 @@
       }
       if (rowAction?.dataset.gridOpportunity) {
         selectGridOpportunity(rowAction.dataset.gridOpportunity);
-        window.openOpportunityModal?.(rowAction.dataset.gridOpportunity, "analysis");
+        const selection = candidateSelection();
+        if (selection.activeId === rowAction.dataset.gridOpportunity) window.openActiveCandidateModal?.(rowAction.dataset.gridOpportunity);
+        else window.openOpportunityModal?.(rowAction.dataset.gridOpportunity, "analysis");
       }
       if (rowAction?.dataset.gridText) {
         selectGridOpportunity(rowAction.dataset.gridText);
@@ -586,7 +609,7 @@
         saveCandidateSelection(next);
         renderOpportunityGrid();
         if (candidateAction.dataset.candidateAction === "activate" && window.openWorkspaceAnalysis?.(id)) return;
-        if (candidateAction.dataset.candidateAction === "open" && typeof showScreen === "function") showScreen("workspace");
+        if (candidateAction.dataset.candidateAction === "open") window.openActiveCandidateModal?.(id);
       }
     });
     document.addEventListener("input", (event) => {
@@ -604,6 +627,7 @@
       entityScope.click();
     });
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.page = 1; setTimeout(renderOpportunityGrid, 0); }));
+    window.addEventListener("workspace-candidates-changed", () => { applyOpportunityCandidateState(); renderOpportunityGrid(); });
     renderEntityFitDashboard();
     setOpportunityView(currentOpportunityView());
   }

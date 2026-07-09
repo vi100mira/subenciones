@@ -10,17 +10,6 @@
         ["folder-plus", "Preseleccionar", "Crear expediente sin enviar nada fuera."]
       ]
     },
-    workspace: {
-      eyebrow: "Expediente de candidatura",
-      title: "Avance sin perder control",
-      modalOnly: true,
-      steps: [
-        ["inbox", "Preseleccion", "Varias candidaturas pueden estar en seguimiento."],
-        ["file-pen-line", "Documentos", "Memoria, anexos y checklist se preparan en Word."],
-        ["eye", "Revisar", "Una persona valida requisitos, importes y evidencias."],
-        ["send-horizontal", "Presentar", "La plataforma no presenta ni envia automaticamente."]
-      ]
-    },
     operations: {
       eyebrow: "Salud operativa",
       title: "Del conector al coste",

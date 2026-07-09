@@ -227,12 +227,12 @@ function renderWorkspace() {
     return `<div class="check-item"><strong>${entry.item}</strong><span class="check-actions">${badge(label, tone)}<button class="ghost-action" data-workspace-action="${entry.action}">${entry.action}</button></span></div>`;
   }).join("");
 
-  document.querySelector("#proposal-outline").innerHTML = window.MOCK.outline.map((section) => `
-    <article class="outline-item">
-      <strong>${section.title}</strong>
-      <p>${section.text}</p>
-    </article>
-  `).join("");
+  const proposal = document.querySelector("#proposal-outline"); if (proposal) proposal.innerHTML = window.MOCK.outline.map((section) => `
+      <article class="outline-item">
+        <strong>${section.title}</strong>
+        <p>${section.text}</p>
+      </article>
+    `).join("");
 }
 
 function renderAudit() {
