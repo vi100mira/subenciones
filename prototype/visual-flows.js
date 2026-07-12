@@ -21,6 +21,20 @@
       ]
     }
   };
+  const platformOpportunityFlow = {
+    eyebrow: "Gobernar el corpus",
+    title: "Como revisar una oportunidad global",
+    steps: [
+      ["database", "Corpus", "Convocatorias publicas y privadas abiertas, sin fuentes tenant-private."],
+      ["file-search", "Evidencia", "Comprobar bases, texto original y procedencia."],
+      ["shield-check", "Calidad", "Revisar plazo, cobertura y riesgos de normalizacion."],
+      ["network", "Distribuir", "Publicar metadatos comunes; cada tenant calcula su propio encaje."]
+    ]
+  };
+
+  function selectedFlow(screenId) {
+    return screenId === "opportunities" && document.body.dataset.role === "superadmin" ? platformOpportunityFlow : flows[screenId];
+  }
 
   function installStyles() {
     if (document.querySelector("#visual-flows-styles")) return;
@@ -62,7 +76,7 @@
   }
 
   function mountFlow(screenId) {
-    const flow = flows[screenId];
+    const flow = selectedFlow(screenId);
     const screen = document.querySelector(`#${screenId}`);
     if (!flow || !screen || screen.querySelector(`[data-visual-flow="${screenId}"]`)) return;
     if (flow.modalOnly) {
@@ -75,7 +89,7 @@
   }
 
   function openFlowModal(screenId) {
-    const flow = flows[screenId];
+    const flow = selectedFlow(screenId);
     if (!flow) return;
     document.querySelector("[data-visual-flow-modal]")?.remove();
     document.body.insertAdjacentHTML("beforeend", `
@@ -116,6 +130,7 @@
   window.addEventListener("hashchange", () => setTimeout(renderFlows, 0));
   window.addEventListener("workspace-candidates-changed", () => setTimeout(renderFlows, 0));
   window.addEventListener("tenant-watch-changed", () => setTimeout(renderFlows, 0));
+  window.addEventListener("role-session-applied", () => { document.querySelector('[data-visual-flow="opportunities"]')?.remove(); renderFlows(); });
   document.addEventListener("click", (event) => {
     const open = event.target.closest?.("[data-open-visual-flow]");
     const close = event.target.closest?.("[data-close-visual-flow]");

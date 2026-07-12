@@ -190,6 +190,28 @@ window.MOCK = {
     { agent: "Asistente de encaje", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
     { agent: "Politicas de datos", detail: "Bloqueo de texto sensible", time: "Hace 9 min" }
   ],
+  platformAlerts: [
+    { title: "Revision de plazo pendiente", detail: "228 convocatorias publicas requieren interpretar el anuncio o las bases." },
+    { title: "Fuente territorial con avisos", detail: "DOGV/BOP necesita revision del conector; no afecta a datos privados tenant." },
+    { title: "BDNS sincronizada", detail: "Corpus publico disponible para todos los tenants sin mezclar contexto interno." }
+  ],
+  platformRuns: [
+    { agent: "Busqueda de convocatorias", detail: "Refresco global BDNS/SNPSAP; solo fuentes publicas" },
+    { agent: "Normalizacion de fuentes", detail: "Revision de evidencias, versiones y plazos de plataforma" },
+    { agent: "Orquestador de tenants", detail: "1 tenant operativo; solo metadatos de estado y coste" }
+  ],
+  platformAgents: [
+    { name: "Busqueda global", icon: "radar", purpose: "Mantiene el corpus publico comun y sus evidencias.", access: "Fuentes platform-public", status: "Listo" },
+    { name: "Normalizacion", icon: "file-search", purpose: "Versiona bases, plazos y procedencia antes de publicar cambios.", access: "Documentos publicos", status: "Revision" },
+    { name: "Orquestador de tenants", icon: "network", purpose: "Coordina altas, permisos, salud y costes sin abrir contenido privado.", access: "Metadatos de gobierno tenant", status: "Controlado" },
+    { name: "Politicas de acceso", icon: "shield-check", purpose: "Impide recuperacion cruzada y exige seleccion explicita de tenant.", access: "Politicas y auditoria global", status: "Listo" }
+  ],
+  platformAudit: [
+    { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion global sin datos privados.", info: "Evento de plataforma sobre una fuente publica reutilizable por todos los tenants." },
+    { event: "Revision territorial programada", actor: "Superadmin plataforma", time: "12:08", detail: "DOGV/BOP; alcance platform-public.", info: "La accion afecta al conector publico y no recupera documentos de entidades." },
+    { event: "Politica de aislamiento comprobada", actor: "Politicas de acceso", time: "12:12", detail: "Sin recuperacion cruzada entre tenants.", info: "Control demo de frontera: el superadmin ve estado de gobierno, no chunks ni borradores privados." },
+    { event: "Tenant operativo verificado", actor: "Orquestador de tenants", time: "12:18", detail: "Novaterra; solo estado, plan y coste.", info: "Se auditan metadatos operativos del tenant sin mostrar sus fuentes, hechos internos o candidaturas." }
+  ],
   checklist: [
     { item: "Confirmar beneficiario elegible", state: "done", action: "Ver evidencia" },
     { item: "Verificar cofinanciacion", state: "review", action: "Verificar" },

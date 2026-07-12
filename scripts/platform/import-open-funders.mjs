@@ -6,6 +6,13 @@ import WebSocket from "ws";
 const args = new Set(process.argv.slice(2));
 const apply = args.has("--apply");
 const catalogPath = "data/private-open-funders/platform-open-funders-v1.json";
+const currentYear = new Date().getUTCFullYear();
+
+function isCurrentConcreteOpportunity(item) {
+  if (["source_index", "programmatic_monitor", "relationship_based_manual_review", "recurring_or_programmatic"].includes(item.opportunity_status)) return false;
+  const years = `${item.name} ${item.deadline_text}`.match(/20\d{2}/g)?.map(Number) || [];
+  return years.includes(currentYear) || years.some((year) => year > currentYear);
+}
 
 function loadEnvFile(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -127,7 +134,9 @@ async function upsertOpportunity(supabase, sourceId, item) {
     priority: item.opportunity_status === "open" ? 85 : 65,
     metadata_json: {
       initial_action: item.initial_action,
-      opportunity_status: item.opportunity_status
+      opportunity_status: item.opportunity_status,
+      edition_current: true,
+      human_review_required: item.deadline_confidence !== "high"
     },
     last_seen_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -186,6 +195,7 @@ async function main() {
   const summary = {
     apply,
     sources: catalog.sources.length,
+    currentConcreteOpportunities: catalog.sources.filter(isCurrentConcreteOpportunity).length,
     openOrActive: catalog.sources.filter((item) => item.opportunity_status === "open" || item.opportunity_status === "open_by_territory").length,
     tenantPrivateSources: catalog.vuelta_1_metrics.tenant_private_sources_used
   };
@@ -206,6 +216,7 @@ async function main() {
   });
   for (const item of catalog.sources) {
     const sourceId = await getSource(supabase, item);
+    if (!isCurrentConcreteOpportunity(item)) continue;
     const opportunityId = await upsertOpportunity(supabase, sourceId, item);
     await ensureVersion(supabase, opportunityId, item, observedAt);
   }

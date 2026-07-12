@@ -201,6 +201,23 @@ body.sidebar-collapsed .sidebar-note {
   outline-offset: -2px;
 }
 
+#platform [data-platform-pane="entities"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#platform [data-platform-pane="entities"] > .panel {
+  min-width: 0;
+}
+
+#platform [data-platform-pane="entities"] .inline-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#platform [data-platform-pane="entities"] .plain-note,
+#platform [data-platform-pane="entities"] .tenant-grid {
+  margin-top: 12px;
+}
+
 .source-map {
   background-color: #f8fffc;
   background-image:
@@ -2249,9 +2266,17 @@ body.sidebar-collapsed .sidebar-note {
   .tenant-actions {
     justify-content: flex-start;
   }
+
+  #platform [data-platform-pane="entities"] .inline-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
+  #platform [data-platform-pane="entities"] .inline-form {
+    grid-template-columns: 1fr;
+  }
+
   #platform > .segmented {
     display: grid;
     width: 100%;
@@ -2365,5 +2390,55 @@ body.sidebar-collapsed .sidebar-note {
 
   .main {
     padding: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  #workspace .panel {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .candidate-guide-heading {
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .candidate-guide-heading h2,
+  .candidate-guide.is-collapsed .candidate-guide-heading h2 {
+    font-size: 24px;
+  }
+
+  .candidate-guide-heading p:last-child {
+    font-size: 16px;
+  }
+
+  .candidate-list-heading {
+    gap: 10px;
+  }
+
+  .candidate-card {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .candidate-card > div {
+    min-width: 0;
+  }
+
+  .candidate-card > div:first-child > strong,
+  .candidate-card > div:first-child > span {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  .candidate-card p {
+    grid-column: 1;
+  }
+
+  .candidate-card > div:last-of-type {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }

@@ -51,6 +51,8 @@
     document.body.dataset.role = session.role;
     sessionStorage.setItem("prototype-role", session.role);
     window.CredentialsAuth?.applySession?.(session);
+    window.refreshRoleViews?.();
+    window.dispatchEvent(new CustomEvent("role-session-applied"));
     window.PlanAccess?.applyMenuPolicy?.();
     const cta = document.querySelector(".top-actions .primary-action"); if (cta) cta.innerHTML = session.role === "superadmin" ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   }

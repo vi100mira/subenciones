@@ -107,6 +107,8 @@ function versionRow(opportunityId, item, versionNumber) {
       administration_level: item.administrationLevel,
       sector: item.sector,
       score: item.score,
+      actionable: item.actionable !== false,
+      lifecycle_status: item.lifecycleStatus || "review_required",
       internal_facts: item.internalFacts || []
     },
     detected_at: item.deadlineReadAt || new Date().toISOString()

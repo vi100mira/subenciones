@@ -21,6 +21,19 @@ La carpeta `data/simulated_drive/Novaterra` es una fixture de piloto. Los valore
 
 La base local se crea en `backend/var/subvenciones.db`.
 
+## Extracción privada y OCR
+
+El escáner de financiadores usa extracción PDF local y activa OCR solo en páginas con menos de 80 caracteres de texto. Preparación del worker:
+
+```powershell
+python -m pip install -r .\backend\requirements.txt
+$env:TESSERACT_CMD = "C:\ruta\a\tesseract.exe"
+$env:OCR_LANGUAGES = "spa+cat+eng"
+npx playwright install chromium
+```
+
+Tesseract 5 y los paquetes de idioma `spa`, `cat` y `eng` deben estar instalados en el host del worker. Si falta OCR, la página queda como `ocr_unavailable`; si el HTML está incompleto, Playwright renderiza la URL pública sin iniciar sesión ni enviar formularios. Estos procesos son workers offline y no deben ejecutarse dentro de una Vercel Function.
+
 ## Ejecutar API local
 
 ```powershell

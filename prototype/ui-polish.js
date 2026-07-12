@@ -277,6 +277,7 @@
   }
 
   function candidateSortValue(item) {
+    if (document.body.dataset.role === "superadmin") return "0-no-aplica";
     if (gridState.scope === "discarded") return "5-no candidata";
     if (gridState.scope === "archived") return "6-archivada";
     const selection = candidateSelection();
@@ -289,6 +290,7 @@
   }
 
   function candidateLabel(item) {
+    if (document.body.dataset.role === "superadmin") return "No aplica";
     if (gridState.scope === "discarded") return "No candidata";
     if (gridState.scope === "archived") return "Archivada";
     const selection = candidateSelection();
@@ -327,6 +329,7 @@
   }
 
   function candidateCell(item) {
+    if (document.body.dataset.role === "superadmin") return `<span class="badge review">No aplica</span>`;
     if (gridState.scope === "discarded") return `<span class="badge danger">No candidata</span>`;
     if (gridState.scope === "archived") return `<span class="badge review">Archivada</span>`;
     const selection = candidateSelection();
@@ -438,7 +441,7 @@
           <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
           <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
-          <th aria-sort="${sortAria("candidate")}"><button data-grid-sort="candidate">Candidatura ${sortMark("candidate")}</button></th>
+          <th aria-sort="${sortAria("candidate")}"><button data-grid-sort="candidate">${document.body.dataset.role === "superadmin" ? "Uso tenant" : "Candidatura"} ${sortMark("candidate")}</button></th>
           <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Acciones</th>
         </tr>${renderFilterHeaders(baseRows)}</thead>
         <tbody>${body}</tbody>
@@ -628,6 +631,7 @@
     });
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.page = 1; setTimeout(renderOpportunityGrid, 0); }));
     window.addEventListener("workspace-candidates-changed", () => { applyOpportunityCandidateState(); renderOpportunityGrid(); });
+    window.addEventListener("role-session-applied", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
     renderEntityFitDashboard();
     setOpportunityView(currentOpportunityView());
   }

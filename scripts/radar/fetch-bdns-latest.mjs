@@ -16,6 +16,8 @@ const prototypeOut = args.get("prototype-out") || "prototype/radar-data.js";
 const mode = args.get("mode") || "latest";
 const detailDelayMs = Number(args.get("detail-delay-ms") || 250);
 const retryCount = Number(args.get("retries") || 2);
+const today = args.get("today") || new Date().toISOString().slice(0, 10);
+const currentYear = Number(today.slice(0, 4));
 
 function apiUrl(endpoint, params) {
   const url = new URL(`${API_BASE}${endpoint}`);
@@ -57,11 +59,31 @@ function plainText(value) {
   return typeof value === "string" ? value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
 }
 
-function deadlineStatus(detail) {
+function evidenceYear(detail, documents, announcements) {
+  const datedValues = [
+    detail.fechaInicioSolicitud,
+    detail.fechaFinSolicitud,
+    detail.fechaRegistro,
+    ...documents.flatMap((item) => [item.publishedAt, item.modifiedAt]),
+    ...announcements.map((item) => item.publishedAt)
+  ].filter(Boolean);
+  const years = datedValues.flatMap((value) => String(value).match(/20\d{2}/g) || []).map(Number);
+  return years.length ? Math.max(...years) : null;
+}
+
+function deadlineStatus(detail, documents, announcements) {
   const end = normalizeDate(detail.fechaFinSolicitud);
-  if (!end) return { status: detail.abierto ? "open" : "uncertain", confidence: detail.abierto ? "Media" : "Baja" };
-  const today = new Date().toISOString().slice(0, 10);
-  return { status: end >= today ? "open" : "closed", confidence: "Alta" };
+  if (end) return { status: end >= today ? "open" : "closed", confidence: "Alta", actionable: end >= today, lifecycle: end >= today ? "current" : "historical" };
+
+  const observedYear = evidenceYear(detail, documents, announcements);
+  const currentEvidence = observedYear !== null && observedYear >= currentYear;
+  if (detail.abierto && currentEvidence) return { status: "open", confidence: "Media", actionable: true, lifecycle: "current" };
+  return {
+    status: "uncertain",
+    confidence: "Baja",
+    actionable: false,
+    lifecycle: observedYear !== null && observedYear < currentYear ? "historical" : "review_required"
+  };
 }
 
 function deadlineEvidence(detail, documents, announcements) {
@@ -105,7 +127,6 @@ function estimateScore(detail) {
 }
 
 function normalizeGrant(detail, generatedAt) {
-  const deadline = deadlineStatus(detail);
   const title = detail.descripcion || `Convocatoria BDNS ${detail.codigoBDNS}`;
   const territory = textList(detail.regiones).join(", ") || detail.organo?.nivel2 || detail.organo?.nivel1 || "Estatal";
   const beneficiaries = textList(detail.tiposBeneficiarios);
@@ -127,6 +148,7 @@ function normalizeGrant(detail, generatedAt) {
     publishedAt: item.datPublicacion,
     textPreview: plainText(item.texto).slice(0, 900)
   }));
+  const deadline = deadlineStatus(detail, documents, announcements);
   const evidence = [
     `BDNS ${detail.codigoBDNS}: ${title}`,
     detail.descripcionFinalidad ? `Finalidad: ${detail.descripcionFinalidad}` : "",
@@ -155,6 +177,8 @@ function normalizeGrant(detail, generatedAt) {
     deadline: detail.fechaFinSolicitud || detail.textFin || "Plazo no estructurado",
     deadlineStatus: deadline.status,
     deadlineConfidence: deadline.confidence,
+    actionable: deadline.actionable,
+    lifecycleStatus: deadline.lifecycle,
     ...trace,
     officialUrl: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`,
     basesUrl: detail.urlBasesReguladoras || detail.sedeElectronica || "",
@@ -223,7 +247,9 @@ function qualitySummary(opportunities, listedCount, detailErrors) {
     withBasesUrl: opportunities.filter((item) => item.basesUrl).length,
     withDocuments: opportunities.filter((item) => item.documents.length).length,
     withAnnouncements: opportunities.filter((item) => item.announcements.length).length,
-    uncertainDeadline: opportunities.filter((item) => item.deadlineStatus === "uncertain").length
+    uncertainDeadline: opportunities.filter((item) => item.deadlineStatus === "uncertain").length,
+    actionableCount: opportunities.filter((item) => item.actionable).length,
+    historicalCount: opportunities.filter((item) => item.lifecycleStatus === "historical").length
   };
 }
 
@@ -274,7 +300,12 @@ async function main() {
   await fs.mkdir(outDir, { recursive: true });
   const outputName = mode === "search" ? "bdns-search.json" : "bdns-latest.json";
   await fs.writeFile(path.join(outDir, outputName), `${JSON.stringify(dataset, null, 2)}\n`, "utf8");
-  await fs.writeFile(prototypeOut, `window.RADAR = ${JSON.stringify(dataset, null, 2)};\nwindow.RADAR_PLATFORM_OPPORTUNITIES = window.RADAR.opportunities.map((item) => ({ ...item }));\n`, "utf8");
+  const prototypeDataset = {
+    ...dataset,
+    historicalCount: opportunities.filter((item) => item.lifecycleStatus === "historical").length,
+    opportunities: opportunities.filter((item) => item.actionable)
+  };
+  await fs.writeFile(prototypeOut, `window.RADAR = ${JSON.stringify(prototypeDataset, null, 2)};\nwindow.RADAR_PLATFORM_OPPORTUNITIES = window.RADAR.opportunities.map((item) => ({ ...item }));\n`, "utf8");
   console.log(JSON.stringify({ generatedAt, mode, totalElements, count: opportunities.length, quality: dataset.quality, output: path.join(outDir, outputName), prototypeOut }, null, 2));
 }
 

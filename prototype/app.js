@@ -1,9 +1,8 @@
 const state = { selectedOpportunityId: (window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
 const privateOpenRows = () => [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
 function opportunities() {
-  const rows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || []; return rows.length ? [...rows, ...privateOpenRows()] : window.MOCK.opportunities;
+  const rows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [], today = new Date().toISOString().slice(0, 10), isActionable = (item) => item.actionable === true || (item.actionable !== false && item.deadlineStatus !== "closed" && (item.deadlineEnd ? item.deadlineEnd >= today : item.deadlineStatus === "open" && String(item.deadlineEvidenceDate || item.deadlineStart || "").startsWith(today.slice(0, 4)))); return rows.length ? [...rows, ...privateOpenRows()].filter(isActionable) : window.MOCK.opportunities.filter(isActionable);
 }
-
 const titles = {
   dashboard: "Panel de oportunidades",
   opportunities: "Oportunidades vivas",
@@ -15,20 +14,17 @@ const titles = {
   platform: "Consola plataforma",
   operations: "Operaciones", plan: "Plan y monetizacion"
 };
-
 function badge(text, tone = "review") {
   return `<span class="badge ${tone}">${text}</span>`;
 }
-
 function renderStackItem(item) {
   return `<div class="stack-item"><strong>${item.title || item.agent}</strong><span>${item.detail}</span></div>`;
 }
-
 function scoreLabel(score) {
   return score >= 75 ? "Prioridad alta" : score >= 55 ? "Prioridad media" : "Prioridad baja";
 }
-
 function renderDashboard() {
+  const isPlatform = document.body.dataset.role === "superadmin";
   const radarCount = opportunities().length;
   const openCount = opportunities().filter((item) => item.deadlineStatus === "open").length;
   const metrics = document.querySelectorAll(".metric");
@@ -45,8 +41,9 @@ function renderDashboard() {
     metrics[3].querySelector("strong").textContent = window.RADAR.totalElements || radarCount;
     metrics[3].querySelector("small").textContent = "Resultados potenciales BDNS";
   }
-  document.querySelector("#alerts-list").innerHTML = window.MOCK.alerts.map(renderStackItem).join("");
-  document.querySelector("#agent-runs-small").innerHTML = window.MOCK.runs.slice(0, 3).map(renderStackItem).join("");
+  document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
+  document.querySelector("#agent-runs-small").innerHTML = (isPlatform ? window.MOCK.platformRuns : window.MOCK.runs).slice(0, 3).map(renderStackItem).join("");
+  document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
   document.querySelector("#source-map").innerHTML = `
     <div class="source-legend">
       <span><i class="legend-dot active"></i>Operativa</span>
@@ -54,13 +51,12 @@ function renderDashboard() {
       <span><i class="legend-dot pending"></i>No conectada</span>
       <span><i class="legend-dot blocked"></i>Bloqueada</span>
     </div>
-  ` + window.MOCK.sources.map((source) => {
+  ` + window.MOCK.sources.filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant")).map((source) => {
     const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
     const cls = `${source.scope.includes("privado") || source.scope.includes("curada") || source.kind === "Privativa" ? " private" : ""}${status}`;
     return `<div class="source-node${cls}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
   }).join("");
 }
-
 function renderOpportunities() {
   const list = document.querySelector("#opportunity-list");
   list.innerHTML = opportunities().map((item) => {
@@ -205,7 +201,8 @@ function renderGovernance() {
 }
 
 function renderAgents() {
-  document.querySelector("#agent-grid").innerHTML = window.MOCK.agents.map((agent) => `
+  const isPlatform = document.body.dataset.role === "superadmin";
+  document.querySelector("#agent-grid").innerHTML = (isPlatform ? window.MOCK.platformAgents : window.MOCK.agents).map((agent) => `
     <article class="agent-card">
       <div class="agent-icon"><i data-lucide="${agent.icon}"></i></div>
       <div class="opportunity-topline">
@@ -217,7 +214,7 @@ function renderAgents() {
     </article>
   `).join("");
 
-  document.querySelector("#agent-runs").innerHTML = window.MOCK.runs.map(renderStackItem).join("");
+  document.querySelector("#agent-runs").innerHTML = (isPlatform ? window.MOCK.platformRuns : window.MOCK.runs).map(renderStackItem).join("");
 }
 
 function renderWorkspace() {
@@ -236,7 +233,9 @@ function renderWorkspace() {
 }
 
 function renderAudit() {
-  document.querySelector("#audit-timeline").innerHTML = window.MOCK.audit.map((item) => `
+  const isPlatform = document.body.dataset.role === "superadmin";
+  document.querySelector("#audit .panel-heading h2").textContent = isPlatform ? "Eventos globales de plataforma" : "Eventos del piloto";
+  document.querySelector("#audit-timeline").innerHTML = (isPlatform ? window.MOCK.platformAudit : window.MOCK.audit).map((item) => `
     <div class="timeline-item">
       <time>${item.time}</time>
       <div>
@@ -298,7 +297,8 @@ function showScreen(screenId) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.screen === screenId);
   });
-  document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && screenId === "opportunities" ? "Corpus RAG plataforma" : titles[screenId];
+  const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Corpus RAG plataforma", agents: "Agentes de plataforma", audit: "Auditoria global" };
+  document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && platformTitles[screenId] ? platformTitles[screenId] : titles[screenId];
   document.querySelector(".top-actions .primary-action").innerHTML = (screenId === "platform" || screenId === "operations" || document.body.dataset.role === "superadmin") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -339,6 +339,7 @@ function init() {
   renderAudit();
   renderPlatform();
   renderOperations();
+  window.refreshRoleViews = () => { renderDashboard(); renderOpportunities(); renderAgents(); renderAudit(); renderOperations(); window.renderPlatformOperations?.(); };
   bindNavigation();
   bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
 

@@ -1,14 +1,24 @@
 import fs from "node:fs/promises";
+import crypto from "node:crypto";
+import os from "node:os";
+import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const args = new Set(process.argv.slice(2));
 const limitArg = process.argv.find((item) => item.startsWith("--limit="));
 const idArg = process.argv.find((item) => item.startsWith("--id="));
 const pageBudgetArg = process.argv.find((item) => item.startsWith("--page-budget="));
 const writeArg = process.argv.find((item) => item.startsWith("--write="));
+const browserFallback = !process.argv.includes("--browser-fallback=false");
 const catalogPath = "data/private-open-funders/platform-open-funders-v1.json";
 const limit = limitArg ? Number(limitArg.split("=")[1]) : Infinity;
 const pageBudget = pageBudgetArg ? Number(pageBudgetArg.split("=")[1]) : 10;
 const timeoutMs = 12000;
+const currentYear = new Date().getUTCFullYear();
+const pythonCommand = process.env.PYTHON_BIN || "python";
 
 const linkTerms = [
   "convocatoria", "convocatorias", "ayuda", "ayudas", "subvencion", "subvenciones",
@@ -36,6 +46,10 @@ function sameOrigin(url, origin) {
   } catch {
     return false;
   }
+}
+
+function isPublicDocument(url) {
+  return /\.(pdf|docx?)(?:$|[?#])/i.test(url);
 }
 
 function stripHtml(html) {
@@ -96,7 +110,7 @@ function linksFrom(html, base, origin) {
   const links = [];
   for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
     const href = normalizeUrl(match[1], base);
-    if (!href || !sameOrigin(href, origin)) continue;
+    if (!href || (!sameOrigin(href, origin) && !isPublicDocument(href))) continue;
     const label = stripHtml(match[2]).slice(0, 120);
     links.push({ href, label, score: scoreUrl(href, label) });
   }
@@ -113,7 +127,9 @@ async function fetchText(url) {
     });
     const contentType = response.headers.get("content-type") || "";
     if (!response.ok) return { ok: false, url, status: response.status, contentType, text: "" };
-    if (contentType.includes("pdf")) return { ok: true, url, status: response.status, contentType, text: "PDF localizado" };
+    if (contentType.includes("pdf") || /\.pdf(?:$|[?#])/i.test(url)) {
+      return { ok: true, url, status: response.status, contentType: "application/pdf", bytes: Buffer.from(await response.arrayBuffer()), text: "" };
+    }
     const text = await response.text();
     return { ok: true, url, status: response.status, contentType, text };
   } catch (error) {
@@ -123,8 +139,43 @@ async function fetchText(url) {
   }
 }
 
+async function extractPdf(bytes, url) {
+  const temporaryPath = path.join(os.tmpdir(), `grant-${crypto.randomUUID()}.pdf`);
+  try {
+    await fs.writeFile(temporaryPath, bytes);
+    const { stdout } = await execFileAsync(pythonCommand, ["scripts/workers/extract-public-pdf.py", temporaryPath], { maxBuffer: 2_000_000 });
+    const extracted = JSON.parse(stdout);
+    return {
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+      page_count: extracted.page_count,
+      extracted_text: extracted.text,
+      page_evidence: extracted.page_evidence,
+      ocr_required: extracted.ocr_required,
+      ocr_unavailable: extracted.ocr_unavailable,
+      extraction_status: extracted.ocr_unavailable ? "ocr_unavailable" : extracted.text ? "ready" : "empty",
+      source_url: url
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "pdf_extraction_error";
+    return { extraction_status: "error", extraction_error: message.slice(-500), source_url: url };
+  } finally {
+    await fs.rm(temporaryPath, { force: true });
+  }
+}
+
+async function renderPublicPage(url) {
+  if (!browserFallback) return null;
+  try {
+    const { stdout } = await execFileAsync(process.execPath, ["scripts/workers/render-public-page.mjs", url], { maxBuffer: 4_000_000, timeout: 30000 });
+    return JSON.parse(stdout);
+  } catch {
+    return null;
+  }
+}
+
 function classifyPage(url, html) {
-  const text = stripHtml(html).toLowerCase();
+  const pageText = stripHtml(html);
+  const text = pageText.toLowerCase();
   const urlScore = scoreUrl(url);
   const hasBasis = /bases|convocatoria|solicitud|formulario|plazo|documentaci/.test(text);
   const hasDeadline = /plazo|fecha|hasta el|abierto|cierre|presentaci/.test(text);
@@ -134,6 +185,7 @@ function classifyPage(url, html) {
     url,
     title: titleOf(html),
     status_facts: extractStatusFacts(html),
+    evidence_excerpt: pageText.slice(0, 4000),
     score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (isClosed ? 1 : 0),
     signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", isClosed && "closed_or_resolved"].filter(Boolean)
   };
@@ -196,6 +248,11 @@ function shouldArchiveClosed(source, best) {
   return !sourceStatus.includes("open") && !sourceStatus.includes("mixed") && !sourceStatus.includes("source_index");
 }
 
+function sourceEditionIsCurrent(source) {
+  const years = `${source.name} ${source.deadline_text}`.match(/20\d{2}/g)?.map(Number) || [];
+  return years.includes(currentYear) || years.some((year) => year > currentYear);
+}
+
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
@@ -221,20 +278,44 @@ async function scanSource(source) {
     seen.add(next.href);
     const fetched = await fetchText(next.href);
     if (!fetched.ok) {
-      failures.push({ url: next.href, status: fetched.status, reason: fetched.text.slice(0, 120) });
-      continue;
+      const rendered = next.depth <= 1 ? await renderPublicPage(next.href) : null;
+      if (!rendered?.html) {
+        failures.push({ url: next.href, status: fetched.status, reason: fetched.text.slice(0, 120) });
+        continue;
+      }
+      fetched.ok = true;
+      fetched.text = rendered.html;
+      fetched.contentType = "text/html; rendered=browser";
     }
     if (fetched.contentType.includes("pdf")) {
-      pages.push({ url: next.href, title: next.label || "PDF", score: 8 + scoreUrl(next.href, next.label), signals: ["pdf"], navigation_path: next.path, curated_basis: Boolean(next.curated_basis) });
+      const document = await extractPdf(fetched.bytes, next.href);
+      const documentText = document.extracted_text || "";
+      pages.push({
+        url: next.href,
+        title: next.label || "PDF",
+        score: 8 + scoreUrl(next.href, next.label) + (document.extraction_status === "ready" ? 8 : 0),
+        signals: ["pdf", documentText && "document_text", /requisitos|beneficiari|criterios|plazo/i.test(documentText) && "eligibility"].filter(Boolean),
+        document,
+        evidence_excerpt: documentText.slice(0, 4000),
+        navigation_path: next.path,
+        curated_basis: Boolean(next.curated_basis)
+      });
       continue;
     }
-    const page = classifyPage(next.href, fetched.text);
+    let page = classifyPage(next.href, fetched.text);
+    if (page.score < 6 && next.depth === 0 && !fetched.contentType.includes("rendered=browser")) {
+      const rendered = await renderPublicPage(next.href);
+      if (rendered?.html) {
+        page = classifyPage(rendered.rendered_url || next.href, rendered.html);
+        page.signals.push("browser_rendered");
+      }
+    }
     page.curated_basis = Boolean(next.curated_basis);
     if (next.href === start) page.score += 3;
     page.navigation_path = next.path;
     pages.push(page);
     if (next.depth >= 2) continue;
-    for (const link of linksFrom(fetched.text, next.href, origin).filter((item) => item.score > 0).slice(0, 12)) {
+    for (const link of linksFrom(fetched.text, next.href, origin).filter((item) => item.score > 0 || isPublicDocument(item.href)).slice(0, 18)) {
       queue.push({ ...link, depth: next.depth + 1, path: [...next.path, { url: link.href, label: link.label || link.href }] });
     }
     queue.sort((a, b) => b.score - a.score);
@@ -248,7 +329,9 @@ async function scanSource(source) {
   const blocked = pages.length === 0 && failures.length > 0;
   const factsClosed = /cerrad|finalizad|resuelt|fuera de plazo/i.test(Object.values(statusFacts).join(" "));
   const closed = shouldArchiveClosed(source, best) || factsClosed;
-  const usableEvidence = best?.score >= 6 && confidence.level !== "low";
+  const currentEdition = sourceEditionIsCurrent(source);
+  const documentReady = !best?.document || best.document.extraction_status === "ready";
+  const usableEvidence = best?.score >= 6 && confidence.level !== "low" && (currentEdition || closed) && (closed || documentReady);
   const status = blocked ? "fetch_blocked" : usableEvidence && closed ? "closed_archive_candidate" : usableEvidence ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
   return {
     id: source.id,
@@ -256,7 +339,7 @@ async function scanSource(source) {
     start_url: source.url,
     pages_visited: pages.length,
     page_budget: pageBudget,
-    depth_policy: "same-origin BFS, max depth 2, grant/bases/link keywords first",
+    depth_policy: `same-origin BFS, max depth 2, grant/bases/link keywords first; browser fallback ${browserFallback ? "enabled" : "disabled"}`,
     status,
     recommendation: recommendationFor(status),
     verification_url: best?.url || source.url,
@@ -264,6 +347,9 @@ async function scanSource(source) {
     best_evidence: best,
     basis_confidence: confidence,
     status_facts: statusFacts,
+    edition_current: currentEdition,
+    evidence_complete: Boolean(usableEvidence && documentReady),
+    evidence_documents: pages.filter((page) => page.document).map((page) => page.document),
     manual_fallback: manualFallbackFor(source, status, failures),
     failures
   };

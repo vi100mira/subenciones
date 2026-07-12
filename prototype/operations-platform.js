@@ -44,5 +44,6 @@
   }
 
   renderPlatformOperations();
+  window.renderPlatformOperations = renderPlatformOperations;
   window.addEventListener("hashchange", renderPlatformOperations);
 })();
