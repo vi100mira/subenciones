@@ -48,7 +48,8 @@ function versionHashes(item) {
       objective: item.objective,
       extractedText: item.extractedText,
       documents: item.documents?.map((doc) => [doc.id, doc.filename, doc.modifiedAt, doc.publishedAt]),
-      basesEvidence: item.basesEvidence?.map((doc) => [doc.sourceUrl, doc.sha256, doc.pageCount, doc.extractedChars])
+      basesEvidence: item.basesEvidence?.map((doc) => [doc.sourceUrl, doc.sha256, doc.pageCount, doc.extractedChars]),
+      proposalConstraints: item.proposalConstraints
     }),
     deadline_hash: hash({
       observed: item.deadlineObserved || item.deadline,
@@ -103,6 +104,7 @@ function versionRow(opportunityId, item, versionNumber) {
       documents: item.documents || [],
       announcements: item.announcements || [],
       bases_evidence: item.basesEvidence || [],
+      proposal_constraints: item.proposalConstraints || null,
       evidence: item.evidence || []
     },
     metadata_json: {
@@ -113,7 +115,9 @@ function versionRow(opportunityId, item, versionNumber) {
       bases_status: item.basesStatus || "unknown",
       source_authority: item.sourceAuthority || "unknown",
       lifecycle_status: item.lifecycleStatus || "review_required",
-      internal_facts: item.internalFacts || []
+      internal_facts: item.internalFacts || [],
+      proposal_constraints_status: item.proposalConstraints?.status || "not_scanned",
+      drafting_gate: item.proposalConstraints?.draftingGate || "blocked_pending_constraint_review"
     },
     detected_at: item.deadlineReadAt || new Date().toISOString()
   };

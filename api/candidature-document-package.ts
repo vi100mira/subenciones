@@ -7,6 +7,8 @@ import { logError, logInfo } from "../src/logger.js";
 
 type DocumentSection = { title?: unknown; lines?: unknown };
 type PackageDocument = { id?: unknown; title?: unknown; filename?: unknown; sections?: unknown };
+type ProposalLimit = { documentType?: string; value?: number; unit?: string };
+type ProposalConstraints = { draftingGate?: string; requiresRenderedValidation?: boolean; limits?: ProposalLimit[] };
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -50,6 +52,46 @@ function wordHtml(title: string, sections: ReturnType<typeof normalizeDocument>[
   return `<!doctype html><html><head><meta charset="utf-8"><title>${htmlEscape(title)}</title></head><body><h1>${htmlEscape(title)}</h1>${body}</body></html>`;
 }
 
+function isDraftDocument(document: ReturnType<typeof normalizeDocument>) {
+  return document.id === "memory" || /memoria|propuesta|borrador/i.test(document.title);
+}
+
+function documentText(document: ReturnType<typeof normalizeDocument>) {
+  return document.sections.flatMap((section) => [section.title, ...section.lines]).join(" ");
+}
+
+function validateDraftLimits(documents: ReturnType<typeof normalizeDocument>[], constraints: ProposalConstraints | null) {
+  const drafts = documents.filter(isDraftDocument);
+  if (!drafts.length) return;
+  if (constraints?.draftingGate !== "constraints_verified") {
+    throw new Error("Redaccion bloqueada: faltan limites de extension verificados en evidencia oficial.");
+  }
+  if (constraints.requiresRenderedValidation) {
+    throw new Error("Redaccion bloqueada: el limite por paginas requiere renderizado y validacion servidor antes de guardar la memoria.");
+  }
+  const text = drafts.map(documentText).join(" ");
+  for (const limit of constraints.limits || []) {
+    if (!limit.value || limit.value <= 0) continue;
+    const actual = limit.unit === "words" ? text.trim().split(/\s+/).filter(Boolean).length
+      : limit.unit === "characters" ? text.length : null;
+    if (actual !== null && actual > limit.value) {
+      throw new Error(`Redaccion bloqueada: ${actual} ${limit.unit} superan el maximo oficial de ${limit.value}.`);
+    }
+  }
+}
+
+async function loadProposalConstraints(supabase: ReturnType<typeof getSupabaseAdmin>, canonicalKey: string) {
+  const { data: opportunity, error: opportunityError } = await supabase
+    .from("platform_opportunities").select("id").eq("canonical_key", canonicalKey).maybeSingle();
+  if (opportunityError) throw opportunityError;
+  if (!opportunity) return null;
+  const { data: version, error: versionError } = await supabase
+    .from("platform_opportunity_versions").select("evidence_json").eq("opportunity_id", opportunity.id)
+    .eq("version_status", "current").maybeSingle();
+  if (versionError) throw versionError;
+  return (version?.evidence_json?.proposal_constraints || null) as ProposalConstraints | null;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
 
@@ -63,6 +105,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const safeOpportunity = cleanText(opportunityId).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 80);
     const normalizedDocs = documents.slice(0, 8).map(normalizeDocument).filter((doc) => doc.sections.length);
     if (!normalizedDocs.length) return res.status(400).json(fail("Los documentos no tienen contenido valido"));
+
+    const supabase = getSupabaseAdmin();
+    const proposalConstraints = await loadProposalConstraints(supabase, opportunityId);
+    validateDraftLimits(normalizedDocs, proposalConstraints);
 
     const uploaded = [];
     for (const doc of normalizedDocs) {
@@ -78,7 +124,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       uploaded.push({ id: doc.id, title: doc.title, filename: doc.filename, pathname: blob.pathname || pathname, sha256, size: buffer.byteLength });
     }
 
-    const supabase = getSupabaseAdmin();
     await supabase.from("audit_events").insert({
       tenant_id: actor.tenantId,
       actor_user_id: actor.userId,
@@ -89,6 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       detail_json: {
         title: cleanText(title, "Candidatura"),
         documents: uploaded.map(({ id, title: docTitle, pathname, sha256, size }) => ({ id, title: docTitle, pathname, sha256, size })),
+        proposal_constraints: proposalConstraints,
         decisions: Array.isArray(decisions) ? decisions.map((decision) => cleanText(decision)).filter(Boolean).slice(0, 12) : []
       }
     });
@@ -97,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(201).json(ok({ storage: "vercel_blob", documents: uploaded }));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    const status = message.includes("Permiso") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : 400;
+    const status = message.includes("Permiso") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : message.includes("Redaccion bloqueada") ? 409 : 400;
     logError("candidature_document_package_failed", { status, message });
     return res.status(status).json(fail(message));
   }

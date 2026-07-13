@@ -2,7 +2,7 @@
   const packageKey = "documentary-agent-package-v1";
   const candidateKey = "workspace-candidates-v1";
   const documentBlobKey = "tenant-document-blob-demo-v1";
-  const documentTemplateVersion = 4;
+  const documentTemplateVersion = 5;
   const presets = {
     "labora-empleo-2026": {
       who: ["Entidad sin animo de lucro o social con actuacion en Comunitat Valenciana.", "Capacidad operativa para ejecutar itinerarios de insercion, formacion o acompanamiento.", "Situacion fiscal y Seguridad Social al corriente antes de presentar."],
@@ -35,6 +35,7 @@
     return [
       ...(window.RADAR_PLATFORM_OPPORTUNITIES || []),
       ...(window.RADAR?.opportunities || []),
+      ...(window.MUNICIPAL_RADAR?.opportunities || []),
       ...(window.MOCK?.opportunities || []),
       ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])
     ];
@@ -90,8 +91,34 @@
       fit: item?.fit || ["Encaje pendiente de analisis explicable."],
       risks: item?.risks || ["Requiere revisar bases y plazo antes de continuar."],
       evidence: item?.evidence || ["Evidencia pendiente de consolidar."],
+      proposalConstraints: item?.proposalConstraints || {
+        status: "not_found_requires_review",
+        draftingGate: "blocked_pending_constraint_review",
+        requiresRenderedValidation: false,
+        requiresHumanReview: true,
+        limits: [],
+        formatRules: []
+      },
       ...pack
     };
+  }
+
+  function draftingState(pack) {
+    if (pack.proposalConstraints?.draftingGate !== "constraints_verified") return "constraint_review_required";
+    if (pack.proposalConstraints?.requiresRenderedValidation) return "render_validation_required";
+    return "documentation_ready";
+  }
+
+  function proposalConstraintLines(pack) {
+    const constraints = pack.proposalConstraints || {};
+    if (constraints.draftingGate !== "constraints_verified") {
+      return ["No se ha verificado un limite de extension en las bases. La redaccion de la memoria queda bloqueada hasta revision humana de bases, anexos y formulario."];
+    }
+    const units = { pages: "paginas", folios: "folios", sides: "caras", words: "palabras", characters: "caracteres" };
+    const lines = asArray(constraints.limits).map((item) => `${item.documentType}: maximo ${item.value} ${units[item.unit] || item.unit}. Evidencia: pagina ${item.sourcePage || "HTML"} de ${item.sourceUrl || "fuente oficial"}.`);
+    asArray(constraints.formatRules).forEach((item) => lines.push(`${item.kind}: ${item.value}.`));
+    if (constraints.requiresRenderedValidation) lines.push("Antes de exportar hay que renderizar el documento y comprobar el numero real de paginas; una estimacion por palabras no es suficiente.");
+    return lines;
   }
 
   function documentStore() {
@@ -213,7 +240,8 @@
     const builtDocs = documentBuildPlan(pack);
     const common = [
       { title: "Aviso de uso", lines: "Borrador Word para revision humana. No se presenta, envia ni comparte sin aprobacion de la entidad." },
-      { title: "Convocatoria", lines: [`${pack.title}`, `Fuente: ${pack.source}`, `Territorio: ${pack.territory}`, `Plazo: ${pack.deadline} (${pack.deadlineConfidence})`, `Prioridad estimada: ${scoreLabel(pack.score)} (${pack.score}/100, no elegibilidad automatica)`] }
+      { title: "Convocatoria", lines: [`${pack.title}`, `Fuente: ${pack.source}`, `Territorio: ${pack.territory}`, `Plazo: ${pack.deadline} (${pack.deadlineConfidence})`, `Prioridad estimada: ${scoreLabel(pack.score)} (${pack.score}/100, no elegibilidad automatica)`] },
+      { title: "Limites de redaccion", lines: proposalConstraintLines(pack) }
     ];
     if (kind === "memory") return [
       ...common,
@@ -254,22 +282,27 @@
 
   function buildDocumentPackage(pack) {
     const policy = tenantDocumentPolicy();
+    const state = draftingState(pack);
     const decisions = [
       policy.documentationAgent ? "Agente constructor de documentacion contratado: puede generar borradores Word." : "Agente constructor no contratado: solo se deja checklist manual.",
       policy.driveAvailable ? "Drive tenant autorizado: se podria personalizar con cultura documental aprobada." : "Drive tenant no contratado o no autorizado: se construye sin base documental privada.",
       policy.blobAvailable ? "El paquete queda guardado en Blob tenant simulado para descarga y revision." : "Blob no disponible: la descarga queda en sesion local.",
+      ...proposalConstraintLines(pack),
       "No hay envio ni presentacion automatica; todo Word queda pendiente de verificacion humana."
     ];
     const annexes = annexPlan(pack);
     const builtDocs = documentBuildPlan(pack);
+    const draftingDocs = state === "documentation_ready" ? [
+      { id: "memory", title: "Memoria tecnica", filename: `memoria-${pack.id || "candidatura"}.doc`, summary: "Estructura de memoria sujeta a limites verificados y revision humana.", sections: documentSections(pack, "memory") }
+    ] : [];
     const docs = [
-      { id: "memory", title: "Memoria tecnica", filename: `memoria-${pack.id || "candidatura"}.doc`, summary: "Estructura completa de memoria con encaje, riesgos, evidencia y secciones de proyecto.", sections: documentSections(pack, "memory") },
+      ...draftingDocs,
       { id: "checklist", title: "Checklist documental", filename: `checklist-${pack.id || "candidatura"}.doc`, summary: `${pack.documents.length} documentos y controles humanos antes de presentar.`, sections: documentSections(pack, "checklist") },
       { id: "annexes", title: "Anexos preconstruidos", filename: `anexos-${pack.id || "candidatura"}.doc`, summary: `${annexes.length} anexos base derivados de los requisitos de esta convocatoria.`, sections: documentSections(pack, "annexes") },
       { id: "budget", title: "Guia de presupuesto", filename: `presupuesto-${pack.id || "candidatura"}.doc`, summary: "Tablas y alertas para costes, cofinanciacion y partidas dudosas.", sections: documentSections(pack, "budget") },
       ...builtDocs.map((doc) => ({ id: doc.id, title: doc.title, filename: doc.filename, summary: doc.summary, sections: constructedRequirementSections(pack, doc) }))
     ];
-    return { id: pack.id, opportunityTitle: pack.title, projectState: "documentation_ready", templateVersion: documentTemplateVersion, savedAt: new Date().toISOString(), tenant: policy.tenantName, storage: "local_fallback", decisions, docs };
+    return { id: pack.id, opportunityTitle: pack.title, projectState: state, proposalConstraints: pack.proposalConstraints, templateVersion: documentTemplateVersion, savedAt: new Date().toISOString(), tenant: policy.tenantName, storage: "local_fallback", decisions, docs };
   }
 
   function ensureDocumentPackage(pack) {
@@ -277,7 +310,7 @@
     const current = store[pack.id];
     if (current?.docs?.length && current.templateVersion === documentTemplateVersion) return current;
     const next = buildDocumentPackage(pack);
-    store[pack.id] = current ? { ...next, projectState: current.projectState || next.projectState, activatedAt: current.activatedAt } : next;
+    store[pack.id] = current ? { ...next, previousProjectState: current.projectState, activatedAt: current.activatedAt } : next;
     saveDocumentStore(store);
     return store[pack.id];
   }
@@ -306,6 +339,7 @@
           opportunityId: docs.id,
           title: docs.opportunityTitle,
           decisions: docs.decisions,
+          proposalConstraints: docs.proposalConstraints,
           documents: docs.docs
         })
       });
@@ -324,6 +358,7 @@
 
   function projectStage(pack, docs) {
     const active = docs?.projectState === "active";
+    const draftingReady = docs?.projectState === "documentation_ready";
     return `
       <div class="project-stage" aria-label="Estado de candidatura">
         <span class="is-done">Preseleccionada</span>
@@ -334,7 +369,7 @@
         ${docs ? `<div><strong>Documentacion Word preparada</strong><span>${docs.storage === "vercel_blob" ? "Guardada en Blob tenant" : "Preparada en fallback local"}. ${docs.docs.length} documentos descargables.</span></div>` : `<div><strong>Falta estructura documental</strong><span>Para activar como proyecto, el agente debe generar memoria, checklist, anexos y presupuesto en Word.</span></div>`}
         <div class="button-row">
           ${docs ? `<button class="ghost-action" data-download-doc="all" data-package-id="${pack.id}" type="button">Descargar paquete Word (${docs.docs.length})</button>` : `<button class="primary-action" data-doc-agent-build="${pack.id}" type="button">Preparar documentacion Word</button>`}
-          ${docs && !active ? `<button class="primary-action" data-project-activate="${pack.id}" type="button">Activar como proyecto</button>` : ""}
+          ${docs && !active && draftingReady ? `<button class="primary-action" data-project-activate="${pack.id}" type="button">Activar como proyecto</button>` : ""}
         </div>
         ${docs ? `<div class="download-feedback" data-download-feedback>Al pulsar descargar, el navegador guarda los .doc en su carpeta de descargas. En el navegador integrado puede no abrirse bandeja visible.</div>` : ""}
       </div>`;
@@ -672,6 +707,10 @@
     }
     if (activate) {
       const docs = ensureDocumentPackage(pack);
+      if (docs.projectState !== "documentation_ready") {
+        if (typeof showToast === "function") showToast("Proyecto bloqueado: faltan limites de redaccion o validacion renderizada.");
+        return;
+      }
       const next = updateDocumentPackage(docs.id, { projectState: "active", activatedAt: new Date().toISOString() });
       savePackState(pack, next);
       renderWorkspacePackageSoon();

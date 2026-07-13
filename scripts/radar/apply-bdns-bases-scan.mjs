@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { combineProposalConstraints, extractProposalConstraints } from "./extract-proposal-constraints.mjs";
 
 const args = new Map(process.argv.slice(2).map((arg) => {
   const [key, ...rest] = arg.replace(/^--/, "").split("=");
@@ -58,7 +59,12 @@ export function verifiedEvidence(result, expectedUrl) {
     pageCount: document.page_count,
     extractionStatus: document.extraction_status,
     extractedChars: document.extracted_text.length,
-    excerpt: document.extracted_text.slice(0, 4000)
+    excerpt: document.extracted_text.slice(0, 4000),
+    proposalConstraints: extractProposalConstraints(document.extracted_text, {
+      sourceUrl: document.source_url,
+      documentSha256: document.sha256,
+      pageEvidence: document.page_evidence
+    })
   }));
 
   const best = result.best_evidence || {};
@@ -76,10 +82,23 @@ export function verifiedEvidence(result, expectedUrl) {
       pageCount: 1,
       extractionStatus: "html_ready",
       extractedChars: best.extracted_text.length,
-      excerpt: best.extracted_text.slice(0, 4000)
+      excerpt: best.extracted_text.slice(0, 4000),
+      proposalConstraints: extractProposalConstraints(best.extracted_text, {
+        sourceUrl: best.url,
+        documentSha256: best.content_sha256
+      })
     });
   }
   return documents;
+}
+
+function prototypeOpportunity(item) {
+  const { basesEvidence: _basesEvidence, ...safe } = item;
+  return {
+    ...safe,
+    extractedText: item.extractedText?.slice(0, 2400) || "",
+    announcements: (item.announcements || []).slice(0, 4)
+  };
 }
 
 async function main() {
@@ -103,11 +122,13 @@ async function main() {
       && results.length === expectedUrls.length
       && expectedUrls.every((_, index) => evidenceByResult.some((entry) => entry.index === index && entry.evidence.length > 0));
     const basesEvidence = evidenceByResult.flatMap((entry) => entry.evidence);
+    const proposalConstraints = combineProposalConstraints(basesEvidence.map((entry) => entry.proposalConstraints));
     return {
       ...item,
       actionable: Boolean(item.actionable && complete),
       basesStatus: complete ? "extracted" : item.basesUrl ? "extraction_pending_or_failed" : "missing",
       basesEvidence,
+      proposalConstraints,
       extractedText: [item.extractedText, ...basesEvidence.map((entry) => entry.excerpt)].filter(Boolean).join("\n\n")
     };
   });
@@ -123,7 +144,7 @@ async function main() {
   };
   await fs.mkdir(path.dirname(output), { recursive: true });
   await fs.writeFile(output, `${JSON.stringify(enriched, null, 2)}\n`, "utf8");
-  await fs.writeFile(prototypeOut, `window.MUNICIPAL_RADAR = ${JSON.stringify({ ...enriched, opportunities: opportunities.filter((item) => item.actionable) }, null, 2)};\n`, "utf8");
+  await fs.writeFile(prototypeOut, `window.MUNICIPAL_RADAR = ${JSON.stringify({ ...enriched, opportunities: opportunities.filter((item) => item.actionable).map(prototypeOpportunity) }, null, 2)};\n`, "utf8");
   console.log(JSON.stringify({ output, prototypeOut, basesExtracted: enriched.quality.basesExtracted, actionable: enriched.quality.actionableCount }, null, 2));
 }
 
