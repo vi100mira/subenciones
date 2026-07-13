@@ -7,6 +7,7 @@ const provisioningSql = fs.readFileSync(
   "utf8"
 );
 const reconcileFixSql = fs.readFileSync("supabase/migrations/20260713211000_fix_reconcile_ambiguous_columns.sql", "utf8");
+const reconcileConflictFixSql = fs.readFileSync("supabase/migrations/20260713212000_fix_reconcile_conflict_target.sql", "utf8");
 const provisioningApi = fs.readFileSync("api/admin-tenant-provision.ts", "utf8");
 const researchEvidenceSql = fs.readFileSync(
   "supabase/migrations/20260713190000_entity_research_evidence.sql",
@@ -59,6 +60,7 @@ assert(provisioningSql.includes("tenant_agent_configs.status in ('paused', 'disa
 assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no puede depender del piloto");
 assert(reconcileFixSql.includes("consent.status = 'granted'"), "La reconciliación conserva columnas PL/pgSQL ambiguas");
 assert(reconcileFixSql.includes("config.profile_json"), "El perfil reconciliado no usa alias explícito");
+assert(reconcileConflictFixSql.includes("on conflict on constraint tenant_agent_configs_pkey"), "La reconciliación conserva agent_key ambiguo en ON CONFLICT");
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");

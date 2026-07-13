@@ -7,6 +7,7 @@ Corregir el conflicto entre nombres de salida PL/pgSQL y columnas `status` duran
 ## Cambio
 
 - Añade una migración posterior que reemplaza la función con aliases explícitos.
+- Añade una segunda corrección que referencia la clave primaria por nombre en `ON CONFLICT`.
 - Mantiene puertas, pausas, permisos y cierre `service_role` sin cambios.
 - No modifica las migraciones ya aplicadas.
 
