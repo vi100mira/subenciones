@@ -3,6 +3,7 @@ import fs from "node:fs";
 const workflow = fs.readFileSync(".github/workflows/workers-alojados.yml", "utf8").replace(/\r\n/g, "\n");
 const draftApi = fs.readFileSync("api/draft-agent-runs.ts", "utf8");
 const draftWorker = fs.readFileSync("scripts/workers/run-draft-agent.mjs", "utf8");
+const researchApi = fs.readFileSync("api/entity-research-runs.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -22,5 +23,10 @@ assert(draftApi.includes('status: "fallback_cron"'), "Falta la recuperación seg
 assert(draftApi.includes('agent_key: "draft_agent"'), "La API no etiqueta la ejecucion del redactor");
 assert(draftApi.includes('.eq("agent_key", "draft_agent")'), "La lectura del redactor mezcla otros agentes");
 assert(draftWorker.includes('.eq("agent_key", "draft_agent")'), "El worker redactor puede reclamar otra cola");
+assert(workflow.includes("scripts/workers/run-entity-research.mjs"), "El investigador no tiene runner alojado");
+assert(workflow.includes("inputs.proceso == 'investigador'"), "Falta despacho selectivo del investigador");
+assert(researchApi.includes('agent_key: "entity_research"'), "La API no etiqueta la investigacion");
+assert(researchApi.includes('inputs: { proceso: "investigador" }'), "La API no despacha el investigador");
+assert(researchApi.includes('status !== "ready"'), "La API no respeta el estado reconciliado");
 
-console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));
+console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", investigador: "alojado y bajo demanda", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));

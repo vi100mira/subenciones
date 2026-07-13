@@ -15,6 +15,7 @@ on:
           - todo
           - radares
           - redactor
+          - investigador
 
 permissions:
   contents: read
@@ -59,10 +60,10 @@ jobs:
           node scripts/workers/run-municipal-radar.mjs --campaign=general-social --apply=true
           node scripts/workers/run-private-funder-radar.mjs --apply=true
 
-  redactor:
+  agentes-bajo-demanda:
     if: >-
       (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') ||
-      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor'))
+      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor' || inputs.proceso == 'investigador'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -86,4 +87,8 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
       - name: Consumir una ejecución encolada
+        if: github.event_name == 'schedule' || inputs.proceso == 'todo' || inputs.proceso == 'investigador'
+        run: node scripts/workers/run-entity-research.mjs
+      - name: Consumir redaccion encolada
+        if: github.event_name == 'schedule' || inputs.proceso == 'todo' || inputs.proceso == 'redactor'
         run: node scripts/workers/run-draft-agent.mjs
