@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === "GET") {
       const { data, error } = await supabase.from("tenant_agent_runs")
-        .select("id, agent_key, status, provider, model, error, input_manifest_json, context_manifest_json, usage_json, created_at, updated_at")
+        .select("id, agent_key, status, provider, model, error, input_manifest_json, context_manifest_json, output_json, usage_json, created_at, updated_at")
         .eq("tenant_id", actor.tenantId).order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
       return res.status(200).json(ok(data || []));
@@ -42,6 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { canonicalKey, useApprovedInternalFacts = false } = req.body || {};
     if (typeof canonicalKey !== "string" || !canonicalKey) return res.status(400).json(fail("Falta canonicalKey"));
     if (typeof useApprovedInternalFacts !== "boolean") return res.status(400).json(fail("useApprovedInternalFacts debe ser booleano"));
+    if (useApprovedInternalFacts) return res.status(409).json(fail("La fase autorizada del redactor solo utiliza evidencia pública"));
 
     const { data: opportunity, error: opportunityError } = await supabase.from("platform_opportunities")
       .select("id, canonical_key, title, status").eq("canonical_key", canonicalKey).maybeSingle();
