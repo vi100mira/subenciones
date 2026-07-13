@@ -11,6 +11,10 @@ const researchEvidenceSql = fs.readFileSync(
   "supabase/migrations/20260713190000_entity_research_evidence.sql",
   "utf8"
 );
+const matchSql = fs.readFileSync(
+  "supabase/migrations/20260713200000_tenant_match_recommendations.sql",
+  "utf8"
+);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -53,6 +57,11 @@ assert(!provisioningApi.toLowerCase().includes("novaterra"), "La API no puede de
 assert(researchEvidenceSql.includes("source_document_id"), "La sugerencia no enlaza su snapshot");
 assert(researchEvidenceSql.includes("evidence_excerpt"), "La sugerencia no conserva fragmento de evidencia");
 assert(researchEvidenceSql.includes("source_sha256"), "La sugerencia no conserva hash de evidencia");
+assert(matchSql.includes("tenant_opportunity_recommendations"), "Falta persistencia del encaje");
+assert(matchSql.includes("internal_fact_refs_json"), "El encaje no declara hechos internos usados");
+assert(matchSql.includes("missing_information_json"), "El encaje no conserva información faltante");
+assert(matchSql.includes("human_review_status"), "El encaje no exige revisión humana");
+assert(matchSql.includes("public.is_org_member(tenant_id)"), "El encaje no está aislado por tenant");
 
 console.log(JSON.stringify({
   ok: true,
