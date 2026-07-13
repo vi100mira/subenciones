@@ -22,7 +22,7 @@ assert(["bookmark-plus", "folder-plus", "folder-open"].every((icon) => ui.includ
 assert(ui.includes("window.OpportunityScope?.rows()"), "Oportunidades no usa la seleccion comun");
 assert(app.includes("window.OpportunityScope?.summary()"), "El Panel no usa el resumen comun");
 assert(scope.includes("window.OpportunityScope"), "No existe una unica seleccion compartida");
-assert(index.includes("Versión beta") && !index.includes("Modo prototipo"), "La barra lateral no identifica la version beta");
+assert(index.includes("Versión estable") && !index.includes("Modo prototipo"), "La barra lateral no identifica la version estable");
 assert(!index.includes("Ranking explicable") && !index.includes("data-filter="), "Siguen visibles los filtros superiores redundantes");
 assert(ui.includes('class="sr-only" id="opportunity-pagination"'), "El resumen de resultados sigue ocupando espacio visual");
 assert(ui.includes('aria-label="Conversar con el radar"') && !ui.includes("> Conversar con radar</button>"), "El chat no es una accion de icono accesible");

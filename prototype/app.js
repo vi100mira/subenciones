@@ -26,7 +26,12 @@ function renderDashboard() {
   const isPlatform = document.body.dataset.role === "superadmin";
   const summary = window.OpportunityScope?.summary() || { total: 0, open: 0, highPriority: 0, uncertain: 0 };
   const metrics = document.querySelectorAll("#dashboard .metric");
-  const values = [
+  const values = isPlatform ? [
+    ["Oportunidades públicas", "—", "Cargando corpus común de plataforma"],
+    ["Tenants activos", "—", "Cargando entidades registradas"],
+    ["Asistentes operativos", "—", "Cargando activaciones por tenant"],
+    ["Revisiones pendientes", "—", "Cargando decisiones humanas pendientes"]
+  ] : [
     ["Oportunidades en seguimiento", summary.total, "Coincide con la vista Oportunidades"],
     ["Con plazo abierto", summary.open, "Solicitud abierta confirmada"],
     ["Prioridad alta", summary.highPriority, "Segun el perfil de la entidad"],
@@ -39,6 +44,9 @@ function renderDashboard() {
   });
   document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
   document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
+  const sourceAction = document.querySelector("#dashboard .source-map-panel [data-jump]");
+  sourceAction.textContent = isPlatform ? "Ver estado de fuentes" : "Gestionar"; sourceAction.dataset.jump = isPlatform ? "operations" : "governance";
+  if (isPlatform) sourceAction.dataset.focusTarget = "operations-source-health"; else delete sourceAction.dataset.focusTarget;
   document.querySelector("#source-map").innerHTML = `
     <div class="source-legend">
       <span><i class="legend-dot active"></i>Operativa</span>
@@ -284,7 +292,10 @@ function showScreen(screenId) {
   });
   const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Oportunidades de la plataforma", agents: "Asistentes de la plataforma", audit: "Auditoria global" };
   document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && platformTitles[screenId] ? platformTitles[screenId] : titles[screenId];
-  document.querySelector(".top-actions .primary-action").innerHTML = (screenId === "platform" || screenId === "operations" || document.body.dataset.role === "superadmin") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
+  const primaryAction = document.querySelector(".top-actions .primary-action");
+  const isPlatformAdmin = document.body.dataset.role === "superadmin";
+  primaryAction.style.display = isPlatformAdmin ? "none" : "";
+  primaryAction.innerHTML = (screenId === "platform" || screenId === "operations") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
@@ -298,10 +309,13 @@ function bindNavigation() {
 
 function bindJumps() {
   document.querySelectorAll("[data-jump]").forEach((button) => {
-    button.addEventListener("click", () => showScreen(button.dataset.jump));
+    button.addEventListener("click", () => {
+      showScreen(button.dataset.jump);
+      const target = document.getElementById(button.dataset.focusTarget || "");
+      if (target) requestAnimationFrame(() => { target.scrollIntoView({ block: "start" }); target.focus({ preventScroll: true }); });
+    });
   });
   document.querySelectorAll("[data-platform-tab]").forEach((button) => button.addEventListener("click", () => { document.querySelectorAll("[data-platform-tab]").forEach((tab) => tab.classList.toggle("is-selected", tab === button)); document.querySelectorAll("[data-platform-pane]").forEach((pane) => { pane.hidden = pane.dataset.platformPane !== button.dataset.platformTab; }); }));
-  document.querySelectorAll("#platform-campaigns details summary").forEach((summary) => summary.addEventListener("click", (event) => { event.preventDefault(); summary.parentElement.open = !summary.parentElement.open; }));
 }
 
 function showToast(message) {
@@ -329,6 +343,7 @@ function init() {
   bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
 
   document.querySelector("#refresh-button").addEventListener("click", () => {
+    if (document.body.dataset.role === "superadmin" && window.PlatformRuntime?.refresh) return window.PlatformRuntime.refresh();
     showToast("Fuentes actualizadas. No se ha enviado ningún dato privado.");
   });
 

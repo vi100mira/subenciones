@@ -31,7 +31,7 @@ try {
     await page.locator("#public-login-form [name='email']").fill("vicentmirabarrachina@gmail.com");
     await page.locator("#public-login-form [name='password']").fill(superadminPassword);
     await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
-    assert((await page.locator("#screen-title").textContent()) === "Consola plataforma", "Superadmin no aterriza en Plataforma");
+    assert((await page.locator("#screen-title").textContent()) === "Panel de plataforma", "Superadmin no aterriza en Panel");
     assert((await page.locator("body").getAttribute("data-role")) === "superadmin", "No se aplica rol superadmin");
   }
 
@@ -43,7 +43,7 @@ try {
     await page.locator("#public-login-form [name='email']").fill("admin@novaterra.org.es");
     await page.locator("#public-login-form [name='password']").fill(tenantPassword);
     await page.locator("#public-login-form").evaluate((form) => form.requestSubmit());
-    assert((await page.locator("#screen-title").textContent()) === "Perfil de entidad", "Entidad no aterriza en su perfil");
+    assert((await page.locator("#screen-title").textContent()) === "Panel de oportunidades", "Entidad no aterriza en Panel");
     assert((await page.locator("body").getAttribute("data-role")) === "entity", "No se aplica rol entidad");
   }
 

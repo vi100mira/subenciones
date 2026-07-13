@@ -14,33 +14,33 @@
         <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
         <div class="public-entry__assurance">
           <span><i data-lucide="shield-check"></i><span><strong>Cumplimiento normativo</strong>Arquitectura alineada con RGPD y soberania del dato.</span></span>
-          <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Acceso por rol, auditoria y consentimiento granular.</span></span>
+          <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Cada uso de datos privados requiere un permiso explícito y queda registrado.</span></span>
         </div>
         <figure><img src="./assets/stitch-ngo-grant-hero.png" alt="Ilustracion institucional de gestion segura de subvenciones" /></figure>
       </section>
       <section class="public-entry__access">
         <article class="public-entry__card public-entry__card--login">
           <div class="public-entry__tabs"><span class="is-active">Acceder</span><span>Registrar entidad</span></div>
-          <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional</h2></div><span class="badge safe">Credenciales</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional <button class="info-tip" type="button" aria-label="Cómo se asigna el acceso"><i data-lucide="info"></i><span class="info-tip__content">El sistema valida las credenciales y muestra solo las áreas autorizadas para cada persona y entidad. El rol no se elige desde esta pantalla.</span></button></h2></div><span class="badge safe">Credenciales</span></div>
           <form class="inline-form public-entry__actions" id="public-login-form">
             <label><span>Email profesional</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
             <label><span>Contrasena</span><span class="password-field"><input name="password" type="password" minlength="6" required /><button class="password-toggle" data-toggle-password type="button" aria-label="Mostrar contrasena" title="Mostrar contrasena"><i data-lucide="eye"></i></button></span></label>
             <button class="primary-action" type="submit">Acceder al panel</button>
           </form>
-          <div id="public-login-status" class="plain-note"><strong>Acceso</strong><span>El rol se asigna desde las credenciales validadas, no desde botones publicos.</span></div>
+          <div id="public-login-status" class="plain-note" hidden aria-live="polite"></div>
         </article>
         <article class="public-entry__card">
-          <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad</h2></div><span class="badge review">Sin publicar</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad <button class="info-tip" type="button" aria-label="Qué ocurre al enviar la solicitud"><i data-lucide="info"></i><span class="info-tip__content">La solicitud queda pendiente de revisión. No crea usuarios, no conecta Drive y no usa información privada hasta que una persona responsable la apruebe.</span></button></h2></div><span class="badge review">Sin publicar</span></div>
           <form class="inline-form" id="public-onboarding-form">
             <label><span>Entidad</span><input name="entityName" value="Entidad social" required /></label>
             <label><span>Web publica</span><input name="websiteUrl" placeholder="https://entidad.org" /></label>
             <label><span>Email solicitante</span><input name="requesterEmail" type="email" required /></label>
             <label><span>Email admin entidad</span><input name="adminEmail" type="email" required /></label>
-            <label><span>Territorio</span><input name="territory" value="Comunitat Valenciana" /></label>
+            <label><span>Territorio</span><select name="territory"><option>Ámbito estatal</option><option>Andalucía</option><option>Aragón</option><option>Asturias</option><option>Illes Balears</option><option>Canarias</option><option>Cantabria</option><option>Castilla-La Mancha</option><option>Castilla y León</option><option selected>Comunitat Valenciana</option><option>Cataluña</option><option>Extremadura</option><option>Galicia</option><option>Comunidad de Madrid</option><option>Región de Murcia</option><option>Comunidad Foral de Navarra</option><option>País Vasco</option><option>La Rioja</option><option>Ceuta</option><option>Melilla</option><option>Otro o por definir</option></select></label>
             <label><span><input name="publicWebConsent" type="checkbox" /> Autoriza solo analisis de web publica</span></label>
             <button class="primary-action" type="submit">Registrar solicitud</button>
           </form>
-          <div id="public-onboarding-status" class="plain-note"><strong>Estado</strong><span>La solicitud queda pendiente. No activa la entidad, usuario, Drive ni aprobacion automatica.</span></div>
+          <div id="public-onboarding-status" class="plain-note" hidden aria-live="polite"></div>
         </article>
       </section>
     </div>`;
@@ -58,8 +58,7 @@
   }
 
   function initialScreen(session, requested) {
-    if (session.role === "superadmin" && (!requested || ["dashboard", "entity", "workspace"].includes(requested))) return session.screen;
-    return requested || session.screen || "dashboard";
+    return requested || "dashboard";
   }
 
   function showPublic() {
@@ -90,12 +89,13 @@
     const session = await window.CredentialsAuth.login(email, password);
     if (!session) {
       const message = loginHelp(email, window.CredentialsAuth.getLastError?.() || "Usuario o contrasena no validos.");
+      status.hidden = false;
       status.innerHTML = "<strong>Acceso rechazado</strong><span></span>";
       status.querySelector("span").textContent = message;
       return;
     }
 
-    showApp(session, session.screen);
+    showApp(session, initialScreen(session, ""));
   });
 
   entry.querySelector("[data-toggle-password]").addEventListener("click", (event) => {
@@ -115,6 +115,7 @@
     const data = new FormData(event.currentTarget);
     const payload = Object.fromEntries(data.entries());
     payload.publicWebConsent = data.get("publicWebConsent") === "on";
+    status.hidden = false;
     status.innerHTML = "<strong>Registrando</strong><span>Guardando solicitud en Supabase.</span>";
     try {
       const response = await fetch("/api/onboarding-request", {

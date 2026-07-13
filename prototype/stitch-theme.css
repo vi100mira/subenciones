@@ -2327,7 +2327,8 @@ body.sidebar-collapsed .sidebar-note {
   margin: 5px 0 0;
 }
 
-.inline-form input:focus {
+.inline-form input:focus,
+.inline-form select:focus {
   border-color: var(--teal);
   box-shadow: 0 0 0 3px rgba(0, 106, 99, 0.12);
   outline: none;

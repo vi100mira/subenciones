@@ -2,6 +2,12 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requirePlatformAdmin } from "../src/supabaseAdmin.js";
 
+const RUNNABLE_SOURCE_URLS = new Set([
+  "https://www.infosubvenciones.es/bdnstrans/api#municipal-social",
+  "https://www.infosubvenciones.es/bdnstrans/api#general-social",
+  "https://subvenciones-rag.vercel.app/sources#private-open-funders"
+]);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const actor = await requirePlatformAdmin(req.headers.authorization);
@@ -26,13 +32,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { data: source, error: sourceError } = await supabase
         .from("platform_sources")
-        .select("id, status")
+        .select("id, status, url")
         .eq("id", platformSourceId)
         .maybeSingle();
 
       if (sourceError) throw sourceError;
       if (!source) return res.status(404).json(fail("Fuente de plataforma no encontrada"));
       if (source.status !== "active") return res.status(409).json(fail("La fuente de plataforma no esta activa"));
+      if (!source.url || !RUNNABLE_SOURCE_URLS.has(source.url)) {
+        return res.status(409).json(fail("Esta fuente todavía no tiene un worker alojado que consuma revisiones"));
+      }
 
       const { data, error } = await supabase
         .from("platform_ingestion_campaigns")

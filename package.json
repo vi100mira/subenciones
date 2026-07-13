@@ -1,7 +1,7 @@
 {
   "name": "subvenciones-rag",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "build": "echo \"Static prototype: open prototype/index.html or serve prototype/\"",
@@ -11,6 +11,7 @@
     "check:runtime-truth": "node scripts/guardrails/check-runtime-truth-ui.mjs",
     "check:evidence": "node scripts/guardrails/check-source-evidence-fixtures.mjs && node scripts/guardrails/check-grant-source-authority.mjs && node scripts/guardrails/check-bdns-evidence-policy.mjs && node scripts/guardrails/check-proposal-constraints.mjs && node scripts/guardrails/check-private-radar-gate.mjs && node scripts/guardrails/check-draft-agent-contract.mjs && node scripts/guardrails/check-openai-draft-provider.mjs && node scripts/guardrails/check-proposal-pdf.mjs && npm run platform:verify-source-evidence -- --today=2026-07-06",
     "check:ui": "node scripts/guardrails/check-opportunity-grid-ui.mjs && node scripts/guardrails/check-onboarding-ui.mjs",
+    "check:platform-superadmin": "node scripts/guardrails/check-platform-superadmin-ui.mjs",
     "check:e2e:onboarding": "node scripts/guardrails/check-onboarding-e2e.mjs",
     "check:tenant-agents": "node scripts/guardrails/check-tenant-agent-registry.mjs",
     "check:entity-research": "node scripts/guardrails/check-entity-research-contract.mjs",
