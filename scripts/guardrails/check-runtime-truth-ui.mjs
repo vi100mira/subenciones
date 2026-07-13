@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
+const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime", "tenant-recommendations-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -16,6 +16,10 @@ assert(files["tenant-agent-runtime"].includes("Autorizar web pública"), "Falta 
 assert(files["tenant-agent-runtime"].includes("Investigar ahora"), "Falta ejecutar el Investigador desde Asistentes");
 assert(files["tenant-agent-runtime"].includes("Aprobar perfil revisado"), "Falta revisión humana del perfil");
 assert(files["tenant-agent-runtime"].includes("Calcular encaje"), "Falta ejecutar encaje persistido");
+assert(files["tenant-recommendations-runtime"].includes("/api/tenant-match-runs"), "Oportunidades no carga encaje persistido");
+assert(files["tenant-recommendations-runtime"].includes("perfil aprobado"), "Oportunidades no explica el origen del encaje");
+assert(files["tenant-agent-runtime"].includes("tenant-recommendations-applied"), "La recarga del radar puede borrar el estado real de los agentes");
+assert(!fs.readFileSync("prototype/index.html", "utf8").includes("entity-fit.js"), "La UI todavía carga reglas específicas del piloto");
 assert(files["operations-platform"].includes("Publicaciones revisadas"), "Operaciones no diferencia publicaciones revisadas y oportunidades");
 assert(files["operations-platform"].includes("Financiadores privados"), "Operaciones no explica el seguimiento privado");
 const visibleContract = Object.values(files).join("\n");

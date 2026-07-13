@@ -78,5 +78,6 @@
   }
   document.addEventListener("click", (event) => { const target = event.target instanceof Element ? event.target.closest("[data-tenant-agent-action]") : null; if (target) act(target); });
   window.addEventListener("role-session-applied", () => setTimeout(refresh, 0));
+  window.addEventListener("tenant-recommendations-applied", () => setTimeout(refresh, 0));
   setTimeout(refresh, 0);
 })();

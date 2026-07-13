@@ -30,9 +30,9 @@ assert(theme.includes("position: fixed") && theme.includes(".radar-chat-button")
 assert(ui.includes("gridState.visibleRows + gridState.loadStep"), "No existe carga progresiva al desplazarse");
 assert(theme.includes("border-collapse: separate"), "La tabla no usa el modo compatible con cabeceras adhesivas");
 assert(theme.includes("overscroll-behavior: contain"), "La tabla puede transferir el scroll a toda la pagina");
-assert(theme.includes(".tenant-grid-head {\n  position: sticky"), "Los grids de tenants pierden la cabecera al desplazarse");
+assert(/\.tenant-grid-head \{\r?\n  position: sticky/.test(theme), "Los grids de tenants pierden la cabecera al desplazarse");
 assert(theme.includes("max-height: min(560px, 65dvh)"), "Los grids de tenants no tienen scroll interno en escritorio");
-assert(theme.includes(".platform-monitor-grid .tenant-grid-row {\n    grid-template-columns: 1fr"), "Monitorizacion conserva cinco columnas en movil");
+assert(/\.platform-monitor-grid \.tenant-grid-row \{\r?\n    grid-template-columns: 1fr/.test(theme), "Monitorizacion conserva cinco columnas en movil");
 assert(!app.includes("data-tenant-page") && !plan.includes("data-tenant-page"), "Un grid secundario conserva paginacion");
 
 console.log(JSON.stringify({

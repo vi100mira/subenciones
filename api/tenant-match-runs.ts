@@ -41,8 +41,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         evidence_json, internal_fact_refs_json, profile_snapshot_hash, human_review_status,
         reviewed_at, created_at, updated_at,
         platform_opportunities(id, canonical_key, title, funder_name, territory, status),
-        platform_opportunity_versions(id, source_url, official_url, deadline_text, deadline_status, deadline_confidence)
-      `).eq("tenant_id", actor.tenantId).order("score", { ascending: false }).limit(200);
+        platform_opportunity_versions!inner(id, source_url, official_url, deadline_text, deadline_status, deadline_confidence, version_status)
+      `).eq("tenant_id", actor.tenantId)
+        .eq("platform_opportunity_versions.version_status", "current")
+        .order("score", { ascending: false }).limit(200);
       if (error) throw error;
       return res.status(200).json(ok(data || []));
     }
