@@ -53,5 +53,12 @@ assert(uncertain.missingInformation.length > 0, "No explicita información falta
 
 const contract = fs.readFileSync("scripts/workers/tenant-match-contract.mjs", "utf8").toLowerCase();
 assert(!contract.includes("novaterra"), "El encaje depende del piloto");
+const worker = fs.readFileSync("scripts/workers/run-tenant-match.mjs", "utf8");
+assert(worker.includes('.eq("agent_key", "match_agent")'), "El worker no aísla la cola de encaje");
+assert(worker.includes('.eq("status", "approved")'), "El worker usa hechos sin aprobar");
+assert(worker.includes("profile_snapshot_hash"), "El worker no conserva snapshot del perfil");
+assert(worker.includes('status: "review_required"'), "El worker no exige revisión");
+assert(worker.includes("match_agent.generated_for_review"), "Falta auditoría del encaje");
+assert(!worker.toLowerCase().includes("novaterra"), "El worker depende del piloto");
 
 console.log(JSON.stringify({ ok: true, candidateScore: relevant.score, lowFitScore: uncertain.score, evidence: "versionada", decision: "revisión humana" }, null, 2));
