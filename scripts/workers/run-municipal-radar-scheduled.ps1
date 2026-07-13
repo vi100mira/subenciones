@@ -5,6 +5,9 @@ $logDir = Join-Path $repoRoot ".tmp"
 $logPath = Join-Path $logDir "public-radars-scheduled.log"
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[Console]::OutputEncoding = $utf8NoBom
+$OutputEncoding = $utf8NoBom
+$env:PYTHONIOENCODING = "utf-8"
 
 function Add-LogLine {
   param([string]$Text)
@@ -50,7 +53,7 @@ Add-LogLine "[$startedAt] Inicio de los workers publicos programados"
 Push-Location $repoRoot
 try {
   foreach ($campaign in @("municipal-social", "general-social")) {
-    Add-LogLine "[$(Get-Date -Format "o")] Inicio de campaña $campaign"
+    Add-LogLine "[$(Get-Date -Format "o")] Inicio de campa$([char]0x00F1)a $campaign"
     $output = & node "scripts/workers/run-municipal-radar.mjs" "--campaign=$campaign" "--apply=true" 2>&1 | Out-String
     $workerExitCode = $LASTEXITCODE
     [System.IO.File]::AppendAllText($logPath, $output, $utf8NoBom)
@@ -59,7 +62,7 @@ try {
       throw "El worker $campaign termino con codigo $workerExitCode."
     }
   }
-  Add-LogLine "[$(Get-Date -Format "o")] Inicio de campaña private-open-funders"
+  Add-LogLine "[$(Get-Date -Format "o")] Inicio de campa$([char]0x00F1)a private-open-funders"
   $output = & node "scripts/workers/run-private-funder-radar.mjs" "--apply=true" 2>&1 | Out-String
   $workerExitCode = $LASTEXITCODE
   [System.IO.File]::AppendAllText($logPath, $output, $utf8NoBom)
