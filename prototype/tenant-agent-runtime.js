@@ -47,6 +47,23 @@
     const paused = agents.filter((agent) => agent.status === "paused").length;
     note.textContent = `${ready} capacidades operativas, ${blocked} bloqueadas por puertas pendientes y ${paused} pausadas. Los estados proceden del tenant, no de datos de ejemplo.`;
   }
+  function updateEntitySummary(governance) {
+    const consent = governance.consents.find((item) => item.consent_type === "public_web_analysis");
+    const source = governance.webSource;
+    const status = document.querySelector("[data-tenant-web-status]");
+    const note = document.querySelector("[data-tenant-web-note]");
+    if (!status || !note) return;
+    if (consent?.status !== "granted") {
+      status.textContent = "No autorizada";
+      note.textContent = "La entidad todavía no ha autorizado el análisis de su web pública.";
+    } else if (source?.status !== "active") {
+      status.textContent = "Pendiente de aprobación";
+      note.textContent = "Hay consentimiento, pero la fuente web aún no está aprobada.";
+    } else {
+      status.textContent = "Autorizada";
+      note.textContent = "Solo lectura del dominio público aprobado por la entidad.";
+    }
+  }
   function renderSuggestions(suggestions) {
     document.querySelector("#tenant-profile-review")?.remove();
     const pending = suggestions.filter((item) => item.status === "pending"); if (!pending.length) return;
@@ -60,7 +77,7 @@
     if (!session()) return;
     try {
       const [governance, suggestions] = await Promise.all([request("/api/tenant-agent-governance"), request("/api/tenant-profile-review")]);
-      governance.agents.forEach((agent) => updateCard(agent, governance)); updateSummary(governance.agents); renderSuggestions(suggestions); window.lucide?.createIcons();
+      governance.agents.forEach((agent) => updateCard(agent, governance)); updateSummary(governance.agents); updateEntitySummary(governance); renderSuggestions(suggestions); window.lucide?.createIcons();
     } catch (error) { const note = document.querySelector("#agents-readiness-note span"); if (note) note.textContent = `Estado operativo no disponible: ${error.message}`; }
   }
   async function act(element) {

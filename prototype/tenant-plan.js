@@ -4,7 +4,7 @@
     label: "Plan integral piloto",
     billingStatus: "Contratado",
     features: ["dashboard", "opportunities", "entity", "agents", "workspace", "audit", "plan"],
-    note: "Todos los agentes habilitados para Novaterra durante el piloto."
+    note: "Módulos incluidos; cada agente depende de permisos, consentimientos y estado verificado."
   };
   const featureLabels = {
     dashboard: "Panel",
@@ -20,11 +20,11 @@
   const platformMetrics = [
     ["Ingresos MRR", "0 EUR", "Piloto interno; sin pasarela activa"],
     ["Gasto IA real hoy", "0,00 EUR", "OpenAI sin clave; ninguna llamada"],
-    ["Automatizaciones activas", "2", "Búsqueda diaria y redactor bajo demanda con recuperación cada 15 minutos"],
-    ["Entidades piloto", "1", "Novaterra; análisis privado aún no disponible"]
+    ["Automatizaciones alojadas", "Ver registro", "El estado operativo se consulta por tenant; no se infiere del plan"],
+    ["Entidades piloto", "1", "Novaterra es el tenant piloto, no una configuración especial"]
   ];
   const platformRows = [
-    ["Novaterra", "Piloto activo", "0 EUR", "0,00 EUR", "Encaje local; IA pendiente"]
+    ["Novaterra", "Piloto activo", "0 EUR", "0,00 EUR", "Consultar registro tenant"]
   ];
 
   function session() {

@@ -19,6 +19,9 @@ assert(files["tenant-agent-runtime"].includes("Calcular encaje"), "Falta ejecuta
 assert(files["tenant-recommendations-runtime"].includes("/api/tenant-match-runs"), "Oportunidades no carga encaje persistido");
 assert(files["tenant-recommendations-runtime"].includes("perfil aprobado"), "Oportunidades no explica el origen del encaje");
 assert(files["tenant-agent-runtime"].includes("tenant-recommendations-applied"), "La recarga del radar puede borrar el estado real de los agentes");
+assert(files["entity-activation"].includes("data-tenant-web-status"), "Entidad conserva autorización web fija");
+assert(files["tenant-agent-runtime"].includes("consent?.status !== \"granted\""), "Entidad no consulta consentimiento web real");
+assert(!files["tenant-plan"].includes("Todos los agentes habilitados para Novaterra"), "Plan habilita agentes por ser el piloto");
 assert(!fs.readFileSync("prototype/index.html", "utf8").includes("entity-fit.js"), "La UI todavía carga reglas específicas del piloto");
 assert(files["operations-platform"].includes("Publicaciones revisadas"), "Operaciones no diferencia publicaciones revisadas y oportunidades");
 assert(files["operations-platform"].includes("Financiadores privados"), "Operaciones no explica el seguimiento privado");
