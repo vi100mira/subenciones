@@ -58,6 +58,9 @@ assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no p
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
+assert(provisioningApi.includes("tenant.blueprint_exported"), "Falta exportar blueprint antes de borrar");
+assert(provisioningApi.includes("consents_exported: false"), "El blueprint no advierte que excluye consentimientos");
+assert(!provisioningApi.includes('from("tenant_data_consents")'), "El blueprint exporta consentimientos");
 assert(!provisioningApi.toLowerCase().includes("novaterra"), "La API no puede depender del piloto");
 assert(researchEvidenceSql.includes("source_document_id"), "La sugerencia no enlaza su snapshot");
 assert(researchEvidenceSql.includes("evidence_excerpt"), "La sugerencia no conserva fragmento de evidencia");
