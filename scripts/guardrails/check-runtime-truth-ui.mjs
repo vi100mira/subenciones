@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
+const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -11,6 +11,11 @@ assert(files["agents-readiness"].includes("Qué está disponible hoy"), "Asisten
 assert(files["entity-activation"].includes("Gestor de subvenciones"), "Entidad conserva un rol poco claro");
 assert(!files["entity-activation"].includes("Servicios contratados") && !files["entity-activation"].includes("Suite completa contratada"), "Entidad duplica el catálogo de asistentes");
 assert(files["agents-readiness"].includes("agents-status-legend"), "Asistentes ha perdido el estado operativo de los agentes");
+assert(files["tenant-agent-runtime"].includes("/api/tenant-agent-governance"), "Asistentes no carga estado real del tenant");
+assert(files["tenant-agent-runtime"].includes("Autorizar web pública"), "Falta activar consentimiento web desde Asistentes");
+assert(files["tenant-agent-runtime"].includes("Investigar ahora"), "Falta ejecutar el Investigador desde Asistentes");
+assert(files["tenant-agent-runtime"].includes("Aprobar perfil revisado"), "Falta revisión humana del perfil");
+assert(files["tenant-agent-runtime"].includes("Calcular encaje"), "Falta ejecutar encaje persistido");
 assert(files["operations-platform"].includes("Publicaciones revisadas"), "Operaciones no diferencia publicaciones revisadas y oportunidades");
 assert(files["operations-platform"].includes("Financiadores privados"), "Operaciones no explica el seguimiento privado");
 const visibleContract = Object.values(files).join("\n");

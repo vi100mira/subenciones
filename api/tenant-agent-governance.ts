@@ -66,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .eq("tenant_id", actor.tenantId).order("agent_key"),
         supabase.from("tenant_data_consents").select("consent_type, status, scope_json, granted_at, revoked_at")
           .eq("tenant_id", actor.tenantId).in("consent_type", [...CONSENT_TYPES]),
-        supabase.from("source_connections").select("id, label, kind, scope, status, approved_at")
+        supabase.from("source_connections").select("id, label, kind, scope, status, approved_at, config_json")
           .eq("tenant_id", actor.tenantId).eq("label", "Web pública de la entidad").limit(1).maybeSingle()
       ]);
       for (const result of [agents, consents, webSource]) if (result.error) throw result.error;
