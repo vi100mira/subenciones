@@ -36,11 +36,11 @@
       note: "Revisa cada día la Base Nacional de Subvenciones y 15 financiadores privados, aunque el ordenador esté apagado."
     },
     "Investigador de entidad": {
-      status: "En preparación",
+      status: "Pendiente de activación",
       tone: "warning",
       disabled: true,
       platformOnly: true,
-      note: "La autorización ya está prevista, pero todavía no analiza automáticamente la web de la entidad."
+      note: "El agente está desplegado. La entidad debe autorizar y aprobar su fuente web antes de ejecutarlo."
     },
     "Asistente de encaje": {
       status: "Disponible en esta versión",
@@ -92,7 +92,7 @@
       <div class="agent-status-legend" id="agents-status-legend" aria-label="Leyenda de estado de asistentes">
         <span><i class="legend-dot safe"></i>Operativo</span>
         <span><i class="legend-dot review"></i>Requiere revision</span>
-        <span><i class="legend-dot warning"></i>En desarrollo</span>
+        <span><i class="legend-dot warning"></i>Bloqueado o requiere acción</span>
       </div>`);
   }
 

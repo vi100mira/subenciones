@@ -23,9 +23,9 @@
     const tone = agent.status === "ready" ? "safe" : agent.status === "paused" ? "review" : "warning";
     const label = agent.status === "ready" ? "Operativo" : agent.status === "paused" ? "Pausado" : "Bloqueado";
     card.classList.toggle("is-disabled", !agent.enabled); card.classList.toggle("is-active-prototype", agent.enabled);
-    card.setAttribute("aria-disabled", String(!agent.enabled));
-    const dot = card.querySelector(".agent-status-dot");
-    if (dot) { dot.className = `agent-status-dot ${tone}`; dot.title = `${label}: ${agent.status_reason || "Sin detalle"}`; const reader = dot.querySelector(".sr-only"); if (reader) reader.textContent = label; }
+    const status = card.querySelector(".agent-status-dot, .badge");
+    if (status?.classList.contains("agent-status-dot")) { status.className = `agent-status-dot ${tone}`; status.title = `${label}: ${agent.status_reason || "Sin detalle"}`; const reader = status.querySelector(".sr-only"); if (reader) reader.textContent = label; }
+    else if (status) { status.className = `badge ${tone}`; status.textContent = label; status.title = agent.status_reason || label; }
     const note = card.querySelector(".agent-readiness"); if (note) note.textContent = agent.status_reason || label;
     card.querySelector(".tenant-agent-actions")?.remove();
     const actions = document.createElement("div"); actions.className = "button-row tenant-agent-actions";
@@ -42,6 +42,10 @@
       if (consent?.status !== "granted") actions.innerHTML = button("Autorizar IA para borradores", "grant-ai");
     }
     if (agent.agent_key === "match_agent" && agent.enabled) actions.innerHTML = button("Calcular encaje", "run-match");
+    const requiresAction = !agent.enabled && actions.childElementCount > 0;
+    card.classList.toggle("has-required-action", requiresAction);
+    if (requiresAction) card.removeAttribute("aria-disabled");
+    else card.setAttribute("aria-disabled", String(!agent.enabled));
     if (actions.childElementCount) card.append(actions);
   }
   function updateSummary(agents) {
