@@ -6,6 +6,7 @@ const provisioningSql = fs.readFileSync(
   "supabase/migrations/20260713180000_tenant_suite_provisioning.sql",
   "utf8"
 );
+const provisioningApi = fs.readFileSync("api/admin-tenant-provision.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -41,6 +42,10 @@ assert(provisioningSql.includes("Falta consentimiento de web pública"), "Falta 
 assert(provisioningSql.includes("Falta aprobar el perfil de entidad"), "Falta puerta del encaje");
 assert(provisioningSql.includes("Falta consentimiento de procesamiento IA"), "Falta puerta del redactor");
 assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no puede depender del piloto");
+assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
+assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
+assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
+assert(!provisioningApi.toLowerCase().includes("novaterra"), "La API no puede depender del piloto");
 
 console.log(JSON.stringify({
   ok: true,
