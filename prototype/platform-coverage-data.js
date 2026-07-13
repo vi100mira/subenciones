@@ -34,6 +34,6 @@ window.PLATFORM_COVERAGE = {
     agent: "Investigador de entidad",
     requiredInputs: ["nombre", "web publica", "email admin", "consentimiento"],
     crawlLimit: "12 paginas / profundidad 2 / 90s / 3 MB",
-    state: "operativo como flujo de plataforma; falta worker real"
+    state: "operativo y alojado bajo demanda; solo procesa web pública consentida"
   }
 };

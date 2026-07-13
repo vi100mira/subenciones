@@ -33,7 +33,7 @@
       tone: "safe",
       disabled: false,
       platformOnly: true,
-      note: "Revisa cada día la Base Nacional de Subvenciones y 15 financiadores privados, aunque el ordenador esté apagado."
+      note: "Revisa BDNS y fuentes territoriales; vigila 15 financiadores privados curados. Una privada solo se incorpora con bases oficiales y vigencia verificable."
     },
     "Investigador de entidad": {
       status: "Pendiente de activación",
@@ -60,11 +60,11 @@
       disabled: false,
       note: "Lee bases públicas y sus límites. La lista automática de requisitos y la documentación privada requieren revisión."
     },
-    "Borrador de memoria": {
+    "Gestor documental": {
       status: "Preparado, pendiente de activación",
       tone: "review",
       disabled: false,
-      note: "El servicio está preparado, pero todavía no genera textos porque la conexión con IA no está activada."
+      note: "Organiza requisitos y borradores de candidatura. No genera texto con IA hasta que la entidad lo autorice."
     },
     "Avisos y recordatorios": {
       status: "En desarrollo",
