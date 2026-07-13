@@ -26,8 +26,18 @@ assert(result.externalAiCalls === 0, "La revisión documental consume IA sin nec
 assert(result.humanReviewRequired && !result.externalSubmissionAllowed, "Falta control humano o se permite presentar");
 
 const migration = fs.readFileSync("supabase/migrations/20260713210000_tenant_document_reviews.sql", "utf8");
+const worker = fs.readFileSync("scripts/workers/run-document-review.mjs", "utf8");
+const api = fs.readFileSync("api/document-review-runs.ts", "utf8");
+const workflow = fs.readFileSync(".github/workflows/workers-alojados.yml", "utf8");
 assert(migration.includes("tenant_document_reviews"), "Falta persistencia tenant");
 assert(migration.includes("public.is_org_member(tenant_id)"), "Falta aislamiento RLS");
 assert(migration.includes("human_review_status"), "Falta revisión humana persistida");
+assert(worker.includes('.eq("agent_key", "document_review")'), "El worker no aísla su cola");
+assert(worker.includes("external_ai_calls: 0"), "El worker no declara consumo IA");
+assert(worker.includes("document_review.generated_for_review"), "Falta auditoría del resultado");
+assert(api.includes("requireSourcePermission"), "La API no exige permiso tenant");
+assert(api.includes('inputs: { proceso: "documentos" }'), "La API no despacha el worker alojado");
+assert(api.includes("humanReviewRequired: true"), "La API no exige revisión humana");
+assert(workflow.includes("scripts/workers/run-document-review.mjs"), "El worker no está alojado");
 
 console.log(JSON.stringify({ ok: true, requirements: result.requirements.length, evidence: "versionada", aiCalls: 0, review: "humana obligatoria" }, null, 2));

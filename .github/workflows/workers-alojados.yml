@@ -17,6 +17,7 @@ on:
           - redactor
           - investigador
           - encaje
+          - documentos
 
 permissions:
   contents: read
@@ -64,7 +65,7 @@ jobs:
   agentes-bajo-demanda:
     if: >-
       (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') ||
-      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor' || inputs.proceso == 'investigador' || inputs.proceso == 'encaje'))
+      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor' || inputs.proceso == 'investigador' || inputs.proceso == 'encaje' || inputs.proceso == 'documentos'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -96,3 +97,6 @@ jobs:
       - name: Consumir calculo de encaje encolado
         if: github.event_name == 'schedule' || inputs.proceso == 'todo' || inputs.proceso == 'encaje'
         run: node scripts/workers/run-tenant-match.mjs
+      - name: Consumir revision documental encolada
+        if: github.event_name == 'schedule' || inputs.proceso == 'todo' || inputs.proceso == 'documentos'
+        run: node scripts/workers/run-document-review.mjs
