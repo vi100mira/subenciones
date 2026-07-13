@@ -251,7 +251,6 @@ function renderPlatform() {
       </details>
     `;
   };
-  const tenantRow = (item) => `<div class="tenant-grid-row" data-tenant-slug="${item.slug || ""}"><div><strong>${item.title}</strong><span>${item.detail}</span></div><div>${badge(item.state, item.state === "Activa" ? "safe" : "review")}</div><div><span>Gobierno</span><strong>Registro y ciclo de vida auditados</strong></div><div class="tenant-actions"><button class="ghost-action" data-tenant-admin-action="export" type="button">Exportar</button><button class="ghost-action" data-tenant-admin-action="activate" type="button">Activar</button><button class="ghost-action" data-tenant-admin-action="archive" type="button">Archivar</button><button class="ghost-action" data-tenant-admin-action="restore" type="button">Restaurar</button></div></div>`;
   document.querySelector("#tenant-list").innerHTML = `
     <div class="source-control-row"><div><strong>Tenant minimo</strong><span>Nombre, web publica, email admin y consentimiento.</span></div><div><strong>Agente investigador</strong><span>12 paginas, profundidad 2, 90s, 3 MB.</span></div><div><strong>Revision humana</strong><span>Tipo, territorio, temas y logo quedan pendientes.</span></div></div>
     <div class="inline-form">
@@ -260,8 +259,9 @@ function renderPlatform() {
       <button class="primary-action" data-tenant-provision type="button">Crear estructura tenant</button>
     </div>
     <div class="plain-note" data-tenant-admin-status><strong>Alta gobernada</strong><span>Crea estructura y agentes bloqueados por sus puertas; no concede consentimientos ni investiga automáticamente.</span></div>
-    <div class="tenant-grid"><div class="tenant-grid-head"><span>Entidad</span><span>Estado</span><span>Control</span><span>Operaciones</span></div>${window.MOCK.tenants.map(tenantRow).join("")}</div>
+    <div data-tenant-grid-host></div>
   `;
+  window.TenantGrid?.render(window.MOCK.tenants);
   document.querySelector("#platform-campaigns").innerHTML = `<div class="source-control-row"><div><strong>Detectar cambios</strong><span>Hash/etag sin IA antes de modelos.</span></div><div><strong>Programar cron</strong><span>Cadencia y presupuesto por campana.</span></div><div><strong>Ejecutar ahora</strong><span>Manual con motivo y auditoria.</span></div></div><div class="plain-note"><strong>Flujo del agente</strong><span>Abre cada revision para editar cron, presupuesto y ejecucion manual.</span></div>${window.MOCK.platformCampaigns.map(row).join("")}`;
 }
 

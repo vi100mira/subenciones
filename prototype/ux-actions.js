@@ -93,7 +93,6 @@ function bindStaticActions() {
     if (text === "Exportar borrador Word" || text === "Exportar cuando se apruebe") exportProposal();
     if (button.dataset.policyModal !== undefined) showPolicyModal();
     if (text === "Solicitar fuente") showToast("Solicitud registrada. La aprueba el responsable de datos de la entidad.");
-    if (text === "Programar revision") { window.showScreen?.("platform"); showToast("Configura cadencia, presupuesto y fuentes antes de crear una revision programada."); }
     if (text === "Ejecutar ahora") { window.showScreen?.("platform"); showToast("Ejecucion manual: deteccion ligera primero; IA solo con cambios o motivo auditado."); }
     if (button.dataset.reviewAction === "save") { const schedule = button.closest(".stack-item")?.querySelector("[data-cron-input]")?.value.trim() || ""; return showToast(/^(\S+\s+){4}\S+$/.test(schedule) ? "Programación válida. Se revisarán horario, frecuencia y presupuesto." : "Programación incompleta. Revisa los cinco campos del horario."); }
     if (button.dataset.reviewAction === "run") showToast("La ejecución manual requiere motivo y queda auditada antes de usar IA.");

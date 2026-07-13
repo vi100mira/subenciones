@@ -1,7 +1,7 @@
 {
   "name": "subvenciones-rag",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "scripts": {
     "build": "echo \"Static prototype: open prototype/index.html or serve prototype/\"",

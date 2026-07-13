@@ -73,7 +73,6 @@
     return ["https://www.infosubvenciones.es/bdnstrans/api#municipal-social", "https://www.infosubvenciones.es/bdnstrans/api#general-social", "https://subvenciones-rag.vercel.app/sources#private-open-funders"].includes(source.url);
   }
   function renderReviews(data) {
-    document.querySelector('[data-review-action="create"]')?.remove();
     document.querySelector("[data-platform-pane='reviews'] .panel-heading h2").textContent = "Revisiones operativas";
     document.querySelector("#platform-campaigns").innerHTML = data.platformSources.filter(runnableSource).map((source) => {
       const campaign = latestCampaign(data, source.id); const running = campaign && activeRunStates.has(campaign.status);
@@ -89,8 +88,15 @@
     document.querySelector("#operations-health").innerHTML = data.platformSources.map((item) => `<div class="stack-item"><div class="opportunity-topline"><strong>${escapeHtml(item.label)}</strong>${badge(item.health_status, tone(item.health_status))}</div><span>${escapeHtml(item.status)} · ${date(item.last_synced_at)}</span></div>`).join("");
     const capacity = document.querySelector("#operations .capacity-grid"); if (capacity) capacity.innerHTML = `<div><span>Fuentes registradas</span><strong>${data.platformSources.length}</strong></div><div><span>Ejecuciones tenant</span><strong>${data.agentRuns.length}</strong></div><div><span>Campañas públicas</span><strong>${data.ingestionCampaigns.length}</strong></div><div><span>Eventos auditados</span><strong>${data.auditEvents.length}</strong></div>`;
   }
+  function renderTenants(data) {
+    const configs = new Map(data.tenantConfigs.map((item) => [item.tenant_id, item]));
+    window.TenantGrid?.render(data.organizations.map((organization) => ({
+      title: organization.name, slug: organization.slug, createdAt: organization.created_at,
+      status: configs.get(organization.id)?.status || "unconfigured"
+    })));
+  }
   function render() {
-    if (!state.data) return; renderDashboard(state.data); renderAgents(state.data); renderAudit(state.data); renderReviews(state.data); renderOperations(state.data);
+    if (!state.data) return; renderDashboard(state.data); renderAgents(state.data); renderAudit(state.data); renderReviews(state.data); renderOperations(state.data); renderTenants(state.data);
     const globalAction = document.querySelector(".top-actions .primary-action"); if (globalAction) globalAction.style.display = "none";
     const refreshButton = document.querySelector("#refresh-button"); if (refreshButton) refreshButton.title = "Actualizar estado real";
     window.lucide?.createIcons();

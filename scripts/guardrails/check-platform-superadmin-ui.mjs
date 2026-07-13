@@ -61,6 +61,10 @@ try {
     fakeGlobalActionVisible: getComputedStyle(document.querySelector(".top-actions .primary-action")).display !== "none",
     sourceNodeTextAlign: getComputedStyle(document.querySelector("#source-map .source-node")).textAlign,
     operationsLabels: [...document.querySelectorAll("#operations .metric span")].map((item) => item.textContent.trim()),
+    tenantRows: document.querySelectorAll(".tenant-grid-body .tenant-grid-row").length,
+    tenantSortButtons: document.querySelectorAll("[data-tenant-sort]").length,
+    tenantFilters: document.querySelectorAll("[data-tenant-filter]").length,
+    tenantIconActions: document.querySelectorAll(".tenant-action-icon[aria-label]").length,
     privacyText: document.querySelector("#agents-readiness-note")?.textContent || ""
   }));
   assert(evidence.role === "superadmin", "No se aplicó la sesión superadmin");
@@ -72,7 +76,17 @@ try {
   assert(!evidence.fakeGlobalActionVisible, "La acción global simulada sigue visible para superadmin");
   assert(evidence.sourceNodeTextAlign === "center", "Los textos del mapa de fuentes no están centrados");
   assert(evidence.operationsLabels.includes("Trabajos en cola"), "Operaciones no usa métricas globales");
+  assert(evidence.tenantRows > 0 && evidence.tenantSortButtons === 3 && evidence.tenantFilters === 3, "Entidades no ofrece rejilla ordenable y filtrable");
+  assert(evidence.tenantIconActions === evidence.tenantRows * 4, "Las acciones de entidad no usan iconos accesibles");
   assert(evidence.privacyText.includes("no abre documentos"), "No se declara el límite de privacidad superadmin");
+  await page.evaluate(() => { window.showScreen("platform"); window.TenantGrid.render([{ title: "Zeta", slug: "zeta", state: "Activa" }, { title: "Alfa", slug: "alfa", state: "Pendiente" }]); });
+  await page.locator('[data-platform-tab="entities"]').click();
+  assert((await page.locator(".tenant-grid-row").first().innerText()).startsWith("Alfa"), "El orden inicial de entidades no es ascendente");
+  await page.locator('[data-tenant-sort="name"]').click();
+  assert((await page.locator(".tenant-grid-row").first().innerText()).startsWith("Zeta"), "La cabecera no invierte el orden de entidades");
+  await page.locator('[data-tenant-filter="name"]').fill("Alfa");
+  assert((await page.locator(".tenant-grid-row").count()) === 1 && (await page.locator(".tenant-grid-row").innerText()).startsWith("Alfa"), "El filtro de entidad no reduce la rejilla");
+  await page.evaluate(() => window.showScreen("dashboard"));
   const sourceStatusAction = page.locator("#dashboard .source-map-panel [data-jump]");
   assert((await sourceStatusAction.textContent())?.trim() === "Ver estado de fuentes", "El mapa global conserva una acción ambigua");
   await sourceStatusAction.click();
@@ -92,13 +106,15 @@ try {
     labels: [...document.querySelectorAll("#dashboard .metric span")].map((item) => item.textContent.trim()),
     values: [...document.querySelectorAll("#dashboard .metric strong")].map((item) => item.textContent.trim()),
     details: [...document.querySelectorAll("#dashboard .metric small")].map((item) => item.textContent.trim()),
-    globalActionVisible: getComputedStyle(document.querySelector(".top-actions .primary-action")).display !== "none"
+    globalActionVisible: getComputedStyle(document.querySelector(".top-actions .primary-action")).display !== "none",
+    programButtonVisible: document.querySelector('[data-review-action="create"]') !== null
   }));
   assert(unavailable.title === "Panel de plataforma" && unavailable.hash === "#view-dashboard", "La entrada superadmin no aterriza en Panel");
   assert(unavailable.labels.includes("Tenants activos"), "El estado sin API recupera etiquetas tenant");
   assert(unavailable.values.every((value) => value === "—"), "El estado sin API filtra cifras tenant");
   assert(!unavailable.details.some((value) => value.includes("perfil de la entidad")), "El estado sin API conserva contexto tenant");
   assert(!unavailable.globalActionVisible, "El estado sin API muestra la acción global simulada");
+  assert(!unavailable.programButtonVisible, "El fallback conserva Programar revisión sin funcionalidad real");
   await errorPage.evaluate(() => window.showScreen("platform"));
   const firstConfiguration = errorPage.locator("#platform-campaigns details").first();
   await firstConfiguration.locator("summary").click();
