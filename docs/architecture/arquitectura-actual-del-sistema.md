@@ -8,7 +8,7 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 - Las funciones `api/*.ts` ejecutan autenticación, permisos, altas, consultas y escrituras breves.
 - Supabase/Postgres es la fuente de verdad y contiene dos tablas que actúan como colas.
 - La cola de campañas de plataforma tiene consumidores productivos para tres ciclos: BDNS municipal, BDNS social general y financiadores privados públicos.
-- Existe una cola y un worker asíncrono del redactor para preparar contexto gobernado; no hay todavía proveedor LLM autorizado ni llamadas productivas a modelos.
+- Existe una cola y un worker asíncrono del redactor. OpenAI está autorizado para una primera fase de evidencia exclusivamente pública, con presupuesto de 20 € al mes; falta instalar la clave API en el worker para ejecutar la primera llamada real.
 - Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local.
 - El OCR no es SaaS: se ejecuta en el equipo worker con Tesseract o con el OCR nativo de Windows.
 - En producción hay 634 registros. De los 73 marcados como abiertos, 50 han pasado por la compuerta reforzada: 2 tienen restricciones de redacción verificadas y 48 quedan bloqueados hasta revisar esas restricciones.
@@ -42,7 +42,8 @@ flowchart LR
 
   api --> colaRedactor["Cola: tenant_agent_runs"]
   colaRedactor --> redactor["Worker redactor · cada 5 minutos"]
-  redactor --> esperaIA["awaiting_provider · sin salida simulada"]
+  redactor --> proveedor["OpenAI Responses API · store false"]
+  proveedor --> revision["Borrador estructurado · revisión humana"]
 
   db -. "alertas dentro de la app" .-> web
   db -. "sin emisor de canal" .-> canales["Correo / Teams / WhatsApp pendientes"]
@@ -58,7 +59,7 @@ flowchart LR
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
 | Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
 | Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
-| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos | Contexto operativo; generación IA pendiente de proveedor |
+| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos | Integración OpenAI preparada y probada; falta la clave del worker |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
@@ -111,7 +112,7 @@ La prueba integral del 13 de julio de 2026 recorrió el planificador, la cola de
 | Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 
-Conclusión: los radares y el contexto del redactor son asíncronos y auditables. No hay una flota LLM en producción: el redactor se detiene antes de cualquier llamada externa hasta autorizar proveedor y modelo.
+Conclusión: los radares y el redactor son asíncronos y auditables. El redactor usa salida JSON estricta, `store: false`, límite mensual, evidencia pública y revisión humana. Mientras no exista `OPENAI_API_KEY` en el equipo worker, las ejecuciones permanecen en `awaiting_provider` y no se transmite contenido.
 
 ## Capacidad de búsqueda comprobada
 

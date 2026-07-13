@@ -27,6 +27,31 @@
       strong.textContent = label[0];
       span.textContent = run?.error ? `${label[1]} ${run.error}` : label[1];
       node.append(strong, span);
+      if (run?.status === "review_required" && run.output_json?.sections?.length) {
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = "Abrir borrador para revisión";
+        details.append(summary);
+        const heading = document.createElement("h4");
+        heading.textContent = run.output_json.title || "Borrador";
+        details.append(heading);
+        run.output_json.sections.forEach((section) => {
+          const title = document.createElement("h5");
+          title.textContent = section.title;
+          details.append(title);
+          (section.paragraphs || []).forEach((paragraph) => {
+            const text = document.createElement("p");
+            text.textContent = paragraph;
+            details.append(text);
+          });
+        });
+        if (run.output_json.uncertainties?.length) {
+          const warning = document.createElement("p");
+          warning.textContent = `Pendiente de revisión: ${run.output_json.uncertainties.join(" · ")}`;
+          details.append(warning);
+        }
+        node.append(details);
+      }
     });
     const active = ["queued", "preparing_context", "awaiting_provider", "generating"].includes(run?.status);
     document.querySelectorAll(`[data-draft-agent-start="${CSS.escape(canonicalKey)}"]`).forEach((button) => {
