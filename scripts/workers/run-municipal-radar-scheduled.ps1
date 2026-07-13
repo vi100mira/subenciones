@@ -59,6 +59,14 @@ try {
       throw "El worker $campaign termino con codigo $workerExitCode."
     }
   }
+  Add-LogLine "[$(Get-Date -Format "o")] Inicio de campaña private-open-funders"
+  $output = & node "scripts/workers/run-private-funder-radar.mjs" "--apply=true" 2>&1 | Out-String
+  $workerExitCode = $LASTEXITCODE
+  [System.IO.File]::AppendAllText($logPath, $output, $utf8NoBom)
+  Write-Output $output.TrimEnd()
+  if ($workerExitCode -ne 0) {
+    throw "El worker private-open-funders termino con codigo $workerExitCode."
+  }
 } finally {
   Pop-Location
 }

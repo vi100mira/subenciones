@@ -6,7 +6,8 @@ import WebSocket from "ws";
 const args = new Set(process.argv.slice(2));
 const apply = args.has("--apply");
 const simulateDeadlineChange = args.has("--simulate-deadline-change");
-const catalogPath = "data/private-open-funders/platform-open-funders-v1.json";
+const catalogArg = process.argv.find((item) => item.startsWith("--catalog="));
+const catalogPath = catalogArg ? catalogArg.split("=").slice(1).join("=") : "data/private-open-funders/platform-open-funders-v1.json";
 
 function loadEnvFile(content) {
   for (const line of content.split(/\r?\n/)) {

@@ -6,6 +6,7 @@ const QUERIES = ["accion social", "inclusion", "empleo", "asociaciones", "entida
 const RADARS = [
   {
     campaign: "municipal-social",
+    kind: "bdns",
     label: "BDNS/SNPSAP - radar municipal social",
     url: "https://www.infosubvenciones.es/bdnstrans/api#municipal-social",
     administrationType: "L",
@@ -13,10 +14,19 @@ const RADARS = [
   },
   {
     campaign: "general-social",
+    kind: "bdns",
     label: "BDNS/SNPSAP - radar social general",
     url: "https://www.infosubvenciones.es/bdnstrans/api#general-social",
     administrationType: "todas",
     queries: ["social"]
+  },
+  {
+    campaign: "private-open-funders",
+    kind: "private_funder",
+    label: "Financiadores privados - catálogo público oficial",
+    url: "https://subvenciones-rag.vercel.app/sources#private-open-funders",
+    administrationType: "no_aplica",
+    queries: ["convocatorias sociales privadas"]
   }
 ] as const;
 
@@ -40,7 +50,7 @@ async function ensureSource(radar: (typeof RADARS)[number]) {
     .from("platform_sources")
     .insert({
       label: radar.label,
-      kind: "bdns",
+      kind: radar.kind,
       url: radar.url,
       status: "active",
       health_status: "unknown",

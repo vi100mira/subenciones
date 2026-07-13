@@ -153,6 +153,15 @@ async function upsertOpportunity(supabase, sourceId, item) {
 }
 
 async function ensureVersion(supabase, opportunityId, item, observedAt) {
+  const { data: current, error: currentError } = await supabase
+    .from("platform_opportunity_versions")
+    .select("id")
+    .eq("opportunity_id", opportunityId)
+    .eq("version_status", "current")
+    .limit(1)
+    .maybeSingle();
+  if (currentError) throw currentError;
+  if (current) return;
   const content = {
     name: item.name,
     url: item.url,
