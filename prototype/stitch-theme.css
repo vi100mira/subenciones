@@ -23,20 +23,35 @@ body {
 }
 
 .brand-mark {
-  background: #ecfdf6;
+  width: 52px;
+  height: 52px;
+  background: transparent;
   color: transparent;
-  border: 1px solid rgba(163, 250, 239, 0.35);
+  border: 0;
 }
 
 .brand-mark img {
   display: block;
-  width: 34px;
-  height: 34px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
 }
 
 .brand {
   position: relative;
+}
+
+.brand strong {
+  color: #ffffff;
+  font-size: 18px;
+  letter-spacing: 0.035em;
+  line-height: 1.15;
+}
+
+.brand span {
+  margin-top: 3px;
+  color: #bed4cd;
+  font-size: 12px;
 }
 
 .sidebar-toggle {
@@ -53,8 +68,8 @@ body {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #15231f 0%, #10211d 100%);
-  border-right: 1px solid rgba(163, 250, 239, 0.12);
+  background: #16342d;
+  border-right: 1px solid rgba(189, 218, 209, 0.18);
 }
 
 .sidebar-note {

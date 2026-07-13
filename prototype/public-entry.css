@@ -23,18 +23,12 @@
   justify-content: center;
   overflow: hidden;
   padding: clamp(28px, 5vw, 56px);
-  background:
-    linear-gradient(rgba(21, 35, 31, 0.86), rgba(21, 35, 31, 0.94)),
-    url("./assets/stitch-ngo-grant-hero.png") center / cover;
+  background: #16342d;
   color: #ffffff;
 }
 
 .public-entry__intro::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 100px);
-  pointer-events: none;
+  content: none;
 }
 
 .public-entry__brand,
@@ -46,16 +40,17 @@
 .public-entry__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   margin-bottom: auto;
-  color: #a3faef;
-  font-size: 18px;
+  color: #ffffff;
+  font-size: 22px;
+  letter-spacing: 0.035em;
   font-weight: 900;
 }
 
 .public-entry__brand img {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
 }
 
 .public-entry__access {
@@ -89,13 +84,13 @@
   position: relative;
   z-index: 1;
   max-width: 560px;
-  color: #e3f5ed;
+  color: #d8e9e3;
   line-height: 1.55;
 }
 
 .public-entry__intro .eyebrow {
   margin-top: 70px;
-  color: #a3faef;
+  color: #b7f3e8;
 }
 
 .public-entry__intro figure {
