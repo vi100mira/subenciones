@@ -11,7 +11,7 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 - Existe una cola y un worker asíncrono del redactor para preparar contexto gobernado; no hay todavía proveedor LLM autorizado ni llamadas productivas a modelos.
 - Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local.
 - El OCR no es SaaS: se ejecuta en el equipo worker con Tesseract o con el OCR nativo de Windows.
-- En producción hay 626 registros, pero solo 42 pasan la compuerta reforzada de convocatoria viva, emisor oficial y bases extraídas.
+- En producción hay 634 registros. De los 73 marcados como abiertos, 50 han pasado por la compuerta reforzada: 2 tienen restricciones de redacción verificadas y 48 quedan bloqueados hasta revisar esas restricciones.
 
 ## Vista gráfica
 
@@ -81,6 +81,8 @@ Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un age
 
 El worker es un proceso determinista. En este momento no consulta un modelo generativo ni envía el texto de las bases a un tercero.
 
+La prueba integral del 13 de julio de 2026 recorrió el planificador, la cola de Supabase y el Programador de tareas real. El ciclo general examinó 100 fichas, aceptó 11, descartó 89 y no tuvo fallos. El ciclo privado examinó sus 15 fuentes, no encontró ninguna oportunidad que superase la puerta estricta, bloqueó o mantuvo en observación las 15 y no tuvo fallos. La tarea terminó con código `0` y quedó programada para el día siguiente.
+
 ## El OCR no es SaaS
 
 | Pregunta | Respuesta actual |
@@ -117,35 +119,38 @@ Conclusión: los radares y el contexto del redactor son asíncronos y auditables
 
 | Métrica | Cantidad |
 | --- | ---: |
-| Registros totales | 626 |
-| Registros públicos | 614 |
+| Registros totales | 634 |
+| Registros públicos | 622 |
 | Registros privados curados | 12 |
-| Marcados como abiertos en datos históricos | 65 |
-| Vivos y accionables con bases verificadas | 42 |
+| Marcados como abiertos en datos históricos | 73 |
+| Abiertos incorporados por la compuerta reforzada | 50 |
+| Con restricciones de redacción verificadas | 2 |
+| Bloqueados hasta revisar restricciones de redacción | 48 |
 | Fuentes de plataforma | 19: 3 BDNS y 16 privadas, contando las fuentes agregadoras de campaña |
 
-Los 23 registros abiertos que no pasan la compuerta actual son legado: 19 públicos sin el nuevo contrato de evidencia y 4 privados sin bases verificadas. No deben presentarse como candidaturas accionables hasta revalidarlos.
+Los otros 23 registros abiertos son legado sin el contrato de restricciones actual: 19 públicos y 4 privados. No deben presentarse como candidaturas accionables hasta revalidarlos. Tampoco deben redactarse automáticamente los 48 casos bloqueados; disponer de bases oficiales no equivale a conocer todavía el límite formal de la memoria.
 
-### Tipos de las 42 convocatorias accionables
+### Tipos de las 50 convocatorias incorporadas por la compuerta reforzada
 
 | Tipo BDNS | Cantidad |
 | --- | ---: |
-| Servicios sociales y promoción social | 13 |
+| Servicios sociales y promoción social | 17 |
 | Fomento del empleo | 11 |
-| Educación | 5 |
-| Desempleo | 4 |
+| Educación | 6 |
+| Desempleo | 5 |
 | Comercio, turismo y pymes | 3 |
-| Cultura | 3 |
+| Cultura | 4 |
 | Vivienda y edificación | 1 |
 | Agricultura, pesca y alimentación | 1 |
 | Otras prestaciones económicas | 1 |
+| Infraestructuras | 1 |
 
-Las 42 son de administración local y cubren ayuntamientos, diputaciones, cabildos u otros organismos locales de distintas provincias españolas. La primera campaña examinó 300 detalles: aceptó 42, descartó 258 y no tuvo fallos.
+Las 50 son públicas y cubren entidades locales y resultados adicionales del radar social general. La primera campaña municipal examinó 300 detalles: aceptó 42, descartó 258 y no tuvo fallos. El ciclo general posterior examinó 100 fichas y añadió resultados tras deduplicar los ya existentes.
 
 ### Qué podemos afirmar y qué no
 
 - Sí podemos buscar convocatorias municipales españolas publicadas en BDNS para las cinco familias sociales configuradas.
-- Sí podemos recuperar y verificar bases oficiales en los 42 casos aceptados de la campaña productiva.
+- Sí podemos recuperar bases oficiales y aplicar la compuerta de evidencia a 50 casos; solo 2 permiten redactar porque sus límites formales están verificados.
 - Sí existe una campaña diaria social general en BDNS y otra para 15 fuentes privadas oficiales.
 - La campaña general es periódica pero aún no recorre exhaustivamente todas las páginas, palabras y sectores.
 - Todavía no hay privadas accionables bajo la nueva compuerta, ni cobertura universal de fundaciones.

@@ -40,7 +40,7 @@ async function ensureSource(radar: (typeof RADARS)[number]) {
   const { data: existing, error: readError } = await supabase
     .from("platform_sources")
     .select("id, status")
-    .eq("kind", "bdns")
+    .eq("kind", radar.kind)
     .eq("url", radar.url)
     .maybeSingle();
   if (readError) throw readError;

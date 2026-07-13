@@ -47,7 +47,7 @@ async function runNode(script, args) {
 
 async function claim(supabase) {
   const { data: source, error: sourceError } = await supabase.from("platform_sources")
-    .select("id").eq("url", sourceUrl).eq("status", "active").single();
+    .select("id").eq("kind", "private_funder").eq("url", sourceUrl).eq("status", "active").single();
   if (sourceError) throw sourceError;
   const { data: queued, error: queueError } = await supabase.from("platform_ingestion_campaigns")
     .select("id, campaign_key").eq("platform_source_id", source.id).eq("status", "queued")
