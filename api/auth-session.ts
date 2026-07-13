@@ -54,6 +54,19 @@ async function tenantSession(userId: string, email: string, accessToken: string,
     .eq("tenant_id", membership.tenant_id)
     .maybeSingle();
 
+  if (["paused", "archived"].includes(config?.status || "")) {
+    await supabase.from("audit_events").insert({
+      tenant_id: membership.tenant_id,
+      actor_user_id: userId,
+      actor_label: email,
+      action: "auth.login_blocked",
+      target_type: "session",
+      target_id: userId,
+      detail_json: { role: membership.role, tenant_status: config?.status }
+    });
+    throw new Error("La entidad está pausada o archivada");
+  }
+
   await supabase.from("audit_events").insert({
     tenant_id: membership.tenant_id,
     actor_user_id: userId,
@@ -76,7 +89,7 @@ async function tenantSession(userId: string, email: string, accessToken: string,
       label: "Plan integral piloto",
       billingStatus: "Contratado",
       features: ["dashboard", "opportunities", "entity", "agents", "workspace", "audit", "plan"],
-      note: "Novaterra tiene todos los agentes habilitados durante el piloto."
+      note: "Las capacidades se habilitan según permisos, consentimientos y estado verificado."
     },
     screen: "entity",
     accessToken,
@@ -129,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(ok(tenant));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    const status = message.includes("obligatorias") ? 500 : 400;
+    const status = message.includes("obligatorias") ? 500 : message.includes("pausada") || message.includes("archivada") ? 403 : 400;
     return res.status(status).json(fail(message));
   }
 }

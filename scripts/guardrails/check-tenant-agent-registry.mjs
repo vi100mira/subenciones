@@ -17,6 +17,8 @@ const matchSql = fs.readFileSync(
 );
 const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
 const profileReviewApi = fs.readFileSync("api/tenant-profile-review.ts", "utf8");
+const lifecycleApi = fs.readFileSync("api/admin-tenant-lifecycle.ts", "utf8");
+const authApi = fs.readFileSync("api/auth-session.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -78,6 +80,11 @@ assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no a
 assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
 assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");
 assert(!profileReviewApi.toLowerCase().includes("novaterra"), "La revisión depende del piloto");
+assert(lifecycleApi.includes('"archive", "restore"'), "Falta archivo reversible del tenant");
+assert(lifecycleApi.includes('hard_delete: false'), "El archivo se confunde con borrado definitivo");
+assert(lifecycleApi.includes("reconcile_tenant_agent_suite"), "Restaurar no reconcilia agentes");
+assert(authApi.includes("auth.login_blocked"), "Un tenant archivado todavía puede iniciar sesión");
+assert(!authApi.includes("Novaterra tiene todos los agentes"), "Login conserva habilitación específica del piloto");
 
 console.log(JSON.stringify({
   ok: true,
