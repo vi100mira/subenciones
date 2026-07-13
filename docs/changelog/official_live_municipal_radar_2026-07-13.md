@@ -43,6 +43,10 @@ Impedir que publicaciones de beneficiarios o programas sin convocatoria aparezca
 - El resolver BOP recupero para Arteixo 31 paginas, 72.831 caracteres y hash `2c2b17e0...`; el extracto de 2026 no se uso como sustituto de las bases.
 - Prueba integral del worker: 25 detalles, 7 oportunidades vivas con bases extraidas, 18 rechazadas y 0 fallos del guardrail de autoridad; runtime Python 3.12.13 con OCR nativo de Windows.
 - Prueba negativa del worker: un Python sin parsers PDF aborta antes de reclamar la cola y explica que debe configurarse `PYTHON_BIN`.
+- Activacion productiva: migracion remota aplicada, `CRON_SECRET` sensible configurado y despliegue de Vercel verificado con portada 200, cron sin credenciales 401 y cron autenticado 202.
+- Primera campana productiva `municipal-social:2026-07-13`: 300 detalles oficiales, 42 oportunidades vivas importadas, 258 descartadas y 0 fallos.
+- Auditoria posterior: 42/42 versiones actuales abiertas, con autoridad `official_registry`, bases extraidas, URL oficial y evidencia con hash SHA-256.
+- El lanzador local programado descubre un Python compatible sin almacenar secretos y deja registro operativo en `.tmp/municipal-radar-scheduled.log`.
 
 ## Riesgos residuales
 
@@ -50,4 +54,4 @@ Impedir que publicaciones de beneficiarios o programas sin convocatoria aparezca
 - Algunos portales municipales bloquean descarga o enlazan presupuestos generales en lugar de bases concretas; esos casos quedan en revision, no en oportunidades vivas.
 - En workers no Windows, el OCR necesita Tesseract y sus idiomas; los PDF con texto se extraen sin esa dependencia.
 - El 100 % corresponde a una muestra real de 75 detalles/14 convocatorias vivas, no a todos los BOP de Espana; otros dominios con referencias indirectas necesitaran resolutores equivalentes y deben permanecer en revision hasta entonces.
-- Falta aplicar la nueva migracion, configurar `CRON_SECRET` y ejecutar el worker con un runtime persistente antes de activar el cron en produccion.
+- El consumidor offline depende de que el equipo Windows este encendido; la tarea usa `StartWhenAvailable` para recuperar una ejecucion perdida, pero un host siempre activo seria necesario para disponibilidad continua.
