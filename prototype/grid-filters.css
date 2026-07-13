@@ -1,9 +1,14 @@
+.opportunity-grid thead > tr:first-child th {
+  box-sizing: border-box;
+  height: 40px;
+}
+
 .opportunity-grid .grid-filter-row th {
-  top: 34px;
+  top: 40px;
   z-index: 6;
   padding-top: 4px;
   padding-bottom: 6px;
-  background: #f4fbf8;
+  background: #f8fffc;
   text-transform: none;
 }
 
@@ -11,14 +16,6 @@
   display: grid;
   gap: 2px;
   min-width: 116px;
-}
-
-.grid-filter span {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .grid-filter input {

@@ -222,6 +222,12 @@ button {
   font-weight: 700;
 }
 
+.text-action:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .screen {
   display: none;
 }
@@ -368,11 +374,7 @@ button {
   min-height: 210px;
   padding: 18px;
   border-radius: 8px;
-  background:
-    linear-gradient(90deg, rgba(15, 118, 110, 0.08) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(49, 92, 155, 0.08) 1px, transparent 1px),
-    #f7faf8;
-  background-size: 34px 34px;
+  background: #ffffff;
 }
 
 .source-legend { display: flex; flex-wrap: wrap; gap: 10px; grid-column: 1 / -1; }

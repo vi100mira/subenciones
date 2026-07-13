@@ -23,9 +23,16 @@ body {
 }
 
 .brand-mark {
-  background: #ecfdf6 url("./assets/subvenciones-rag-logo.svg") center / 34px 34px no-repeat;
+  background: #ecfdf6;
   color: transparent;
   border: 1px solid rgba(163, 250, 239, 0.35);
+}
+
+.brand-mark img {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
 }
 
 .brand {
@@ -224,10 +231,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .source-map {
-  background-color: #f8fffc;
-  background-image:
-    linear-gradient(rgba(0, 106, 99, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 106, 99, 0.08) 1px, transparent 1px);
+  background: #ffffff;
 }
 
 .source-node {

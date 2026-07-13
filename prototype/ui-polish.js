@@ -352,7 +352,7 @@
       const listId = `grid-filter-options-${key}`;
       const value = gridState.filters[key] || "";
       const options = filterOptions(optionRows, key).slice(0, 80).map((option) => `<option value="${escapeAttr(option)}"></option>`).join("");
-      return `<th><label class="grid-filter"><span>${label}</span><input data-grid-filter="${key}" list="${listId}" value="${escapeAttr(value)}" placeholder="Filtrar..." autocomplete="off" /><datalist id="${listId}">${options}</datalist></label></th>`;
+      return `<th><label class="grid-filter"><input data-grid-filter="${key}" aria-label="Filtrar por ${escapeAttr(label)}" list="${listId}" value="${escapeAttr(value)}" placeholder="Filtrar..." autocomplete="off" /><datalist id="${listId}">${options}</datalist></label></th>`;
     }).join("");
     return `<tr class="grid-filter-row">${cells}</tr>`;
   }

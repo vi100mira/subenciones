@@ -8,7 +8,7 @@
   entry.innerHTML = `
     <div class="public-entry__grid">
       <section class="public-entry__intro">
-        <div class="public-entry__brand"><img src="./assets/subvenciones-rag-logo.svg" alt="" /><strong>Subvenciones con IA</strong></div>
+        <div class="public-entry__brand"><img src="./assets/insertia/icon-192.png" alt="" /><strong>INSERTIA</strong></div>
         <p class="eyebrow">Compromiso administrativo</p>
         <h1>Garantia de integridad y privacidad institucional</h1>
         <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
