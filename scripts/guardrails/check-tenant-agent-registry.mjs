@@ -15,6 +15,7 @@ const matchSql = fs.readFileSync(
   "supabase/migrations/20260713200000_tenant_match_recommendations.sql",
   "utf8"
 );
+const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -49,6 +50,7 @@ assert(provisioningSql.includes("grant execute") && provisioningSql.includes("se
 assert(provisioningSql.includes("Falta consentimiento de web pública"), "Falta puerta del investigador");
 assert(provisioningSql.includes("Falta aprobar el perfil de entidad"), "Falta puerta del encaje");
 assert(provisioningSql.includes("Falta consentimiento de procesamiento IA"), "Falta puerta del redactor");
+assert(provisioningSql.includes("tenant_agent_configs.status in ('paused', 'disabled')"), "La reconciliación ignora pausas explícitas");
 assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no puede depender del piloto");
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
@@ -62,6 +64,14 @@ assert(matchSql.includes("internal_fact_refs_json"), "El encaje no declara hecho
 assert(matchSql.includes("missing_information_json"), "El encaje no conserva información faltante");
 assert(matchSql.includes("human_review_status"), "El encaje no exige revisión humana");
 assert(matchSql.includes("public.is_org_member(tenant_id)"), "El encaje no está aislado por tenant");
+assert(governanceApi.includes("requireSourcePermission"), "El gobierno no exige rol tenant");
+assert(governanceApi.includes("Falta alcance explícito"), "El consentimiento no exige alcance");
+assert(governanceApi.includes("validConsentScope"), "El consentimiento no valida su alcance");
+assert(governanceApi.includes("scope_keys"), "La auditoría conserva el alcance completo");
+assert(governanceApi.includes("reconcile_tenant_agent_suite"), "Los cambios no reconcilian agentes");
+assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa reversible de agentes");
+assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");
+assert(!governanceApi.toLowerCase().includes("novaterra"), "El gobierno depende del piloto");
 
 console.log(JSON.stringify({
   ok: true,

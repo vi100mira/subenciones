@@ -78,10 +78,19 @@ begin
   from platform_agent_definitions definition
   where definition.active
   on conflict (tenant_id, agent_key) do update set
-    status = excluded.status,
-    enabled = excluded.enabled,
+    status = case
+      when tenant_agent_configs.status in ('paused', 'disabled') then tenant_agent_configs.status
+      else excluded.status
+    end,
+    enabled = case
+      when tenant_agent_configs.status in ('paused', 'disabled') then false
+      else excluded.enabled
+    end,
     permissions_json = excluded.permissions_json,
-    status_reason = excluded.status_reason,
+    status_reason = case
+      when tenant_agent_configs.status in ('paused', 'disabled') then tenant_agent_configs.status_reason
+      else excluded.status_reason
+    end,
     provisioned_version = excluded.provisioned_version,
     activated_at = coalesce(tenant_agent_configs.activated_at, excluded.activated_at),
     last_verified_at = excluded.last_verified_at,
