@@ -4,11 +4,12 @@ import { createHash } from "node:crypto";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
 import { logError, logInfo } from "../src/logger.js";
+import { renderProposalPdf, validateRenderedPages, type PdfFormatRule } from "../src/proposalPdf.js";
 
 type DocumentSection = { title?: unknown; lines?: unknown };
 type PackageDocument = { id?: unknown; title?: unknown; filename?: unknown; sections?: unknown };
 type ProposalLimit = { documentType?: string; value?: number; unit?: string };
-type ProposalConstraints = { draftingGate?: string; requiresRenderedValidation?: boolean; limits?: ProposalLimit[] };
+type ProposalConstraints = { draftingGate?: string; requiresRenderedValidation?: boolean; limits?: ProposalLimit[]; formatRules?: PdfFormatRule[] };
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -66,9 +67,6 @@ function validateDraftLimits(documents: ReturnType<typeof normalizeDocument>[], 
   if (constraints?.draftingGate !== "constraints_verified") {
     throw new Error("Redaccion bloqueada: faltan limites de extension verificados en evidencia oficial.");
   }
-  if (constraints.requiresRenderedValidation) {
-    throw new Error("Redaccion bloqueada: el limite por paginas requiere renderizado y validacion servidor antes de guardar la memoria.");
-  }
   const text = drafts.map(documentText).join(" ");
   for (const limit of constraints.limits || []) {
     if (!limit.value || limit.value <= 0) continue;
@@ -112,6 +110,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const uploaded = [];
     for (const doc of normalizedDocs) {
+      const renderedPdf = isDraftDocument(doc) && proposalConstraints?.requiresRenderedValidation
+        ? await renderProposalPdf(doc.title, doc.sections, proposalConstraints.formatRules || [])
+        : null;
+      if (renderedPdf) validateRenderedPages(renderedPdf.pageCount, proposalConstraints?.limits || []);
       const html = wordHtml(doc.title, doc.sections);
       const buffer = Buffer.from(`\ufeff${html}`, "utf8");
       const sha256 = createHash("sha256").update(buffer).digest("hex");
@@ -121,7 +123,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         addRandomSuffix: false,
         contentType: "application/msword"
       });
-      uploaded.push({ id: doc.id, title: doc.title, filename: doc.filename, pathname: blob.pathname || pathname, sha256, size: buffer.byteLength });
+      let validationPdf = null;
+      if (renderedPdf) {
+        const pdfSha256 = createHash("sha256").update(renderedPdf.buffer).digest("hex");
+        const pdfFilename = doc.filename.replace(/\.doc$/i, ".pdf");
+        const pdfPathname = `tenants/${actor.tenantId}/candidatures/${safeOpportunity}/${pdfSha256.slice(0, 12)}-${pdfFilename}`;
+        const pdfBlob = await put(pdfPathname, renderedPdf.buffer, { access: "public", addRandomSuffix: false, contentType: "application/pdf" });
+        validationPdf = { filename: pdfFilename, pathname: pdfBlob.pathname || pdfPathname, sha256: pdfSha256, size: renderedPdf.buffer.byteLength, pageCount: renderedPdf.pageCount, font: renderedPdf.font, fontSize: renderedPdf.fontSize };
+      }
+      uploaded.push({ id: doc.id, title: doc.title, filename: doc.filename, pathname: blob.pathname || pathname, sha256, size: buffer.byteLength, validationPdf });
     }
 
     await supabase.from("audit_events").insert({
@@ -133,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       target_id: opportunityId,
       detail_json: {
         title: cleanText(title, "Candidatura"),
-        documents: uploaded.map(({ id, title: docTitle, pathname, sha256, size }) => ({ id, title: docTitle, pathname, sha256, size })),
+        documents: uploaded.map(({ id, title: docTitle, pathname, sha256, size, validationPdf }) => ({ id, title: docTitle, pathname, sha256, size, validation_pdf: validationPdf })),
         proposal_constraints: proposalConstraints,
         decisions: Array.isArray(decisions) ? decisions.map((decision) => cleanText(decision)).filter(Boolean).slice(0, 12) : []
       }
