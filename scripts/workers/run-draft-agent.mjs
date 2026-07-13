@@ -37,7 +37,8 @@ async function claim(supabase, ready) {
   const statuses = ready ? ["queued", "awaiting_provider"] : ["queued"];
   const { data: queued, error: queueError } = await supabase.from("tenant_agent_runs")
     .select("id, tenant_id, opportunity_id, opportunity_version_id, use_approved_internal_facts, input_manifest_json, requested_by, status")
-    .in("status", statuses).order("created_at", { ascending: true }).limit(1).maybeSingle();
+    .eq("agent_key", "draft_agent").in("status", statuses)
+    .order("created_at", { ascending: true }).limit(1).maybeSingle();
   if (queueError) throw queueError;
   if (!queued) return null;
   const { data, error } = await supabase.from("tenant_agent_runs")

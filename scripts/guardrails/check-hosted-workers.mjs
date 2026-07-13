@@ -1,7 +1,8 @@
 import fs from "node:fs";
 
-const workflow = fs.readFileSync(".github/workflows/workers-alojados.yml", "utf8");
+const workflow = fs.readFileSync(".github/workflows/workers-alojados.yml", "utf8").replace(/\r\n/g, "\n");
 const draftApi = fs.readFileSync("api/draft-agent-runs.ts", "utf8");
+const draftWorker = fs.readFileSync("scripts/workers/run-draft-agent.mjs", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -18,4 +19,8 @@ assert(draftApi.includes("DRAFT_WORKER_GITHUB_TOKEN"), "Falta la credencial serv
 assert(draftApi.includes('inputs: { proceso: "redactor" }'), "El despacho inmediato no limita el workflow al redactor");
 assert(draftApi.includes('status: "fallback_cron"'), "Falta la recuperación segura cuando el despacho falla");
 
-console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));
+assert(draftApi.includes('agent_key: "draft_agent"'), "La API no etiqueta la ejecucion del redactor");
+assert(draftApi.includes('.eq("agent_key", "draft_agent")'), "La lectura del redactor mezcla otros agentes");
+assert(draftWorker.includes('.eq("agent_key", "draft_agent")'), "El worker redactor puede reclamar otra cola");
+
+console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));

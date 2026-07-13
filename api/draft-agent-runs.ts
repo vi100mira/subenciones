@@ -59,7 +59,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET") {
       const { data, error } = await supabase.from("tenant_agent_runs")
         .select("id, agent_key, status, provider, model, error, input_manifest_json, context_manifest_json, output_json, usage_json, created_at, updated_at")
-        .eq("tenant_id", actor.tenantId).order("created_at", { ascending: false }).limit(50);
+        .eq("tenant_id", actor.tenantId).eq("agent_key", "draft_agent")
+        .order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
       return res.status(200).json(ok(data || []));
     }
@@ -101,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     const { data: run, error: runError } = await supabase.from("tenant_agent_runs").insert({
       tenant_id: actor.tenantId,
+      agent_key: "draft_agent",
       opportunity_id: opportunity.id,
       opportunity_version_id: version.id,
       status: "queued",
