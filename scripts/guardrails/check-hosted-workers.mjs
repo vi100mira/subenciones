@@ -4,6 +4,7 @@ const workflow = fs.readFileSync(".github/workflows/workers-alojados.yml", "utf8
 const draftApi = fs.readFileSync("api/draft-agent-runs.ts", "utf8");
 const draftWorker = fs.readFileSync("scripts/workers/run-draft-agent.mjs", "utf8");
 const researchApi = fs.readFileSync("api/entity-research-runs.ts", "utf8");
+const matchApi = fs.readFileSync("api/tenant-match-runs.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -28,5 +29,9 @@ assert(workflow.includes("inputs.proceso == 'investigador'"), "Falta despacho se
 assert(researchApi.includes('agent_key: "entity_research"'), "La API no etiqueta la investigacion");
 assert(researchApi.includes('inputs: { proceso: "investigador" }'), "La API no despacha el investigador");
 assert(researchApi.includes('status !== "ready"'), "La API no respeta el estado reconciliado");
+assert(workflow.includes("scripts/workers/run-tenant-match.mjs"), "El encaje no tiene runner alojado");
+assert(matchApi.includes('agent_key: "match_agent"'), "La API no etiqueta el encaje");
+assert(matchApi.includes('inputs: { proceso: "encaje" }'), "La API no despacha el encaje");
+assert(matchApi.includes("human_review_status"), "La API no permite revisión humana del encaje");
 
-console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", investigador: "alojado y bajo demanda", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));
+console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", investigador: "alojado y bajo demanda", encaje: "alojado y revisable", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));
