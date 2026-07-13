@@ -7,6 +7,10 @@ const provisioningSql = fs.readFileSync(
   "utf8"
 );
 const provisioningApi = fs.readFileSync("api/admin-tenant-provision.ts", "utf8");
+const researchEvidenceSql = fs.readFileSync(
+  "supabase/migrations/20260713190000_entity_research_evidence.sql",
+  "utf8"
+);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -46,6 +50,9 @@ assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exi
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
 assert(!provisioningApi.toLowerCase().includes("novaterra"), "La API no puede depender del piloto");
+assert(researchEvidenceSql.includes("source_document_id"), "La sugerencia no enlaza su snapshot");
+assert(researchEvidenceSql.includes("evidence_excerpt"), "La sugerencia no conserva fragmento de evidencia");
+assert(researchEvidenceSql.includes("source_sha256"), "La sugerencia no conserva hash de evidencia");
 
 console.log(JSON.stringify({
   ok: true,
