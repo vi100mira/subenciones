@@ -49,7 +49,7 @@
     if (!item) return;
     saveLocalWatch(item, trigger.dataset.watchReason || "candidate_workspace");
     const apiResult = await tryApiWatch(item, trigger.dataset.watchReason || "candidate_workspace").catch(() => null);
-    note(apiResult ? "Seguimiento registrado. Se avisara si cambian plazos o criterios." : "Seguimiento guardado en modo demo. Sin datos privados enviados.");
+    note(apiResult ? "Seguimiento registrado. Se avisará si cambian plazos o criterios." : "Seguimiento guardado localmente. Sin datos privados enviados.");
     window.dispatchEvent(new CustomEvent("tenant-watch-changed"));
   });
 })();

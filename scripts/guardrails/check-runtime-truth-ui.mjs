@@ -9,6 +9,8 @@ function assert(condition, message) {
 assert(files["runtime-truth"].includes("mismas que aparecen en la vista Oportunidades"), "El Panel no explica la coherencia con Oportunidades");
 assert(files["agents-readiness"].includes("Qué está disponible hoy"), "Asistentes no explica su disponibilidad en lenguaje claro");
 assert(files["entity-activation"].includes("Gestor de subvenciones"), "Entidad conserva un rol poco claro");
+assert(!files["entity-activation"].includes("Servicios contratados") && !files["entity-activation"].includes("Suite completa contratada"), "Entidad duplica el catálogo de asistentes");
+assert(files["agents-readiness"].includes("agents-status-legend"), "Asistentes ha perdido el estado operativo de los agentes");
 assert(files["operations-platform"].includes("Publicaciones revisadas"), "Operaciones no diferencia publicaciones revisadas y oportunidades");
 assert(files["operations-platform"].includes("Financiadores privados"), "Operaciones no explica el seguimiento privado");
 const visibleContract = Object.values(files).join("\n");

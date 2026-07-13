@@ -386,12 +386,7 @@
   function renderGridStatus(totalRows, visibleRows) {
     const holder = document.querySelector("#opportunity-pagination");
     if (!holder) return;
-    holder.innerHTML = `
-      <span><strong>${visibleRows}</strong> de ${totalRows} resultados visibles</span>
-      <div class="pager-buttons">
-        ${hasColumnFilters() ? `<button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>` : ""}
-      </div>
-      <small>Los ${totalRows} resultados coinciden con la selección y los filtros actuales. Desplázate dentro de la tabla para ver más; la cabecera permanece visible.</small>`;
+    holder.textContent = `${visibleRows} de ${totalRows} resultados visibles`;
   }
 
   function renderOpportunityGrid() {
@@ -518,29 +513,20 @@
 
   function bindOpportunityGrid() {
     const list = document.querySelector("#opportunity-list");
-    const heading = document.querySelector("#opportunities .list-panel .panel-heading");
-    if (!list || !heading || document.querySelector("#opportunity-grid")) return;
+    if (!list || document.querySelector("#opportunity-grid")) return;
     const fit = window.RADAR?.quality;
     if (fit?.entityFitRule && !document.querySelector("#entity-fit-note")) {
-      heading.insertAdjacentHTML("afterend", `
+      list.insertAdjacentHTML("beforebegin", `
         <div class="plain-note entity-fit-note" id="entity-fit-note">
           <strong>Radar de entidad</strong>
           <span>${radarCounts().active} oportunidades en seguimiento. ${fit.entityDiscardedCount} no encajan por territorio y ${fit.entityArchivedClosedCount || 0} están archivadas por plazo cerrado.</span>
         </div>`);
     }
-    const filters = [...heading.querySelectorAll(".segmented")].find((group) => group.querySelector("[data-filter]"));
-    if (filters && !filters.closest(".filter-control")) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "filter-control";
-      wrapper.innerHTML = `<span class="control-label">Filtrar</span>`;
-      filters.before(wrapper);
-      wrapper.append(filters);
-    }
-    (document.querySelector("#entity-fit-note") || heading).insertAdjacentHTML("afterend", `
+    list.insertAdjacentHTML("beforebegin", `
       <div class="opportunity-grid-tools">
-        <div class="grid-pagination" id="opportunity-pagination" aria-live="polite"></div>
+        <div class="sr-only" id="opportunity-pagination" aria-live="polite"></div>
         <div id="opportunity-grid-x-scroll" class="opportunity-grid-x-scroll" aria-label="Desplazamiento horizontal del grid"><span></span></div>
-        <button class="ghost-action radar-chat-button" data-open-opportunity-chat type="button"><i data-lucide="message-square-text"></i> Conversar con radar</button>
+        <button class="icon-button radar-chat-button" data-open-opportunity-chat type="button" title="Conversar con el radar" aria-label="Conversar con el radar"><i data-lucide="message-square-text"></i></button>
       </div>`);
     list.insertAdjacentHTML("afterend", `<div id="opportunity-grid" class="opportunity-grid" hidden></div>`);
     const topScroll = document.querySelector("#opportunity-grid-x-scroll");

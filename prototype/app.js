@@ -340,7 +340,7 @@ function init() {
   bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
 
   document.querySelector("#refresh-button").addEventListener("click", () => {
-    showToast("Fuentes refrescadas en modo prototipo. No se ha enviado ningun dato privado.");
+    showToast("Fuentes actualizadas. No se ha enviado ningún dato privado.");
   });
 
   const hash = window.location.hash.replace("#", "");

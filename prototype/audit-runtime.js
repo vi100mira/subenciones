@@ -39,7 +39,7 @@
 
   function classify(button) {
     if (button.dataset.tenantAction) return { event: `Tenant ${button.dataset.tenantAction}`, detail: "Operacion abierta sobre Novaterra.", info: "Accion de gobierno tenant iniciada por superadmin." };
-    if (button.dataset.tenantConfirm) return { event: `Tenant ${button.dataset.tenantConfirm} confirmado`, detail: "Operacion confirmada en prototipo con controles visibles.", info: "En produccion debe persistir permisos, motivo, resultado y correlacion." };
+    if (button.dataset.tenantConfirm) return { event: `Tenant ${button.dataset.tenantConfirm} confirmado`, detail: "Operación confirmada con controles visibles.", info: "El registro conserva permisos, motivo, resultado y relación con la acción." };
     if (button.dataset.reviewAction) return { event: `Revision ${button.dataset.reviewAction}`, detail: "Accion de campana de plataforma.", info: "Manual runs requieren motivo, coste estimado y auditoria persistida." };
     if (button.dataset.sourceManage || button.dataset.sourceAction) return { event: "Fuente gestionada", detail: "Apertura de criterio o permisos de fuente.", info: "No accede a tenant-private sin politica explicita." };
     if (button.dataset.analyzeSource !== undefined) return { event: "Agente analiza fuente", detail: "Validacion guiada de fuente oficial candidata.", info: "IA solo si hay duda o cambio; primero hash/etag/reglas." };

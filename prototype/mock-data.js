@@ -83,7 +83,7 @@ window.MOCK = {
       ],
       evidence: [
         "Historico de convocatorias territoriales para entidades sociales.",
-        "Bases privadas pendientes de descarga en el prototipo."
+        "Bases privadas pendientes de descarga."
       ],
       internalFacts: ["Proyectos acompanamiento", "Indicadores impacto"]
     },
@@ -106,7 +106,7 @@ window.MOCK = {
         "La entidad podria aportar experiencia territorial y seguimiento de participantes."
       ],
       risks: [
-        "No hay plazo oficial confirmado en el prototipo.",
+        "No hay plazo oficial confirmado.",
         "Puede requerir colaboracion empresarial o indicadores de empleabilidad muy concretos."
       ],
       evidence: [
@@ -209,7 +209,7 @@ window.MOCK = {
   platformAudit: [
     { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion global sin datos privados.", info: "Evento de plataforma sobre una fuente publica reutilizable por todos los tenants." },
     { event: "Revision territorial programada", actor: "Superadmin plataforma", time: "12:08", detail: "DOGV/BOP; alcance platform-public.", info: "La accion afecta al conector publico y no recupera documentos de entidades." },
-    { event: "Politica de aislamiento comprobada", actor: "Politicas de acceso", time: "12:12", detail: "Sin recuperacion cruzada entre tenants.", info: "Control demo de frontera: el superadmin ve estado de gobierno, no chunks ni borradores privados." },
+    { event: "Politica de aislamiento comprobada", actor: "Politicas de acceso", time: "12:12", detail: "Sin recuperación cruzada entre entidades.", info: "El administrador ve el estado de gobierno, pero no fragmentos ni borradores privados." },
     { event: "Tenant operativo verificado", actor: "Orquestador de tenants", time: "12:18", detail: "Novaterra; solo estado, plan y coste.", info: "Se auditan metadatos operativos del tenant sin mostrar sus fuentes, hechos internos o candidaturas." }
   ],
   checklist: [
@@ -226,13 +226,13 @@ window.MOCK = {
     { title: "Indicadores", text: "Participantes atendidos, finalizacion de itinerarios, inserciones y continuidad." }
   ],
   audit: [
-    { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion sin datos privados.", info: "Evento demo basado en la ultima copia BDNS cargada en el prototipo. Sirve para ensenar que una fuente publica se ha refrescado sin usar informacion de la entidad." },
+    { event: "Fuente BDNS sincronizada", actor: "Radar público", time: "12:05", detail: "Operación sin datos privados.", info: "Registro basado en la última copia pública cargada. La fuente se actualiza sin usar información de la entidad." },
     { event: "Encaje recalculado", actor: "Asistente de encaje", time: "12:08", detail: "Uso de 3 datos internos aprobados.", info: "Evento simulado: todavia no hay motor de IA con fuentes reales. Muestra como quedaria trazado el uso de informacion aprobada cuando exista analisis automatico de encaje." },
     { event: "Fragmento bloqueado", actor: "Politicas de datos", time: "12:12", detail: "Posible dato personal indirecto.", info: "Evento simulado de seguridad: indica que un texto no deberia usarse para analisis de encaje ni borradores hasta que una persona lo revise o anonimice." },
     { event: "Checklist generado", actor: "Documentacion", time: "12:18", detail: "Pendiente de revision humana.", info: "Evento simulado: representa la generacion de tareas de candidatura a partir de bases y evidencias. No equivale a una solicitud presentada." }
   ],
   operationsJobs: [
-    { title: "Carpeta privada demo", detail: "Leidos 4 documentos aprobados, 1 bloqueado por privacidad, 0 errores", state: "Completado" },
+    { title: "Carpeta privada", detail: "Leídos 4 documentos aprobados, 1 bloqueado por privacidad, 0 errores", state: "Completado" },
     { title: "Boletines DOGV/BOP", detail: "2 convocatorias tienen plazo relativo y necesitan revision humana", state: "Atencion" },
     { title: "Politica coste IA radar", detail: "IA maxima diaria por campana; deteccion hash/etag sin IA antes de interpretar", state: "OK" },
     { title: "Conservacion de originales", detail: "12 documentos guardados con huella para poder demostrar procedencia", state: "OK" }
@@ -240,7 +240,7 @@ window.MOCK = {
   operationsHealth: [
     { title: "Radar publico", detail: "Responde con normalidad; 0 errores en 24h", state: "OK" },
     { title: "Encaje de oportunidades", detail: "3 recomendaciones marcadas con baja confianza para revisar", state: "OK" },
-    { title: "BDNS", detail: "Ultima lectura publica disponible en el prototipo", state: "OK" },
+    { title: "BDNS", detail: "Última lectura pública disponible", state: "OK" },
     { title: "Microsoft 365 / SharePoint", detail: "Pendiente de conectar credenciales de la entidad", state: "Pendiente" }
   ],
   tenants: [
