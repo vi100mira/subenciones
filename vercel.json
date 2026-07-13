@@ -26,6 +26,9 @@
     "api/ingestion-dispatch.ts": {
       "maxDuration": 30
     },
+    "api/draft-agent-runs.ts": {
+      "maxDuration": 30
+    },
     "api/platform-radar-schedule.ts": {
       "maxDuration": 30
     }
