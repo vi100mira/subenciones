@@ -334,7 +334,7 @@
         closeReviewModal();
       }
       if (manage && typeof showToast === "function") showToast(`Criterio abierto: ${manage.dataset.sourceManage}`);
-      if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta en modo prototipo." : "Fuente pausada sin impacto en tenants.");
+      if (review && typeof showToast === "function") showToast(review.dataset.reviewSource === "resolve" ? "Duda marcada como resuelta." : "Fuente pausada sin impacto en las entidades.");
     });
     window.lucide?.createIcons();
   }

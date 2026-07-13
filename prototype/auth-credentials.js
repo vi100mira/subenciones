@@ -31,8 +31,8 @@
     const role = document.createElement("strong");
     const button = document.createElement("button");
     item.className = "auth-session";
-    role.textContent = session.role === "superadmin" ? "Superadmin" : "Tenant";
-    label.textContent = session.label;
+    role.textContent = session.role === "superadmin" ? "Administración" : "Entidad";
+    label.textContent = String(session.label || "").replace(/\s+demo$/i, "");
     button.type = "button";
     button.dataset.authLogout = "";
     button.textContent = "Salir";

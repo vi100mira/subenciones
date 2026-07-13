@@ -6,6 +6,7 @@ const theme = fs.readFileSync("prototype/stitch-theme.css", "utf8");
 const app = fs.readFileSync("prototype/app.js", "utf8");
 const plan = fs.readFileSync("prototype/tenant-plan.js", "utf8");
 const scope = fs.readFileSync("prototype/opportunity-scope.js", "utf8");
+const index = fs.readFileSync("prototype/index.html", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -21,6 +22,11 @@ assert(["bookmark-plus", "folder-plus", "folder-open"].every((icon) => ui.includ
 assert(ui.includes("window.OpportunityScope?.rows()"), "Oportunidades no usa la seleccion comun");
 assert(app.includes("window.OpportunityScope?.summary()"), "El Panel no usa el resumen comun");
 assert(scope.includes("window.OpportunityScope"), "No existe una unica seleccion compartida");
+assert(index.includes("Versión beta") && !index.includes("Modo prototipo"), "La barra lateral no identifica la version beta");
+assert(!index.includes("Ranking explicable") && !index.includes("data-filter="), "Siguen visibles los filtros superiores redundantes");
+assert(ui.includes('class="sr-only" id="opportunity-pagination"'), "El resumen de resultados sigue ocupando espacio visual");
+assert(ui.includes('aria-label="Conversar con el radar"') && !ui.includes("> Conversar con radar</button>"), "El chat no es una accion de icono accesible");
+assert(theme.includes("position: fixed") && theme.includes(".radar-chat-button"), "El chat no permanece flotante");
 assert(ui.includes("gridState.visibleRows + gridState.loadStep"), "No existe carga progresiva al desplazarse");
 assert(theme.includes("border-collapse: separate"), "La tabla no usa el modo compatible con cabeceras adhesivas");
 assert(theme.includes("overscroll-behavior: contain"), "La tabla puede transferir el scroll a toda la pagina");
@@ -36,5 +42,7 @@ console.log(JSON.stringify({
   pagination: "sustituida por carga continua",
   header: "adhesiva dentro de la tabla",
   secondaryGrids: "continuos con cabecera adhesiva en escritorio",
-  consistency: "Panel y Oportunidades comparten seleccion"
+  consistency: "Panel y Oportunidades comparten seleccion",
+  density: "cabecera y resumen redundantes retirados",
+  chat: "icono flotante accesible"
 }, null, 2));

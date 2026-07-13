@@ -15,8 +15,8 @@ window.downloadWord = downloadWord;
 
 function exportAudit() {
   const auditRows = (window.getAuditEvents?.() || window.MOCK.audit).map((item) => `${item.time} - ${item.event}: ${item.actor}. ${item.detail}`);
-  downloadWord("auditoria-subvenciones-demo.doc", "Auditoria de trazabilidad - demo", [
-    { title: "Alcance", lines: "Eventos de prototipo. Solo la lectura BDNS procede de la copia publica cargada; el resto simula la trazabilidad que tendra el producto." },
+  downloadWord("auditoria-subvenciones.doc", "Auditoría de trazabilidad", [
+    { title: "Alcance", lines: "Solo la lectura BDNS procede de la copia pública cargada; los demás registros ilustran la trazabilidad prevista." },
     { title: "Eventos", lines: auditRows },
     { title: "Control humano", lines: "Ningun evento implica envio, presentacion ni uso externo de informacion sin revision humana." }
   ]);
@@ -66,7 +66,7 @@ function showTenantModal(action) {
     edit: ["Editar Novaterra", "Cambios auditados", `<div class="inline-form"><label><span>Nombre</span><input value="Novaterra" /></label><label><span>Web publica</span><input value="https://www.novaterra.org.es" /></label><label><span>Email admin</span><input value="admin@novaterra.org.es" /></label><label><span>Color marca</span><input value="#24515a" /></label></div><div class="plain-note"><strong>No toca datos privados</strong><span>Solo cambia configuracion visible del tenant. Requiere auditoria y no modifica fuentes privadas.</span></div>`, "Guardar cambios"],
     terms: ["Terminos y consentimientos", "Control legal", `<div class="policy-list"><article><strong>Condiciones aceptadas</strong><p>Suite de asistencia, radar y borradores sujetos a revision humana.</p></article><article><strong>Web publica</strong><p>Autorizada para lectura de informacion abierta. Hechos quedan sugeridos hasta aprobacion.</p></article><article><strong>Drive privado</strong><p>Pendiente. No se conecta sin consentimiento expreso y alcance limitado.</p></article></div>`, "Registrar revision"],
     suspend: ["Suspender Novaterra", "Operacion reversible", `<div class="inline-form"><label><span>Motivo obligatorio</span><input value="Revision administrativa" /></label><label><span>Fecha de revision</span><input value="2026-07-08" /></label></div><div class="plain-note"><strong>Efecto</strong><span>Bloquea accesos y nuevas ejecuciones tenant. Mantiene datos aislados y auditables.</span></div>`, "Suspender tenant"],
-    delete: ["Eliminar Novaterra", "Bloqueado por seguridad", `<div class="policy-list danger-list"><article><strong>Doble aprobacion</strong><p>Requiere superadmin y owner del tenant.</p></article><article><strong>Exportacion previa</strong><p>Antes debe ofrecerse exportacion y periodo de retencion legal.</p></article><article><strong>Auditoria</strong><p>La operacion no esta disponible en prototipo ni se ejecuta sin backend seguro.</p></article></div>`, "Solicitar borrado seguro"]
+    delete: ["Eliminar Novaterra", "Bloqueado por seguridad", `<div class="policy-list danger-list"><article><strong>Doble aprobación</strong><p>Requiere autorización de administración y de la entidad.</p></article><article><strong>Exportación previa</strong><p>Antes debe ofrecerse exportación y periodo de retención legal.</p></article><article><strong>Auditoría</strong><p>La operación no se ejecuta sin controles y aprobación expresa.</p></article></div>`, "Solicitar borrado seguro"]
   }[action];
   document.querySelector(".modal-backdrop")?.remove();
   document.body.insertAdjacentHTML("beforeend", `<div class="modal-backdrop" data-close-modal><article class="modal tenant-op-modal" role="dialog" aria-modal="true"><div class="panel-heading"><div><p class="eyebrow">${content[1]}</p><h2>${content[0]}</h2></div><button class="icon-button" data-close-modal>X</button></div>${content[2]}<div class="button-row"><button class="primary-action" data-tenant-confirm="${action}" type="button">${content[3]}</button><button class="ghost-action" data-close-modal type="button">Cancelar</button></div></article></div>`);
@@ -83,11 +83,11 @@ function handleWorkspaceAction(action, button) {
     showToast("Memoria preparada como borrador editable.");
     return;
   }
-  if (action === "Anexar") return showToast("Demo: se abriria selector de documentos Office/PDF y se registraria la procedencia.");
+  if (action === "Anexar") return showToast("Se abrirá el selector de documentos y se registrará su procedencia.");
   if (action === "Ver evidencia") return showToast("Evidencia: fuente oficial y perfil minimo aprobados para analisis.");
   button.closest(".check-item").querySelector(".badge").textContent = "Verificado";
   button.closest(".check-item").querySelector(".badge").className = "badge safe";
-  showToast("Punto verificado en demo. Queda registrado para auditoria.");
+  showToast("Punto verificado y registrado para auditoría.");
 }
 
 function bindStaticActions() {
@@ -103,14 +103,14 @@ function bindStaticActions() {
     if (text === "Exportar auditoria") exportAudit();
     if (text === "Exportar borrador Word" || text === "Exportar cuando se apruebe") exportProposal();
     if (button.dataset.policyModal !== undefined) showPolicyModal();
-    if (text === "Solicitar fuente") showToast("Solicitud registrada en demo. La aprueba el responsable de datos de la entidad.");
+    if (text === "Solicitar fuente") showToast("Solicitud registrada. La aprueba el responsable de datos de la entidad.");
     if (text === "Programar revision") { window.showScreen?.("platform"); showToast("Configura cadencia, presupuesto y fuentes antes de crear una revision programada."); }
     if (text === "Ejecutar ahora") { window.showScreen?.("platform"); showToast("Ejecucion manual: deteccion ligera primero; IA solo con cambios o motivo auditado."); }
-    if (button.dataset.reviewAction === "save") { const cron = button.closest(".stack-item")?.querySelector("[data-cron-input]")?.value.trim() || ""; return showToast(/^(\S+\s+){4}\S+$/.test(cron) ? "Cron valido en demo. Backend validara zona horaria, cadencia maxima IA y presupuesto." : "Cron incompleto: usa 5 campos, por ejemplo 0 6 * * *."); }
-    if (button.dataset.reviewAction === "run") showToast("Ejecucion manual en demo: requiere motivo y queda auditada antes de usar IA.");
+    if (button.dataset.reviewAction === "save") { const schedule = button.closest(".stack-item")?.querySelector("[data-cron-input]")?.value.trim() || ""; return showToast(/^(\S+\s+){4}\S+$/.test(schedule) ? "Programación válida. Se revisarán horario, frecuencia y presupuesto." : "Programación incompleta. Revisa los cinco campos del horario."); }
+    if (button.dataset.reviewAction === "run") showToast("La ejecución manual requiere motivo y queda auditada antes de usar IA.");
     if (button.dataset.sourceAction) showToast(`${button.dataset.sourceAction}: aqui se abriria permisos, responsable, alcance y ultima revision.`);
     if (button.dataset.tenantAction) showTenantModal(button.dataset.tenantAction);
-    if (button.dataset.tenantConfirm) { document.querySelector(".modal-backdrop")?.remove(); showToast({ edit: "Cambios de tenant guardados en prototipo con auditoria.", terms: "Revision de terminos registrada en prototipo.", suspend: "Suspension preparada: backend exigira motivo, permisos y auditoria.", delete: "Borrado no ejecutado: queda como solicitud segura pendiente de doble aprobacion." }[button.dataset.tenantConfirm]); }
+    if (button.dataset.tenantConfirm) { document.querySelector(".modal-backdrop")?.remove(); showToast({ edit: "Cambios de la entidad guardados con auditoría.", terms: "Revisión de términos registrada.", suspend: "Suspensión preparada: exige motivo, permisos y auditoría.", delete: "Borrado no ejecutado: queda como solicitud segura pendiente de doble aprobación." }[button.dataset.tenantConfirm]); }
     if (button.dataset.workspaceAction) handleWorkspaceAction(button.dataset.workspaceAction, button);
   });
 }

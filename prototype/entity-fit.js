@@ -1,6 +1,6 @@
 (function () {
   const context = {
-    name: "Novaterra demo",
+    name: "Novaterra",
     territory: "Comunitat Valenciana",
     allowedTerritories: ["es - espana", "comunitat valenciana", "valenciana", "valencia", "castellon", "alicante"],
     excludedTerritories: ["cadiz", "huelva", "granada", "aragon", "london", "todo el mundo"],

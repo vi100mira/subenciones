@@ -28,7 +28,7 @@
 
   function renderDemoAlerts() {
     const count = watchedCount();
-    const note = `<div class="plain-note"><strong>${count ? `${count} oportunidades en seguimiento demo` : "Sin alertas reales en modo demo"}</strong><span>Cuando una fuente cambie plazo, bases o criterios, aqui apareceran las alertas del tenant.</span></div>`;
+    const note = `<div class="plain-note"><strong>${count ? `${count} oportunidades en seguimiento` : "Sin alertas registradas"}</strong><span>Cuando una fuente cambie plazo, bases o criterios, aquí aparecerán las alertas de la entidad.</span></div>`;
     const mocks = (window.MOCK?.alerts || []).slice(0, 2).map((item) => `<div class="stack-item"><strong>${item.title}</strong><span>${item.detail}</span></div>`).join("");
     return note + mocks;
   }

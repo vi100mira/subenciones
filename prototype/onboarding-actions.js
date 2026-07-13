@@ -4,7 +4,7 @@
     panel.innerHTML = `
       <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad</h2></div><span class="badge review">Sin publicar</span></div>
       <form class="inline-form" id="onboarding-request-form">
-        <label><span>Entidad</span><input name="entityName" value="Novaterra demo" required /></label>
+        <label><span>Entidad</span><input name="entityName" value="Novaterra" required /></label>
         <label><span>Web publica</span><input name="websiteUrl" value="https://www.novaterra.org.es" /></label>
         <label><span>Email solicitante</span><input name="requesterEmail" type="email" required /></label>
         <label><span>Email admin entidad</span><input name="adminEmail" type="email" required /></label>

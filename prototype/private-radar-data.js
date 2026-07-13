@@ -246,7 +246,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
       "Requiere confirmar bases vigentes, territorio y si admite entidades no lucrativas."
     ],
     risks: [
-      "Plazo o criterios no confirmados por el prototipo.",
+      "Plazo o criterios pendientes de confirmar.",
       "La plataforma debe guardar evidencia antes de recomendarla a un tenant."
     ],
     evidence: privateEvidence.evidence || [
