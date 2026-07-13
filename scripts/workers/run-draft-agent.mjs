@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
+import { contractForConstraints } from "./draft-agent-contract.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -88,7 +89,8 @@ async function contextManifest(supabase, run) {
     allowedDataClasses: facts.length ? ["public", "internal_approved"] : ["public"],
     rawPrivateTextPersisted: false,
     humanReviewRequired: true,
-    externalSubmissionAllowed: false
+    externalSubmissionAllowed: false,
+    outputContract: contractForConstraints(constraints)
   };
 }
 
