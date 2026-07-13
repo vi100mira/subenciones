@@ -13,6 +13,8 @@ assert(!files["entity-activation"].includes("Servicios contratados") && !files["
 assert(files["agents-readiness"].includes("agents-status-legend"), "Asistentes ha perdido el estado operativo de los agentes");
 assert(files["tenant-agent-runtime"].includes("/api/tenant-agent-governance"), "Asistentes no carga estado real del tenant");
 assert(files["tenant-agent-runtime"].includes("Autorizar web pública"), "Falta activar consentimiento web desde Asistentes");
+assert(files["tenant-agent-runtime"].includes("Autorizar IA para borradores"), "Falta consentimiento IA desde Asistentes");
+assert(files["tenant-agent-runtime"].includes('store: false, allowedDataClasses: ["public"]'), "El consentimiento IA no limita almacenamiento y datos");
 assert(files["tenant-agent-runtime"].includes("Investigar ahora"), "Falta ejecutar el Investigador desde Asistentes");
 assert(files["tenant-agent-runtime"].includes("Aprobar perfil revisado"), "Falta revisión humana del perfil");
 assert(files["tenant-agent-runtime"].includes("Calcular encaje"), "Falta ejecutar encaje persistido");

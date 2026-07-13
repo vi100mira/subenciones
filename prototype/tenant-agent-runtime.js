@@ -37,6 +37,10 @@
       else if (source?.status !== "active" && source?.id) actions.innerHTML = button("Aprobar fuente web", "approve-web", `data-source-id="${source.id}"`);
       else if (agent.enabled) actions.innerHTML = button("Investigar ahora", "run-research");
     }
+    if (agent.agent_key === "draft_agent" && agent.status !== "paused") {
+      const consent = governance.consents.find((item) => item.consent_type === "ai_processing");
+      if (consent?.status !== "granted") actions.innerHTML = button("Autorizar IA para borradores", "grant-ai");
+    }
     if (agent.agent_key === "match_agent" && agent.enabled) actions.innerHTML = button("Calcular encaje", "run-match");
     if (actions.childElementCount) card.append(actions);
   }
@@ -84,6 +88,7 @@
     const action = element.dataset.tenantAgentAction; if (!action) return; element.disabled = true;
     try {
       if (action === "grant-web") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "grant_consent", consentType: "public_web_analysis", scope: { baseUrl: element.dataset.baseUrl, sameDomainOnly: true } }) });
+      if (action === "grant-ai") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "grant_consent", consentType: "ai_processing", scope: { provider: "openai", store: false, allowedDataClasses: ["public"] } }) });
       if (action === "approve-web") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "approve_public_web_source", sourceId: element.dataset.sourceId }) });
       if (action === "resume") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "resume_agent", agentKey: element.dataset.agentKey }) });
       if (action === "run-research") await request("/api/entity-research-runs", { method: "POST", body: "{}" });
