@@ -1,12 +1,16 @@
 import fs from "node:fs";
 
-const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime", "tenant-recommendations-runtime", "document-review-ui", "tenant-admin-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
+const files = Object.fromEntries(["agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime", "tenant-recommendations-runtime", "document-review-ui", "tenant-admin-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
+const dashboardHtml = fs.readFileSync("prototype/index.html", "utf8");
+const appUi = fs.readFileSync("prototype/app.js", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(files["runtime-truth"].includes("mismas que aparecen en la vista Oportunidades"), "El Panel no explica la coherencia con Oportunidades");
+assert(!dashboardHtml.includes("Situación actual") && !dashboardHtml.includes("Actividad de asistentes"), "El Panel vuelve a duplicar información disponible en Auditoría");
+assert(!appUi.includes("agent-runs-small"), "El Panel sigue preparando actividad duplicada de asistentes");
+assert(dashboardHtml.indexOf("Alertas recientes") > dashboardHtml.indexOf("Cobertura del radar"), "Las alertas no acompañan al radar en el panel");
 assert(files["agents-readiness"].includes("Qué está disponible hoy"), "Asistentes no explica su disponibilidad en lenguaje claro");
 assert(files["entity-activation"].includes("Gestor de subvenciones"), "Entidad conserva un rol poco claro");
 assert(!files["entity-activation"].includes("Servicios contratados") && !files["entity-activation"].includes("Suite completa contratada"), "Entidad duplica el catálogo de asistentes");

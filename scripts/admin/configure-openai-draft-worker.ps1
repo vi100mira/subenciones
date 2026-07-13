@@ -2,6 +2,9 @@ param(
   [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\.."))
 )
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
 $envPath = Join-Path $ProjectRoot ".env.local"
 $secret = Read-Host "Introduce OPENAI_API_KEY (entrada oculta)" -AsSecureString
 $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
@@ -21,7 +24,12 @@ $values = [ordered]@{
   AI_DRAFT_MAX_OUTPUT_TOKENS = "6000"
   OPENAI_API_KEY = $apiKey
 }
-$lines = if (Test-Path $envPath) { [Collections.Generic.List[string]](Get-Content $envPath) } else { [Collections.Generic.List[string]]::new() }
+$lines = [Collections.Generic.List[string]]::new()
+if (Test-Path $envPath) {
+  foreach ($line in Get-Content -LiteralPath $envPath) {
+    $lines.Add($line)
+  }
+}
 foreach ($entry in $values.GetEnumerator()) {
   $prefix = "$($entry.Key)="
   $index = -1

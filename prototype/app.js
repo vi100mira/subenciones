@@ -38,7 +38,6 @@ function renderDashboard() {
     metric.querySelector("small").textContent = values[index][2];
   });
   document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
-  document.querySelector("#agent-runs-small").innerHTML = (isPlatform ? window.MOCK.platformRuns : window.MOCK.runs).slice(0, 3).map(renderStackItem).join("");
   document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
   document.querySelector("#source-map").innerHTML = `
     <div class="source-legend">
@@ -49,8 +48,7 @@ function renderDashboard() {
     </div>
   ` + window.MOCK.sources.filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant")).map((source) => {
     const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
-    const cls = `${source.scope.includes("privado") || source.scope.includes("curada") || source.kind === "Privativa" ? " private" : ""}${status}`;
-    return `<div class="source-node${cls}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
+    return `<div class="source-node${status}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
   }).join("");
 }
 function renderOpportunities() {

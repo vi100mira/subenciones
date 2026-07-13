@@ -409,10 +409,6 @@ button {
 .source-node.blocked,
 .legend-dot.blocked { border-color: #f4b9b2; background: #ffe6e3; color: var(--red); }
 
-.source-node.private {
-  border-color: #d9c8f0;
-}
-
 .stack-list,
 .opportunity-list,
 .checklist,

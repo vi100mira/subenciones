@@ -1203,8 +1203,9 @@ body.sidebar-collapsed .sidebar-note {
 
 .opportunity-grid {
   overflow: auto;
-  height: max(360px, calc(100dvh - 470px));
-  max-height: 680px;
+  /* Reserve enough vertical space for four compact results on desktop. */
+  height: max(500px, calc(100dvh - 380px));
+  max-height: 760px;
   overscroll-behavior: contain;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -1225,7 +1226,7 @@ body.sidebar-collapsed .sidebar-note {
 
 .opportunity-grid th,
 .opportunity-grid td {
-  padding: 11px 12px;
+  padding: 8px 10px;
   border-bottom: 1px solid rgba(189, 201, 198, 0.55);
   text-align: left;
   vertical-align: top;
@@ -1277,6 +1278,7 @@ body.sidebar-collapsed .sidebar-note {
 
 .opportunity-grid td {
   font-size: 13px;
+  line-height: 1.3;
 }
 
 .opportunity-grid td:first-child {
@@ -1286,7 +1288,7 @@ body.sidebar-collapsed .sidebar-note {
 .opportunity-grid td span,
 .grid-title + span {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
@@ -1326,6 +1328,14 @@ body.sidebar-collapsed .sidebar-note {
 
 .opportunity-grid .grid-actions {
   margin-top: 0;
+  gap: 0;
+}
+
+.opportunity-grid .opportunity-toolbar .icon-action {
+  width: 32px;
+  min-width: 32px;
+  height: 30px;
+  min-height: 30px;
 }
 
 #opportunities .list-panel > .panel-heading {
