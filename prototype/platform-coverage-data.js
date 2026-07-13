@@ -12,16 +12,23 @@ window.PLATFORM_COVERAGE = {
     detailErrors: 0,
     state: "funcional paginado"
   },
+  municipal: {
+    agent: "Busqueda de convocatorias locales",
+    source: "BDNS/SNPSAP - tipoAdmon=L",
+    queries: ["accion social", "inclusion", "empleo", "asociaciones", "entidades sin animo de lucro"],
+    activationRule: "Emisor oficial + solicitud abierta + bases extraidas",
+    state: "campana funcional; BOP y portales locales se profundizan desde la ficha BDNS"
+  },
   privateOpen: {
     agent: "Busqueda privada abierta",
-    sourcesReviewed: 12,
-    accepted: 12,
-    activeOrOpen: 6,
-    monitorOnly: 5,
-    needsHumanReview: 1,
-    loadedRows: 20,
-    scrapingUsed: false,
-    state: "funcional con catalogo inicial"
+    sourcesReviewed: 16,
+    accepted: 15,
+    activeOrOpen: 0,
+    monitorOnly: 13,
+    needsHumanReview: 13,
+    loadedRows: 0,
+    scrapingUsed: true,
+    state: "catalogo oficial en vigilancia; ninguna privada se activa sin bases y vigencia"
   },
   entityResearch: {
     agent: "Investigador de entidad",

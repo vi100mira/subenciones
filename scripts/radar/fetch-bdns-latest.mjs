@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const API_BASE = "https://www.infosubvenciones.es/bdnstrans/api";
 const PORTAL = "GE";
@@ -13,7 +14,11 @@ const pageSize = Number(args.get("page-size") || 25);
 const maxDetails = Number(args.get("max-details") || pages * pageSize);
 const outDir = args.get("out-dir") || "data/public-radar";
 const prototypeOut = args.get("prototype-out") || "prototype/radar-data.js";
-const mode = args.get("mode") || "latest";
+const campaign = args.get("campaign") || "";
+const mode = campaign ? "search" : args.get("mode") || "latest";
+const campaignDescriptions = campaign === "municipal-social"
+  ? ["accion social", "inclusion", "empleo", "asociaciones", "entidades sin animo de lucro"]
+  : [];
 const detailDelayMs = Number(args.get("detail-delay-ms") || 250);
 const retryCount = Number(args.get("retries") || 2);
 const today = args.get("today") || new Date().toISOString().slice(0, 10);
@@ -59,6 +64,119 @@ function plainText(value) {
   return typeof value === "string" ? value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
 }
 
+function urlsFrom(value) {
+  return typeof value === "string"
+    ? [...value.matchAll(/https?:\/\/[^\s,;]+/g)].map((match) => match[0].replace(/[.)]+$/, ""))
+    : [];
+}
+
+export function documentDownloadUrl(id) {
+  return id ? `${API_BASE}/convocatorias/documentos?idDocumento=${encodeURIComponent(id)}` : "";
+}
+
+export function primaryCallDocument(documents) {
+  const excluded = /\b(anexo|extracto|certificad|cuenta justificativa|declaraci[oó]n|solicitud|correcci[oó]n|concesi[oó]n)\b/i;
+  const score = (document) => {
+    const text = `${document.description || ""} ${document.filename || ""}`;
+    if (excluded.test(text)) return -1;
+    let value = 0;
+    if (/bases|normas|ordenanza/i.test(text)) value += 100;
+    if (/convocatoria/i.test(document.filename || "")) value += 80;
+    if (/documento de la convocatoria en espa[nñ]ol|texto en castellano de la convocatoria/i.test(document.description || "")) value += 60;
+    if (/lengua cooficial|otra lengua/i.test(document.description || "")) value -= 20;
+    return value;
+  };
+  return [...documents].map((document) => ({ document, score: score(document) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || String(a.document.id).localeCompare(String(b.document.id)))[0]?.document || null;
+}
+
+function isCompetitive(detail) {
+  const type = `${detail.tipoConvocatoria || ""} ${detail.descripcion || ""}`.toLowerCase();
+  return !/concesion directa|concesión directa|instrumental|nominativa|convenio de colaboracion|convenio de colaboración/.test(type);
+}
+
+function addWorkingDays(isoDate, days) {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  let remaining = days;
+  while (remaining > 0) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    if (![0, 6].includes(date.getUTCDay())) remaining -= 1;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+function dateFromSpanishText(value = "") {
+  const text = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const numeric = text.match(/(?:hasta(?:\s+el)?\s+)?(\d{1,2})[\/-](\d{1,2})[\/-](20\d{2})/);
+  if (numeric) return `${numeric[3]}-${numeric[2].padStart(2, "0")}-${numeric[1].padStart(2, "0")}`;
+  const months = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12 };
+  const written = text.match(/(?:hasta(?:\s+el)?\s+)?(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(20\d{2})/);
+  return written && months[written[2]] ? `${written[3]}-${String(months[written[2]]).padStart(2, "0")}-${written[1].padStart(2, "0")}` : null;
+}
+
+function matchingTokens(value = "") {
+  const weak = new Set(["convocatoria", "subvenciones", "ayudas", "bases", "municipales", "programa", "para", "del", "2023", "2026", "2027"]);
+  return [...new Set(value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .split(/[^a-z0-9]+/).filter((token) => token.length >= 4 && !weak.has(token)))];
+}
+
+export function resolveCorunaReferenceFromHtml(item, html) {
+  const announcementText = (item.announcements || []).map((entry) => `${entry.officialJournal || ""} ${entry.textPreview || ""}`).join(" ");
+  if (!/b\.?o\.?p\.?[^.]{0,40}(?:a\s+)?coru[nñ]a/i.test(announcementText)) return "";
+  const citedDate = dateFromSpanishText(announcementText);
+  if (!citedDate) return "";
+  const targetTokens = matchingTokens(`${item.organism || ""} ${item.title || ""}`);
+  const candidates = [...html.matchAll(/<div[^>]+class\s*=\s*["']bloqueAnuncio["'][^>]*>([\s\S]*?)<\/div>/gi)].map((match) => {
+    const block = match[1];
+    const filename = block.match(/href\s*=\s*["'](20\d{2}_\d{10}\.pdf)["']/i)?.[1] || "";
+    const text = plainText(block);
+    const score = targetTokens.filter((token) => matchingTokens(text).includes(token)).length;
+    return { filename, score };
+  }).filter((entry) => entry.filename && entry.score >= 2).sort((a, b) => b.score - a.score || a.filename.localeCompare(b.filename));
+  if (!candidates.length || (candidates[1] && candidates[1].score === candidates[0].score)) return "";
+  const [year, month, day] = citedDate.split("-");
+  return `https://bop.dacoruna.gal/bopportal/publicado/${year}/${month}/${day}/${candidates[0].filename}`;
+}
+
+async function resolveOfficialBopReferences(opportunities) {
+  for (const item of opportunities.filter((entry) => entry.deadlineStatus === "open" && !entry.basesUrl)) {
+    const announcementText = (item.announcements || []).map((entry) => `${entry.officialJournal || ""} ${entry.textPreview || ""}`).join(" ");
+    if (!/b\.?o\.?p\.?[^.]{0,40}(?:a\s+)?coru[nñ]a/i.test(announcementText)) continue;
+    const citedDate = dateFromSpanishText(announcementText);
+    if (!citedDate) continue;
+    const [year, month, day] = citedDate.split("-");
+    const summaryUrl = `https://bop.dacoruna.gal/bopportal/cambioBoletin?fechaInput=${day}%2F${month}%2F${year}`;
+    try {
+      const response = await fetch(summaryUrl, { headers: { accept: "text/html" } });
+      if (!response.ok) continue;
+      const basesUrl = resolveCorunaReferenceFromHtml(item, await response.text());
+      if (!basesUrl) continue;
+      item.basesUrl = basesUrl;
+      item.basesUrls = [basesUrl];
+      item.basesStatus = "located";
+      item.basesSourceStrategy = "official_bop_reference_resolver";
+      item.actionable = true;
+    } catch {
+      // Network or portal failures preserve review_required; no inferred bases are emitted.
+    }
+  }
+}
+
+function relativeDeadline(detail, announcements) {
+  const absolute = dateFromSpanishText(detail.textFin || "");
+  if (absolute) return { end: absolute, method: "official_text_absolute" };
+  const published = announcements.map((item) => normalizeDate(item.publishedAt)).filter(Boolean).sort().at(-1);
+  if (!published) return null;
+  const text = (detail.textFin || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const words = { diez: 10, quince: 15, veinte: 20, treinta: 30, trigesimo: 30 };
+  const match = text.match(/(\d+|diez|quince|veinte|treinta|trigesimo)\s+dias?/);
+  if (!match) return null;
+  const days = Number(match[1]) || words[match[1]];
+  const end = text.includes("habil") ? addWorkingDays(published, days) : addDays(published, days).slice(0, 10);
+  return { end, method: text.includes("habil") ? "official_announcement_business_days" : "official_announcement_calendar_days", published };
+}
+
 function evidenceYear(detail, documents, announcements) {
   const datedValues = [
     detail.fechaInicioSolicitud,
@@ -71,13 +189,18 @@ function evidenceYear(detail, documents, announcements) {
   return years.length ? Math.max(...years) : null;
 }
 
-function deadlineStatus(detail, documents, announcements) {
-  const end = normalizeDate(detail.fechaFinSolicitud);
-  if (end) return { status: end >= today ? "open" : "closed", confidence: "Alta", actionable: end >= today, lifecycle: end >= today ? "current" : "historical" };
+function deadlineStatus(detail, documents, announcements, hasOfficialBases) {
+  const derived = relativeDeadline(detail, announcements);
+  const end = normalizeDate(detail.fechaFinSolicitud) || derived?.end || null;
+  const acceptsOpenApplications = isCompetitive(detail);
+  if (end) {
+    const open = end >= today && acceptsOpenApplications;
+    return { status: open ? "open" : "closed", confidence: derived ? "Media" : "Alta", actionable: open && hasOfficialBases, lifecycle: open ? "current" : acceptsOpenApplications ? "historical" : "not_open_to_applicants", end, deadlineMethod: derived?.method || "structured" };
+  }
 
   const observedYear = evidenceYear(detail, documents, announcements);
   const currentEvidence = observedYear !== null && observedYear >= currentYear;
-  if (detail.abierto && currentEvidence) return { status: "open", confidence: "Media", actionable: true, lifecycle: "current" };
+  if (detail.abierto === true && acceptsOpenApplications && currentEvidence) return { status: "open", confidence: "Media", actionable: hasOfficialBases, lifecycle: "current", end: null, deadlineMethod: "bdns_open_flag" };
   return {
     status: "uncertain",
     confidence: "Baja",
@@ -90,22 +213,23 @@ function deadlineEvidence(detail, documents, announcements) {
   const announcement = announcements[0];
   const document = documents[0];
   if (announcement) return { label: announcement.officialJournal || "Anuncio oficial", url: announcement.url, date: announcement.publishedAt };
-  if (document) return { label: document.description || document.filename || "Documento oficial", url: "", date: document.publishedAt || document.modifiedAt };
+  if (document) return { label: document.description || document.filename || "Documento oficial", url: document.downloadUrl || "", date: document.publishedAt || document.modifiedAt };
   return { label: "Ficha BDNS/SNPSAP", url: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`, date: "" };
 }
 
 function deadlineTraceFields(detail, deadline, documents, announcements, generatedAt) {
   const evidence = deadlineEvidence(detail, documents, announcements);
-  const structured = Boolean(normalizeDate(detail.fechaFinSolicitud));
+  const resolved = Boolean(deadline.end);
   const status = deadline.status;
   return {
-    deadlineObserved: detail.fechaFinSolicitud || detail.textFin || "Plazo no estructurado",
+    deadlineObserved: deadline.end ? `${detail.textFin || detail.fechaFinSolicitud || "Plazo"} · fin ${deadline.end}` : detail.textFin || "Plazo no estructurado",
     deadlineEvidenceLabel: evidence.label,
     deadlineEvidenceUrl: evidence.url,
     deadlineEvidenceDate: evidence.date || "",
     deadlineReadAt: generatedAt,
     deadlineNextReviewAt: addDays(generatedAt, status === "closed" ? 7 : 1),
-    deadlineUncertaintyReason: structured ? "" : "BDNS no ofrece fecha fin estructurada o expresa el plazo como texto relativo; requiere revisar bases/anuncio.",
+    deadlineUncertaintyReason: resolved ? "" : "BDNS no ofrece fecha fin estructurada o no hay anuncio oficial suficiente para resolver el plazo relativo.",
+    deadlineCalculationMethod: deadline.deadlineMethod || "unresolved",
     tenantAlarmPolicy: status === "closed" ? "No alertar salvo reapertura, rectificacion o nueva version." : "Alertar a tenants afectados si cambia fecha fin, texto de plazo, anuncio oficial o confianza."
   };
 }
@@ -137,7 +261,8 @@ function normalizeGrant(detail, generatedAt) {
     filename: doc.nombreFic,
     sizeBytes: doc.long,
     modifiedAt: doc.datMod,
-    publishedAt: doc.datPublicacion
+    publishedAt: doc.datPublicacion,
+    downloadUrl: documentDownloadUrl(doc.id)
   }));
   const announcements = (detail.anuncios || []).map((item) => ({
     id: item.numAnuncio,
@@ -148,7 +273,11 @@ function normalizeGrant(detail, generatedAt) {
     publishedAt: item.datPublicacion,
     textPreview: plainText(item.texto).slice(0, 900)
   }));
-  const deadline = deadlineStatus(detail, documents, announcements);
+  const regulatoryBasesUrls = urlsFrom(detail.urlBasesReguladoras);
+  const primaryDocument = primaryCallDocument(documents);
+  const basesUrls = primaryDocument?.downloadUrl ? [primaryDocument.downloadUrl] : regulatoryBasesUrls;
+  const basesUrl = basesUrls[0] || "";
+  const deadline = deadlineStatus(detail, documents, announcements, basesUrls.length > 0);
   const evidence = [
     `BDNS ${detail.codigoBDNS}: ${title}`,
     detail.descripcionFinalidad ? `Finalidad: ${detail.descripcionFinalidad}` : "",
@@ -173,15 +302,22 @@ function normalizeGrant(detail, generatedAt) {
     budgetTotal: detail.presupuestoTotal ?? null,
     amount: detail.presupuestoTotal ? `${Number(detail.presupuestoTotal).toLocaleString("es-ES")} EUR presupuesto` : "No indicado",
     deadlineStart: normalizeDate(detail.fechaInicioSolicitud),
-    deadlineEnd: normalizeDate(detail.fechaFinSolicitud),
-    deadline: detail.fechaFinSolicitud || detail.textFin || "Plazo no estructurado",
+    deadlineEnd: deadline.end,
+    deadline: deadline.end || detail.textFin || "Plazo no estructurado",
     deadlineStatus: deadline.status,
     deadlineConfidence: deadline.confidence,
     actionable: deadline.actionable,
     lifecycleStatus: deadline.lifecycle,
+    sourceAuthority: "official_registry",
+    basesStatus: basesUrl ? "located" : "missing",
+    applicationAccessStatus: isCompetitive(detail) ? "competitive_or_open_call" : "not_open_to_applicants",
     ...trace,
     officialUrl: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`,
-    basesUrl: detail.urlBasesReguladoras || detail.sedeElectronica || "",
+    basesUrl,
+    basesUrls,
+    supplementaryBasesUrls: primaryDocument ? regulatoryBasesUrls : [],
+    basesSourceStrategy: primaryDocument ? "bdns_primary_call_document" : regulatoryBasesUrls.length ? "official_regulatory_url" : "missing",
+    applicationUrl: detail.sedeElectronica || "",
     documents,
     announcements,
     theme: detail.descripcionFinalidad || sectors[0] || "Subvencion publica",
@@ -206,19 +342,19 @@ function normalizeGrant(detail, generatedAt) {
   };
 }
 
-function searchParams(page) {
+function searchParams(page, description = args.get("descripcion")) {
   return {
     page,
     pageSize,
     vpd: PORTAL,
-    descripcion: args.get("descripcion"),
-    descripcionTipoBusqueda: args.get("descripcion-tipo") || (args.has("descripcion") ? 1 : undefined),
+    descripcion: description,
+    descripcionTipoBusqueda: args.get("descripcion-tipo") || (description ? 1 : undefined),
     numeroConvocatoria: args.get("numero-convocatoria"),
     mrr: args.get("mrr"),
     contribucion: args.get("contribucion"),
     fechaDesde: args.get("fecha-desde"),
     fechaHasta: args.get("fecha-hasta"),
-    tipoAdministracion: args.get("tipo-administracion") || "C",
+    tipoAdministracion: campaign === "municipal-social" ? "L" : args.get("tipo-administracion") || "C",
     organos: args.get("organos"),
     regiones: args.get("regiones"),
     tiposBeneficiario: args.get("tipos-beneficiario"),
@@ -228,7 +364,7 @@ function searchParams(page) {
   };
 }
 
-function qualitySummary(opportunities, listedCount, detailErrors) {
+function qualitySummary(opportunities, listedCount, uniqueListedCount, detailErrors) {
   const byStatus = {};
   const byAdministration = {};
   for (const item of opportunities) {
@@ -239,7 +375,8 @@ function qualitySummary(opportunities, listedCount, detailErrors) {
   return {
     listedCount,
     normalizedCount: opportunities.length,
-    duplicateCount: listedCount - new Set(opportunities.map((item) => item.id)).size,
+    uniqueListedCount,
+    duplicateCount: listedCount - uniqueListedCount,
     detailErrorCount: detailErrors.length,
     byStatus,
     byAdministration,
@@ -256,13 +393,18 @@ function qualitySummary(opportunities, listedCount, detailErrors) {
 async function main() {
   const listed = [];
   let totalElements = null;
-  for (let page = 0; page < pages; page += 1) {
-    const endpoint = mode === "search" ? "/convocatorias/busqueda" : "/convocatorias/ultimas";
-    const params = mode === "search" ? searchParams(page) : { page, pageSize, vpd: PORTAL };
-    const url = apiUrl(endpoint, params);
-    const payload = await getJson(url);
-    totalElements = payload.totalElements ?? totalElements;
-    listed.push(...(payload.content || []));
+  const queryTotals = [];
+  const descriptions = campaignDescriptions.length ? campaignDescriptions : [args.get("descripcion")];
+  for (const description of descriptions) {
+    for (let page = 0; page < pages; page += 1) {
+      const endpoint = mode === "search" ? "/convocatorias/busqueda" : "/convocatorias/ultimas";
+      const params = mode === "search" ? searchParams(page, description) : { page, pageSize, vpd: PORTAL };
+      const url = apiUrl(endpoint, params);
+      const payload = await getJson(url);
+      totalElements = descriptions.length === 1 ? payload.totalElements ?? totalElements : null;
+      if (page === 0) queryTotals.push({ description: description || null, totalElements: payload.totalElements ?? null });
+      listed.push(...(payload.content || []));
+    }
   }
 
   const unique = [...new Map(listed.map((item) => [item.numeroConvocatoria, item])).values()];
@@ -281,7 +423,8 @@ async function main() {
 
   const generatedAt = new Date().toISOString();
   const opportunities = details.map((detail) => normalizeGrant(detail, generatedAt));
-  const query = mode === "search" ? searchParams(0) : { pageSize, vpd: PORTAL };
+  await resolveOfficialBopReferences(opportunities);
+  const query = mode === "search" ? { ...searchParams(0, descriptions[0]), descriptions } : { pageSize, vpd: PORTAL };
   const dataset = {
     generatedAt,
     source: "BDNS/SNPSAP",
@@ -291,14 +434,15 @@ async function main() {
     pages,
     pageSize,
     totalElements,
+    queryTotals,
     count: opportunities.length,
-    quality: qualitySummary(opportunities, listed.length, detailErrors),
+    quality: qualitySummary(opportunities, listed.length, unique.length, detailErrors),
     detailErrors,
     opportunities
   };
 
   await fs.mkdir(outDir, { recursive: true });
-  const outputName = mode === "search" ? "bdns-search.json" : "bdns-latest.json";
+  const outputName = args.get("output-name") || (campaign ? `bdns-${campaign}.json` : mode === "search" ? "bdns-search.json" : "bdns-latest.json");
   await fs.writeFile(path.join(outDir, outputName), `${JSON.stringify(dataset, null, 2)}\n`, "utf8");
   const prototypeDataset = {
     ...dataset,
@@ -309,7 +453,9 @@ async function main() {
   console.log(JSON.stringify({ generatedAt, mode, totalElements, count: opportunities.length, quality: dataset.quality, output: path.join(outDir, outputName), prototypeOut }, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

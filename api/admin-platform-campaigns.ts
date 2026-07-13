@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET") {
       const { data, error } = await supabase
         .from("platform_ingestion_campaigns")
-        .select("id, status, scanned, changed, vectorized, skipped, failed, error, created_at, platform_sources(label, kind)")
+        .select("id, campaign_key, status, scanned, changed, vectorized, skipped, failed, error, created_at, platform_sources(label, kind)")
         .order("created_at", { ascending: false })
         .limit(50);
 

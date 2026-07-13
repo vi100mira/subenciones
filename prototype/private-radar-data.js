@@ -164,12 +164,6 @@ const PRIVATE_EVIDENCE = {
     "Fundacion Orange describe EDYTA como programa nacional de educacion y transformacion digital para mujeres y asociaciones del tercer sector que trabajan con colectivos femeninos en riesgo de exclusion y baja empleabilidad. Requiere confirmar convocatoria de entidades o colaboracion vigente.",
     "programa privado abierto"
   ),
-  "ford-espana-centimos-solidarios": privateEvidence(
-    "https://www.novaterra.org.es/ford-espana-y-sus-empleados-impulsan-la-transformacion-digital-de-fundacion-novaterra-a-traves-de-centimos-solidarios/",
-    "Centimos Solidarios - Ford Espana y Fundacion Novaterra",
-    "Novaterra publica que Ford Espana, a traves de Centimos Solidarios, apoyo su transformacion digital. Es evidencia de fuente privada relacional; no se han localizado bases publicas ni ventana abierta, por lo que requiere aportacion manual o contacto con Ford antes de convertirlo en oportunidad.",
-    "programa relacional privado"
-  ),
   "ford-construyendo-juntos": privateEvidence(
     "https://www.fromtheroad.ford.com/es/es/articles/2025/la-iniciativa-ford-construyendo-juntos-arranca-con-una-campana-h",
     "Ford Construyendo Juntos - accion comunitaria",
@@ -197,7 +191,6 @@ const PRIVATE_FEATURES = {
   "fundacion-repsol-social": ["Inclusion social", "Energia/sostenibilidad", "Ventana anual"],
   "fundacion-naturgy-vulnerabilidad": ["Vulnerabilidad energetica", "Accion social", "Por convenio"],
   "fundacion-orange-digital": ["Inclusion digital", "Autonomia", "Proyecto social"],
-  "ford-espana-centimos-solidarios": ["Relacion empresa", "Inclusion sociolaboral", "Aportacion manual"],
   "ford-construyendo-juntos": ["RSC corporativa", "Comunidad", "Sin bases publicas"]
 };
 
@@ -219,9 +212,7 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
   ["fundacion-randstad-empleabilidad", "Empleabilidad e inclusion laboral de colectivos vulnerables", "Fundacion Randstad", "Fundacion corporativa", "Insercion laboral", "Estatal", "Plazo por confirmar", "Media", 74, "Por proyecto"],
   ["fundacion-repsol-social", "Proyectos sociales vinculados a energia e inclusion", "Fundacion Repsol", "Empresa / fundacion", "Inclusion y sostenibilidad", "Estatal", "Ventana anual por confirmar", "Baja", 67, "Por confirmar"],
   ["fundacion-naturgy-vulnerabilidad", "Programas contra vulnerabilidad energetica", "Fundacion Naturgy", "Empresa / fundacion", "Vulnerabilidad energetica", "Estatal", "Convocatoria por verificar", "Media", 68, "Por convenio"],
-  ["fundacion-orange-digital", "Inclusion digital y autonomia de colectivos vulnerables", "Fundacion Orange", "Empresa / fundacion", "Inclusion digital", "Estatal", "Plazo por confirmar", "Baja", 65, "Por proyecto"],
-  ["ford-espana-centimos-solidarios", "Apoyo relacional de Ford Espana a entidades sociales", "Ford Espana", "Empresa / RSC", "Inclusion sociolaboral", "Comunitat Valenciana", "Sin convocatoria publica", "Baja", 63, "Aportacion fija por programa"],
-  ["ford-construyendo-juntos", "Iniciativa comunitaria Ford Construyendo Juntos", "Ford Espana", "Empresa / RSC", "Accion comunitaria", "Estatal", "Campana por verificar", "Baja", 61, "Por campana"]
+  ["fundacion-orange-digital", "Inclusion digital y autonomia de colectivos vulnerables", "Fundacion Orange", "Empresa / fundacion", "Inclusion digital", "Estatal", "Plazo por confirmar", "Baja", 65, "Por proyecto"]
 ].map(([id, title, source, funderType, theme, territory, deadline, deadlineConfidence, score, amount]) => {
   const privateEvidence = PRIVATE_EVIDENCE[id] || {};
   return {
@@ -233,6 +224,9 @@ window.PRIVATE_OPEN_OPPORTUNITIES = [
     deadline,
     deadlineStatus: /cerrad|fuera de plazo|caducad|resuelt/i.test(deadline) ? "closed" : deadlineConfidence === "Alta" ? "open" : "uncertain",
     deadlineConfidence,
+    sourceAuthority: "issuer_official",
+    basesStatus: privateEvidence.officialUrl && privateEvidence.basesUrl ? "located" : "missing_or_unverified",
+    actionable: Boolean(privateEvidence.officialUrl && privateEvidence.basesUrl && deadlineConfidence === "Alta" && !/cerrad|fuera de plazo|caducad|resuelt/i.test(deadline)),
     sourceScope: "Privada abierta",
     funderType,
     evidenceQuality: privateEvidence.evidenceType?.includes("relacional") || privateEvidence.evidenceType?.includes("RSC")

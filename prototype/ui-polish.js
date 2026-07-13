@@ -94,11 +94,12 @@
   }
 
   function privateActiveRows() {
-    return privateOpenRows().filter((item) => item.deadlineStatus !== "closed" && (document.body.dataset.role === "superadmin" || item.entityFit?.status === "candidate"));
+    return privateOpenRows().filter((item) => item.actionable === true && item.deadlineStatus === "open" && (document.body.dataset.role === "superadmin" || item.entityFit?.status === "candidate"));
   }
 
   function publicRows() {
-    return document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
+    const baseRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
+    return [...new Map([...baseRows, ...(window.MUNICIPAL_RADAR?.opportunities || [])].map((item) => [item.id, item])).values()];
   }
 
   function radarOpportunities() {

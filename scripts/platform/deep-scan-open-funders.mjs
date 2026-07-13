@@ -12,8 +12,9 @@ const limitArg = process.argv.find((item) => item.startsWith("--limit="));
 const idArg = process.argv.find((item) => item.startsWith("--id="));
 const pageBudgetArg = process.argv.find((item) => item.startsWith("--page-budget="));
 const writeArg = process.argv.find((item) => item.startsWith("--write="));
+const catalogArg = process.argv.find((item) => item.startsWith("--catalog="));
 const browserFallback = !process.argv.includes("--browser-fallback=false");
-const catalogPath = "data/private-open-funders/platform-open-funders-v1.json";
+const catalogPath = catalogArg ? catalogArg.split("=").slice(1).join("=") : "data/private-open-funders/platform-open-funders-v1.json";
 const limit = limitArg ? Number(limitArg.split("=")[1]) : Infinity;
 const pageBudget = pageBudgetArg ? Number(pageBudgetArg.split("=")[1]) : 10;
 const timeoutMs = 12000;
@@ -127,7 +128,7 @@ async function fetchText(url) {
     });
     const contentType = response.headers.get("content-type") || "";
     if (!response.ok) return { ok: false, url, status: response.status, contentType, text: "" };
-    if (contentType.includes("pdf") || /\.pdf(?:$|[?#])/i.test(url)) {
+    if (contentType.includes("pdf") || contentType.includes("application/octet-stream") || /\.pdf(?:$|[?#])/i.test(url)) {
       return { ok: true, url, status: response.status, contentType: "application/pdf", bytes: Buffer.from(await response.arrayBuffer()), text: "" };
     }
     const text = await response.text();
@@ -180,14 +181,16 @@ function classifyPage(url, html) {
   const hasBasis = /bases|convocatoria|solicitud|formulario|plazo|documentaci/.test(text);
   const hasDeadline = /plazo|fecha|hasta el|abierto|cierre|presentaci/.test(text);
   const hasAmount = /eur|euros|dotaci|importe|cuant/.test(text);
+  const hasEligibility = /beneficiari|requisit|criteri|obligacion|obligaci[oó]|documentaci[oó]n|solicitante/.test(text);
   const isClosed = closedTerms.some((term) => text.includes(term));
   return {
     url,
     title: titleOf(html),
     status_facts: extractStatusFacts(html),
     evidence_excerpt: pageText.slice(0, 4000),
-    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (isClosed ? 1 : 0),
-    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", isClosed && "closed_or_resolved"].filter(Boolean)
+    extracted_text: pageText.slice(0, 120000),
+    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (hasEligibility ? 2 : 0) + (isClosed ? 1 : 0),
+    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", hasEligibility && "eligibility", isClosed && "closed_or_resolved"].filter(Boolean)
   };
 }
 
@@ -258,14 +261,15 @@ async function scanSource(source) {
   const origin = new URL(start).origin;
   const queue = [{ href: start, depth: 0, label: source.name, score: 99, path: [{ url: start, label: source.name }] }];
   const curatedBasis = source.basis_url ? normalizeUrl(source.basis_url, start) : "";
-  if (curatedBasis && sameOrigin(curatedBasis, origin)) {
+  if (curatedBasis && (sameOrigin(curatedBasis, origin) || source.source_authority === "official_registry")) {
     queue.push({
       href: curatedBasis,
       depth: 1,
       label: "Bases PDF verificadas",
       score: 100,
       path: source.navigation_path || [{ url: start, label: source.name }, { url: curatedBasis, label: "Bases PDF verificadas" }],
-      curated_basis: true
+      curated_basis: true,
+      curated_basis_origin: curatedBasis
     });
   }
   const seen = new Set();
@@ -289,6 +293,7 @@ async function scanSource(source) {
     }
     if (fetched.contentType.includes("pdf")) {
       const document = await extractPdf(fetched.bytes, next.href);
+      document.curated_basis_origin = next.curated_basis_origin || (next.curated_basis ? next.href : "");
       const documentText = document.extracted_text || "";
       pages.push({
         url: next.href,
@@ -311,12 +316,20 @@ async function scanSource(source) {
       }
     }
     page.curated_basis = Boolean(next.curated_basis);
+    page.curated_basis_origin = next.curated_basis_origin || (next.curated_basis ? next.href : "");
+    page.content_sha256 = crypto.createHash("sha256").update(page.extracted_text).digest("hex");
+    page.content_type = fetched.contentType || "text/html";
     if (next.href === start) page.score += 3;
     page.navigation_path = next.path;
     pages.push(page);
     if (next.depth >= 2) continue;
     for (const link of linksFrom(fetched.text, next.href, origin).filter((item) => item.score > 0 || isPublicDocument(item.href)).slice(0, 18)) {
-      queue.push({ ...link, depth: next.depth + 1, path: [...next.path, { url: link.href, label: link.label || link.href }] });
+      queue.push({
+        ...link,
+        depth: next.depth + 1,
+        path: [...next.path, { url: link.href, label: link.label || link.href }],
+        curated_basis_origin: page.curated_basis_origin
+      });
     }
     queue.sort((a, b) => b.score - a.score);
   }

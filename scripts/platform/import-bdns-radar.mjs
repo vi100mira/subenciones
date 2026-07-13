@@ -47,7 +47,8 @@ function versionHashes(item) {
       title: item.title,
       objective: item.objective,
       extractedText: item.extractedText,
-      documents: item.documents?.map((doc) => [doc.id, doc.filename, doc.modifiedAt, doc.publishedAt])
+      documents: item.documents?.map((doc) => [doc.id, doc.filename, doc.modifiedAt, doc.publishedAt]),
+      basesEvidence: item.basesEvidence?.map((doc) => [doc.sourceUrl, doc.sha256, doc.pageCount, doc.extractedChars])
     }),
     deadline_hash: hash({
       observed: item.deadlineObserved || item.deadline,
@@ -101,6 +102,7 @@ function versionRow(opportunityId, item, versionNumber) {
       bases_url: item.basesUrl,
       documents: item.documents || [],
       announcements: item.announcements || [],
+      bases_evidence: item.basesEvidence || [],
       evidence: item.evidence || []
     },
     metadata_json: {
@@ -108,6 +110,8 @@ function versionRow(opportunityId, item, versionNumber) {
       sector: item.sector,
       score: item.score,
       actionable: item.actionable !== false,
+      bases_status: item.basesStatus || "unknown",
+      source_authority: item.sourceAuthority || "unknown",
       lifecycle_status: item.lifecycleStatus || "review_required",
       internal_facts: item.internalFacts || []
     },
@@ -239,7 +243,8 @@ async function writeVersion(supabase, opportunityId, item) {
 
 async function main() {
   const dataset = JSON.parse(await fs.readFile(input, "utf8"));
-  const summary = { apply, input, opportunities: dataset.opportunities.length, inserted: 0, refreshed: 0, versioned: 0 };
+  const opportunities = dataset.opportunities.filter((item) => item.actionable === true && item.deadlineStatus === "open" && item.basesStatus === "extracted");
+  const summary = { apply, input, scanned: dataset.opportunities.length, eligibleLive: opportunities.length, rejectedByLiveEvidenceGate: dataset.opportunities.length - opportunities.length, inserted: 0, refreshed: 0, versioned: 0 };
   if (!apply) {
     console.log(JSON.stringify({ mode: "dry-run", ...summary }, null, 2));
     return;
@@ -247,7 +252,7 @@ async function main() {
   const supabase = await supabaseClient();
   await assertDeadlineTraceSchema(supabase);
   const sourceId = await ensureSource(supabase, dataset);
-  for (const item of dataset.opportunities) {
+  for (const item of opportunities) {
     const opportunityId = await upsertOpportunity(supabase, sourceId, item);
     const action = await writeVersion(supabase, opportunityId, item);
     summary[action] += 1;
