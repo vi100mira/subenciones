@@ -7,9 +7,9 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 - La interfaz es un prototipo estático servido por Vercel.
 - Las funciones `api/*.ts` ejecutan autenticación, permisos, altas, consultas y escrituras breves.
 - Supabase/Postgres es la fuente de verdad y contiene dos tablas que actúan como colas.
-- Solo la cola de campañas de plataforma tiene hoy un consumidor productivo, limitado al radar municipal BDNS.
+- La cola de campañas de plataforma tiene consumidores productivos para tres ciclos: BDNS municipal, BDNS social general y financiadores privados públicos.
 - No existe todavía un runtime general de agentes, un orquestador de modelos ni llamadas productivas a un LLM.
-- El pipeline municipal es asíncrono, determinista y auditable; combina API, scraping oficial, extracción PDF y OCR local.
+- Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local.
 - El OCR no es SaaS: se ejecuta en el equipo worker con Tesseract o con el OCR nativo de Windows.
 - En producción hay 626 registros, pero solo 42 pasan la compuerta reforzada de convocatoria viva, emisor oficial y bases extraídas.
 
@@ -23,21 +23,23 @@ flowchart LR
   api --> db[("Supabase / Postgres")]
   api --> blob[("Vercel Blob")]
 
-  cron["Cron de Vercel · 05:00 UTC"] --> planificador["API de planificación municipal"]
+  cron["Cron de Vercel · 05:00 UTC"] --> planificador["API de planificación de radares"]
   planificador --> colaPlataforma["Cola: platform_ingestion_campaigns"]
-  tarea["Programador de Windows · 07:15"] --> worker["Worker municipal"]
-  colaPlataforma --> worker
-  worker --> bdns["BDNS / SNPSAP"]
-  worker --> bases["Bases, BOP y portales oficiales"]
+  tarea["Programador de Windows · 07:15"] --> workers["Workers públicos programados"]
+  colaPlataforma --> workers
+  workers --> bdns["BDNS municipal y social general"]
+  workers --> privadas["15 financiadores privados oficiales"]
+  bdns --> bases["Bases, BOP y portales oficiales"]
+  privadas --> bases
   bases --> pdf["Extracción PDF"]
   pdf --> ocr["OCR local si falta texto"]
   ocr --> filtro["Compuerta: viva + oficial + bases"]
-  filtro --> db
+  filtro --> cambios["Versiones, cambios y alertas por tenant"]
+  cambios --> db
 
   api --> colaTenant["Cola: ingestion_runs"]
   colaTenant -. "sin consumidor productivo" .-> pendiente["Ingesta privada pendiente"]
 
-  scripts["Scripts manuales de cambios y alertas"] -.-> db
   db -. "alertas dentro de la app" .-> web
   db -. "sin emisor de canal" .-> canales["Correo / Teams / WhatsApp pendientes"]
 ```
@@ -47,26 +49,30 @@ flowchart LR
 | Flujo | Cola persistida | Productor | Consumidor | Estado real |
 | --- | --- | --- | --- | --- |
 | Radar municipal | `platform_ingestion_campaigns` | Cron de Vercel o API de superadministración | `run-municipal-radar.mjs` desde Windows | Productivo |
+| Radar BDNS social general | `platform_ingestion_campaigns` | Cron de Vercel | `run-municipal-radar.mjs --campaign=general-social` desde Windows | Productivo; cobertura paginada parcial |
+| Radar de financiadores privados | `platform_ingestion_campaigns` | Cron de Vercel | `run-private-funder-radar.mjs` desde Windows | Productivo; 15 fuentes, puerta estricta |
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
-| Alertas por cambios | `tenant_change_alerts.channel_status` | Script manual de impacto | No existe emisor externo | Parcial; solo lectura en la app |
+| Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
 | Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
-Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Hoy solo la campaña municipal tiene el ciclo productor-cola-consumidor cerrado.
+Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
 
-## Pipeline productivo del radar municipal
+## Pipeline productivo de los radares
 
 1. Vercel invoca diariamente `/api/platform-radar-schedule` con `CRON_SECRET`.
-2. La función crea una campaña idempotente `municipal-social:AAAA-MM-DD`.
+2. La función crea tres campañas idempotentes: `municipal-social`, `general-social` y `private-open-funders`, todas con fecha diaria.
 3. El Programador de tareas de Windows inicia el worker después del cron.
 4. El worker reclama una única campaña `queued` y la marca `running`.
-5. Consulta BDNS con administración local y cinco búsquedas: acción social, inclusión, empleo, asociaciones y entidades sin ánimo de lucro.
+5. El radar municipal consulta cinco familias sociales; el general busca `social` en todas las administraciones; el privado recorre 15 fuentes oficiales con profundidad máxima dos.
 6. Normaliza, deduplica y descarta convenios, ayudas nominativas, expedientes cerrados o plazos inciertos.
 7. Descarga documentos oficiales de BDNS y resuelve BOP o portales oficiales cuando la ficha los referencia.
 8. Extrae texto con `pypdf`; usa `pdfplumber` como respaldo para PDF problemáticos.
 9. Si el PDF es una imagen, usa Tesseract o el OCR nativo de Windows.
-10. Solo importa oportunidades abiertas con emisor oficial, bases sustantivas, URL de evidencia y SHA-256.
-11. Guarda métricas y salud de fuente, y marca la campaña `completed` o `failed`.
+10. Solo importa oportunidades abiertas con emisor oficial, bases sustantivas, URL de evidencia y SHA-256. En privadas exige además estado abierto y cierre explícito.
+11. Extrae las restricciones de redacción; si no las encuentra, bloquea el borrador para revisión. Los máximos por páginas exigen validar el documento renderizado.
+12. El radar privado compara versiones y genera alertas para tenants que siguen la oportunidad.
+13. Guarda métricas y salud de fuente, y marca cada campaña `completed` o `failed`.
 
 El worker es un proceso determinista. En este momento no consulta un modelo generativo ni envía el texto de las bases a un tercero.
 
@@ -87,15 +93,15 @@ El worker es un proceso determinista. En este momento no consulta un modelo gene
 
 | Capacidad | Construcción actual | Automatización | Veredicto |
 | --- | --- | --- | --- |
-| Búsqueda de convocatorias | Radar municipal completo; búsqueda BDNS general disponible como script | Cron + cola + worker para municipales | Operativo parcial |
-| Normalización y revisión de bases | Integrada en el worker municipal con hashes, extracción y OCR | Automática dentro de cada campaña | Operativo para municipales |
-| Monitor de cambios | Esquema y script determinista para catálogo privado | Ejecución manual, sin cron productivo | Parcial |
+| Búsqueda de convocatorias | Radares municipal, social general y 15 financiadores privados | Cron + cola + workers para los tres ciclos | Operativo con cobertura acotada |
+| Normalización y revisión de bases | Hashes, extracción, OCR, evidencia y límites de redacción | Automática dentro de cada campaña | Operativo para los tres radares |
+| Monitor de cambios | Versiones y eventos deterministas para catálogo privado | Automático al final de cada campaña privada | Operativo; cambios críticos esperan revisión |
 | Investigador de entidad | Flujo, límites de rastreo y consentimiento visibles | No existe worker de rastreo | Prototipo |
 | Asistente de encaje | Ranking y conversación local sobre datos cargados | JavaScript en navegador, sin modelo | Prototipo funcional |
 | Políticas de datos | RLS, permisos y exclusión de documentos sensibles al trocear | No existe agente de gobierno autónomo | Controles parciales |
 | Revisión documental | Reglas locales y API que guarda paquetes Word compatibles | Petición síncrona, sin extracción semántica de agente | Parcial |
-| Borrador de memoria | Plantillas y contenido de demostración | Sin modelo ni recuperación privada productiva | Prototipo |
-| Avisos y recordatorios | Tablas, watch, generador y API de lectura | Sin ejecución periódica ni envío por canal | Parcial |
+| Borrador de memoria | Plantillas, puerta de restricciones y bloqueo de máximos renderizados | Sin modelo ni recuperación privada productiva | Parcial y seguro por defecto |
+| Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 
 Conclusión: hay un pipeline productivo automatizado, varios servicios deterministas parciales y ninguna flota de agentes LLM asíncronos en producción.
@@ -111,7 +117,7 @@ Conclusión: hay un pipeline productivo automatizado, varios servicios determini
 | Registros privados curados | 12 |
 | Marcados como abiertos en datos históricos | 65 |
 | Vivos y accionables con bases verificadas | 42 |
-| Fuentes de plataforma | 14: 2 BDNS y 12 financiadores privados |
+| Fuentes de plataforma | 19: 3 BDNS y 16 privadas, contando las fuentes agregadoras de campaña |
 
 Los 23 registros abiertos que no pasan la compuerta actual son legado: 19 públicos sin el nuevo contrato de evidencia y 4 privados sin bases verificadas. No deben presentarse como candidaturas accionables hasta revalidarlos.
 
@@ -135,8 +141,8 @@ Las 42 son de administración local y cubren ayuntamientos, diputaciones, cabild
 
 - Sí podemos buscar convocatorias municipales españolas publicadas en BDNS para las cinco familias sociales configuradas.
 - Sí podemos recuperar y verificar bases oficiales en los 42 casos aceptados de la campaña productiva.
-- Podemos explorar BDNS general y páginas oficiales privadas con scripts manuales.
-- Todavía no hay campaña nacional completa y periódica para todas las palabras, sectores y administraciones.
+- Sí existe una campaña diaria social general en BDNS y otra para 15 fuentes privadas oficiales.
+- La campaña general es periódica pero aún no recorre exhaustivamente todas las páginas, palabras y sectores.
 - Todavía no hay privadas accionables bajo la nueva compuerta, ni cobertura universal de fundaciones.
 - La cantidad de resultados no equivale a encaje para una entidad; el encaje por territorio, forma jurídica y actividad sigue necesitando perfil aprobado y revisión humana.
 
@@ -178,13 +184,15 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 ## Ficheros ejecutables principales
 
 - `vercel.json`: rutas, funciones y cron diario.
-- `api/platform-radar-schedule.ts`: productor automático de la cola municipal.
+- `api/platform-radar-schedule.ts`: productor automático de las tres colas de radar.
 - `api/admin-platform-campaigns.ts`: consulta y alta manual de campañas.
 - `api/ingestion-dispatch.ts`: productor de la cola privada aún sin consumidor.
 - `scripts/workers/run-municipal-radar.mjs`: consumidor y orquestador del pipeline municipal.
+- `scripts/workers/run-private-funder-radar.mjs`: consumidor privado, monitor de versiones y generador de alertas.
 - `scripts/workers/run-municipal-radar-scheduled.ps1`: lanzador local programado.
 - `scripts/radar/fetch-bdns-latest.mjs`: consulta y normalización BDNS.
 - `scripts/platform/deep-scan-open-funders.mjs`: descarga, extracción y validación de bases.
+- `scripts/platform/apply-open-funder-scan.mjs`: puerta de evidencia y restricciones de redacción privadas.
 - `scripts/platform/import-bdns-radar.mjs`: compuerta e importación en Supabase.
 - `scripts/workers/extract-public-pdf.py`: extracción de texto y coordinación OCR.
 - `scripts/workers/ocr-image-windows.ps1`: OCR local nativo de Windows.
@@ -195,7 +203,7 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 1. Mover el worker a un host siempre activo o mantener explícitamente la dependencia del PC Windows.
 2. Crear el consumidor de `ingestion_runs` antes de ofrecer conectores privados como operativos.
 3. Revalidar los 23 registros abiertos heredados o excluirlos de cualquier vista accionable.
-4. Ejecutar y programar el monitor de cambios y el generador de alertas.
+4. Añadir emisor autorizado para alertas externas; la generación dentro de la app ya está programada.
 5. Cambiar los paquetes de candidatura de Blob público a acceso privado con descarga autorizada.
 6. Implementar el investigador de entidad con snapshots, consentimiento y aprobación humana.
 7. Traducir por bloques la documentación histórica en inglés sin cambiar sus rutas.
