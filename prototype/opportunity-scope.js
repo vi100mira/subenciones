@@ -12,10 +12,11 @@
     const publicBase = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length
       ? window.RADAR_PLATFORM_OPPORTUNITIES
       : window.RADAR?.opportunities || [];
-    const publicRows = [...new Map([...publicBase, ...(window.MUNICIPAL_RADAR?.opportunities || [])]
+    const publicRows = [...new Map([...publicBase, ...(window.TENANT_RECOMMENDATIONS_APPLIED ? [] : window.MUNICIPAL_RADAR?.opportunities || [])]
       .map((item) => [item.id, item])).values()];
     const privateRows = [...(window.MOCK?.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])]
-      .filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
+      .filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"))
+      .filter((item) => !window.TENANT_RECOMMENDATIONS_APPLIED || item.entityFit?.status === "candidate");
     const combined = publicRows.length ? [...publicRows, ...privateRows] : window.MOCK?.opportunities || [];
     return [...new Map(combined.filter(isCurrent).map((item) => [item.id, item])).values()];
   }

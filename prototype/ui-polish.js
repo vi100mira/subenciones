@@ -100,7 +100,8 @@
 
   function publicRows() {
     const baseRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
-    return [...new Map([...baseRows, ...(window.MUNICIPAL_RADAR?.opportunities || [])].map((item) => [item.id, item])).values()];
+    const municipal = window.TENANT_RECOMMENDATIONS_APPLIED ? [] : window.MUNICIPAL_RADAR?.opportunities || [];
+    return [...new Map([...baseRows, ...municipal].map((item) => [item.id, item])).values()];
   }
 
   function radarOpportunities() {

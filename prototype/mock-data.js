@@ -244,7 +244,7 @@ window.MOCK = {
     { title: "Microsoft 365 / SharePoint", detail: "Pendiente de conectar credenciales de la entidad", state: "Pendiente" }
   ],
   tenants: [
-    { title: "Novaterra", detail: "piloto activo - web publica autorizada - Drive pendiente", state: "Activa" }
+    { title: "Novaterra", slug: "novaterra-demo", detail: "piloto activo - estado de agentes consultable por tenant", state: "Activa" }
   ],
   platformCampaigns: [
     { title: "Radar publico estatal", detail: "BDNS/SNPSAP: cambios, evidencias y versiones reutilizables", cron: "0 6 * * *", trigger: "requiere motivo", costPolicy: "IA solo si cambio", budget: "3 EUR/dia", state: "Activa" },
