@@ -35,7 +35,7 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 4. La API guarda identificadores, clases permitidas y huellas; no persiste un prompt ni texto interno.
 5. El worker programado cada cinco minutos vuelve a comprobar versión, plazo, consentimiento y restricciones.
 6. Sin proveedor autorizado, deja la ejecución en `awaiting_provider`; nunca simula una respuesta de IA.
-7. Con proveedor, la futura integración deberá producir salida estructurada, pasar el renderizado PDF y quedar en `review_required`.
+7. Con proveedor y clave instalados, la integración produce salida JSON estructurada, valida límites y queda en `review_required`.
 8. Ningún agente puede presentar, enviar o compartir externamente sin aprobación humana.
 
 ## Puerta de candidata a proyecto
@@ -67,4 +67,4 @@ Antes de ordenar oportunidades, debe cargar territorio, forma jurídica, colecti
 
 - Los tres radares son deterministas y autónomos; no necesitan un LLM para descubrir y verificar convocatorias.
 - El agente redactor ya tiene API, cola Supabase, manifiesto mínimo, auditoría y worker asíncrono.
-- La generación con IA permanece detenida en `awaiting_provider` hasta aprobar proveedor, modelo, región, retención, subprocesadores y presupuesto.
+- OpenAI está autorizado para evidencia pública con `store: false` y presupuesto de 20 € al mes. La generación permanece detenida en `awaiting_provider` porque la clave no está instalada en GitHub.

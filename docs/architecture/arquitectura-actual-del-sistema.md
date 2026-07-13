@@ -6,7 +6,7 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 
 - La interfaz es un prototipo estático servido por Vercel.
 - Las funciones `api/*.ts` ejecutan autenticación, permisos, altas, consultas y escrituras breves.
-- Supabase/Postgres es la fuente de verdad y contiene dos tablas que actúan como colas.
+- Supabase/Postgres es la fuente de verdad y contiene tres tablas que actúan como colas.
 - La cola de campañas de plataforma tiene consumidores productivos para tres ciclos: BDNS municipal, BDNS social general y financiadores privados públicos.
 - Existe una cola y un worker asíncrono del redactor. OpenAI está autorizado para una primera fase de evidencia exclusivamente pública, con presupuesto de 20 € al mes; falta instalar la clave API en el worker para ejecutar la primera llamada real.
 - Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local al runner.
@@ -65,6 +65,16 @@ flowchart LR
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
 
+### Fotografía de las colas
+
+Consulta de solo lectura realizada en Supabase el 13 de julio de 2026:
+
+| Cola | Registros | Estado actual | Interpretación |
+| --- | ---: | --- | --- |
+| `platform_ingestion_campaigns` | 5 | 5 `completed` | Las campañas existentes terminaron; el cron seguirá creando campañas idempotentes |
+| `ingestion_runs` | 0 | Vacía | La API puede encolar, pero no existe consumidor de documentos privados |
+| `tenant_agent_runs` | 2 | 1 `awaiting_provider`, 1 `cancelled` | El worker alojado funciona; la generación espera la clave de OpenAI |
+
 ## Pipeline productivo de los radares
 
 1. Vercel invoca diariamente `/api/platform-radar-schedule` con `CRON_SECRET`.
@@ -84,6 +94,8 @@ Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un age
 El worker es un proceso determinista. En este momento no consulta un modelo generativo ni envía el texto de las bases a un tercero.
 
 La prueba integral del 13 de julio de 2026 recorrió el planificador, la cola de Supabase y el Programador de tareas real. El ciclo general examinó 100 fichas, aceptó 11, descartó 89 y no tuvo fallos. El ciclo privado examinó sus 15 fuentes, no encontró ninguna oportunidad que superase la puerta estricta, bloqueó o mantuvo en observación las 15 y no tuvo fallos. La tarea terminó con código `0` y quedó programada para el día siguiente.
+
+La primera prueba del worker alojado se completó correctamente el 13 de julio de 2026 en [GitHub Actions](https://github.com/vi100mira/subenciones/actions/runs/29244318871): instaló dependencias en un runner limpio, accedió a la cola mediante secretos cifrados y ejecutó el consumidor del redactor sin depender del PC.
 
 ## El OCR no es SaaS
 
@@ -178,6 +190,7 @@ En producción hay un documento público listo para procesar y cero fragmentos p
 | `docs/architecture/arquitectura-actual-del-sistema.md` | Arquitectura actual del sistema | Documento canónico del estado real |
 | `docs/product/master-context.md` | Contexto maestro del producto | Propósito, flujos y fronteras de confianza |
 | `docs/product/agentic-architecture.md` | Arquitectura de capacidades agenticas | Contratos y puertas humanas diseñadas |
+| `docs/architecture/participacion-ia-y-rag.md` | Participación de IA y RAG | Diferencia la ejecución actual de la arquitectura objetivo |
 | `docs/product/data-governance-brief.md` | Gobierno de datos | Clasificación, uso permitido y prohibiciones |
 | `docs/product/prd.md` | Requisitos del producto | Alcance y objetivos del MVP |
 | `docs/architecture/*.md` | Decisiones de arquitectura | Diseño de RAG, tenants, fuentes, alertas, credenciales y operaciones |

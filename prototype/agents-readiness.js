@@ -1,18 +1,46 @@
 (function () {
   const readiness = {
-    "Busqueda de convocatorias": {
-      status: "Operativo plataforma",
+    "Busqueda global": {
+      status: "Operativo alojado",
       tone: "safe",
       disabled: false,
       platformOnly: true,
-      note: "Servicio de plataforma para traer novedades publicas y refrescos programados. En esta demo los datos son una copia de trabajo, no una ejecucion diaria real."
+      note: "Consume las campañas BDNS y privadas desde GitHub Actions; no usa IA generativa para descubrir convocatorias."
+    },
+    "Normalizacion": {
+      status: "Operativo determinista",
+      tone: "safe",
+      disabled: false,
+      platformOnly: true,
+      note: "Versiona, extrae PDF, aplica OCR y puertas de evidencia mediante código y hashes, sin modelo externo."
+    },
+    "Orquestador de tenants": {
+      status: "Infraestructura parcial",
+      tone: "review",
+      disabled: false,
+      platformOnly: true,
+      note: "Autenticación, permisos y RLS existen; todavía no planifica cadenas de agentes ni consume la ingesta privada."
+    },
+    "Politicas de acceso": {
+      status: "Controles parciales",
+      tone: "review",
+      disabled: false,
+      platformOnly: true,
+      note: "Las APIs y RLS aíslan tenants; no existe un agente autónomo de gobierno ni un índice privado operativo."
+    },
+    "Busqueda de convocatorias": {
+      status: "Operativo alojado",
+      tone: "safe",
+      disabled: false,
+      platformOnly: true,
+      note: "Radar determinista alojado: Vercel encola y GitHub Actions consume BDNS y 15 financiadores. No usa un modelo generativo."
     },
     "Investigador de entidad": {
-      status: "Operativo plataforma",
-      tone: "safe",
-      disabled: false,
+      status: "Diseñado, sin worker",
+      tone: "warning",
+      disabled: true,
       platformOnly: true,
-      note: "Servicio de superadmin para crear tenant minimo desde web publica consentida. Propone logo y hechos; no aprueba contexto por si solo."
+      note: "La interfaz y el contrato de consentimiento existen, pero no hay rastreador alojado que investigue la web de la entidad."
     },
     "Asistente de encaje": {
       status: "Operativo en prototipo",
@@ -27,16 +55,16 @@
       note: "Hay reglas visibles, pero no bloqueo automatico en servidor."
     },
     "Revision documental": {
-      status: "En desarrollo",
-      tone: "warning",
-      disabled: true,
-      note: "Checklist y evidencias son demo. Falta extraccion real de bases/PDF y trazas."
+      status: "Parcial con revision",
+      tone: "review",
+      disabled: false,
+      note: "Extrae bases publicas y restricciones con reglas; el checklist semantico de agente y la lectura privada siguen pendientes."
     },
     "Borrador de memoria": {
-      status: "En desarrollo",
-      tone: "warning",
-      disabled: true,
-      note: "Puede exportar borrador Word demo, pero no redacta aun desde informacion validada real."
+      status: "Cola alojada; IA pendiente",
+      tone: "review",
+      disabled: false,
+      note: "API y worker alojado preparan evidencia publica. Sin clave OpenAI quedan en espera y no simulan una redaccion."
     },
     "Avisos y recordatorios": {
       status: "En desarrollo",
@@ -111,7 +139,7 @@
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
         <strong>Estado real del prototipo</strong>
-        <span>Busqueda de convocatorias e Investigador de entidad son servicios troncales de superadmin. Funcionan como capacidades programadas o bajo demanda; sus salidas requieren evidencia y revision humana antes de afectar al tenant.</span>
+        <span>La busqueda y el redactor ya tienen consumidores alojados. El investigador de entidad, el RAG privado y los canales externos aun no tienen consumidor productivo.</span>
       </div>`);
   }
 

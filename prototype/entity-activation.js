@@ -1,10 +1,10 @@
 (function () {
   const agents = [
-    { name: "Busqueda de convocatorias", role: "Plataforma", contract: "Contratado", state: "Solo plataforma", tone: "review", detail: "Lectura de fuentes publicas y novedades diarias. En demo usa una copia de trabajo; falta ejecucion real programada." },
+    { name: "Busqueda de convocatorias", role: "Plataforma", contract: "Contratado", state: "Operativo alojado", tone: "safe", detail: "Vercel encola y GitHub Actions consume diariamente BDNS y 15 financiadores oficiales sin depender del PC." },
     { name: "Asistente de encaje", role: "Entidad", contract: "Contratado", state: "Operativo prototipo", tone: "safe", detail: "Conversacion local con oportunidades filtradas para Novaterra." },
     { name: "Politicas de datos", role: "Transversal", contract: "Incluido", state: "Normas", tone: "review", detail: "Politicas visibles en footer; falta bloqueo automatico en servidor." },
-    { name: "Revision documental", role: "Entidad", contract: "Contratado", state: "En desarrollo", tone: "warning", detail: "Debe leer bases/PDF y preparar listas de comprobacion con evidencias." },
-    { name: "Borrador de memoria", role: "Entidad", contract: "Contratado", state: "En desarrollo", tone: "warning", detail: "Hoy exporta borrador demo; falta redaccion con informacion validada real." },
+    { name: "Revision documental", role: "Entidad", contract: "Contratado", state: "Parcial", tone: "review", detail: "Extrae bases y limites publicos con reglas; la lectura semantica privada aun no esta conectada." },
+    { name: "Borrador de memoria", role: "Entidad", contract: "Contratado", state: "IA pendiente", tone: "review", detail: "Cola y worker alojado operativos; sin clave OpenAI no redacta ni envia contenido." },
     { name: "Avisos y recordatorios", role: "Entidad", contract: "Contratado", state: "En desarrollo", tone: "warning", detail: "Pendiente de conectar email, Teams o WhatsApp." }
   ];
   const badge = (text, tone) => `<span class="badge ${tone}">${text}</span>`;
