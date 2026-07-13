@@ -4,6 +4,7 @@ import {
   parseRobots,
   robotsAllows
 } from "../workers/entity-research-contract.mjs";
+import fs from "node:fs";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -49,6 +50,13 @@ assert(result.reviewRequired, "Las sugerencias deben requerir revisión");
 assert(result.suggestions.every((item) => item.status === "pending" && item.sourceRef && item.sourceSha256), "Falta evidencia trazable");
 assert(result.suggestions.some((item) => item.fieldKey === "theme" && item.value === "empleo e inserción"), "Falta tema de empleo");
 assert(result.suggestions.some((item) => item.fieldKey === "territory"), "Falta sugerencia territorial");
+
+const worker = fs.readFileSync("scripts/workers/run-entity-research.mjs", "utf8");
+assert(worker.includes('.eq("agent_key", "entity_research")'), "El worker no aísla su cola");
+assert(worker.includes('consent_type", "public_web_analysis"'), "El worker no comprueba consentimiento");
+assert(worker.includes('data_class: "public"'), "El worker no clasifica snapshots como públicos");
+assert(worker.includes('status: "review_required"'), "El worker no detiene la salida para revisión");
+assert(worker.includes("entity_research.generated_for_review"), "Falta auditoría de la investigación");
 
 console.log(JSON.stringify({
   ok: true,
