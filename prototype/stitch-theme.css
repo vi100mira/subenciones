@@ -1437,7 +1437,7 @@ body.sidebar-collapsed .sidebar-note {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  min-width: 140px;
+  min-width: 38px;
 }
 
 .candidate-state .ghost-action {

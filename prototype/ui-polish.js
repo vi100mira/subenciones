@@ -9,7 +9,7 @@
     "Bases/convocatoria": "scale",
     "Ver texto original usado": "file-text",
     "Texto fuente privada usado": "file-text",
-    "API oficial": "external-link"
+    "Fuente oficial": "external-link"
   };
 
   function applyWorkspaceActionIcons() {
@@ -104,8 +104,7 @@
   }
 
   function radarOpportunities() {
-    const rows = publicRows();
-    return rows.length ? [...rows, ...privateActiveRows()] : window.MOCK.opportunities;
+    return window.OpportunityScope?.rows() || [];
   }
 
   function scopeRows() {
@@ -341,10 +340,10 @@
       const docs = documentState(item.id);
       const label = docs?.projectState === "active" ? "Proyecto" : docs ? "Docs listas" : "Docs pendientes";
       const tone = docs?.projectState === "active" ? "safe" : "warning";
-      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="ghost-action" data-candidate-detail="${item.id}" type="button">Ver detalle</button></div>`;
+      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="icon-action" data-candidate-detail="${item.id}" type="button" title="Ver candidatura" aria-label="Ver candidatura"><i data-lucide="folder-open"></i><span class="sr-only">Ver candidatura</span></button></div>`;
     }
-    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="ghost-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button">Preparar</button></div>`;
-    return `<div class="candidate-state"><button class="ghost-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button">Preseleccionar</button></div>`;
+    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="icon-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button" title="Preparar candidatura" aria-label="Preparar candidatura"><i data-lucide="folder-plus"></i><span class="sr-only">Preparar candidatura</span></button></div>`;
+    return `<div class="candidate-state"><button class="icon-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button" title="Preseleccionar" aria-label="Preseleccionar"><i data-lucide="bookmark-plus"></i><span class="sr-only">Preseleccionar</span></button></div>`;
   }
 
   function renderFilterHeaders(optionRows) {
@@ -368,7 +367,7 @@
     const isPublicOfficial = (item.sourceScope || "").includes("Publica oficial") || item.source === "BDNS/SNPSAP";
     const basesLabel = isPublicOfficial ? "Bases reguladoras" : "Bases/convocatoria privada";
     const textLabel = item.sourceTextLabel || (isPublicOfficial ? "Texto original usado" : "Texto fuente privada usado");
-    const officialLabel = isPublicOfficial ? "API oficial BDNS" : "Fuente externa";
+    const officialLabel = isPublicOfficial ? "Ficha oficial de la convocatoria" : "Fuente de la convocatoria";
     return `
       <div class="opportunity-toolbar grid-actions">
         ${candidateCell(item)}
@@ -387,14 +386,12 @@
   function renderGridStatus(totalRows, visibleRows) {
     const holder = document.querySelector("#opportunity-pagination");
     if (!holder) return;
-    const publicLoaded = window.RADAR_PLATFORM_OPPORTUNITIES?.length || window.RADAR?.count || 0;
-    const publicPotential = window.RADAR?.totalElements || publicLoaded;
     holder.innerHTML = `
       <span><strong>${visibleRows}</strong> de ${totalRows} resultados visibles</span>
       <div class="pager-buttons">
         ${hasColumnFilters() ? `<button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>` : ""}
       </div>
-      <small>BDNS público cargado: ${publicLoaded}/${publicPotential}. Desplázate dentro de la tabla para cargar más resultados; la cabecera permanece visible.</small>`;
+      <small>Los ${totalRows} resultados coinciden con la selección y los filtros actuales. Desplázate dentro de la tabla para ver más; la cabecera permanece visible.</small>`;
   }
 
   function renderOpportunityGrid() {
@@ -462,20 +459,18 @@
     const isPlatform = document.body.dataset.role === "superadmin";
     panel.classList.toggle("is-platform-corpus", isPlatform);
     if (isPlatform) {
-      const privateOpen = privateOpenRows().length;
-      const publicTotal = publicRows().length;
-      const platformTotal = publicTotal + privateOpen;
-      const publicPotential = Number(window.RADAR?.totalElements || 0);
       const coverage = window.PLATFORM_COVERAGE;
+      const privateSources = Math.max(0, Number(coverage?.privateOpen?.sourcesReviewed || 1) - 1);
+      const privateOpen = Number(coverage?.privateOpen?.activeOrOpen || 0);
       panel.innerHTML = `
         <div class="fit-copy">
-          <strong>Estado funcional de agentes</strong>
-          <span>BDNS esta refrescado hoy. Privado abierto se mide por fuentes monitorizadas; no hay contador universal privado sin ampliar catalogo y scraping.</span>
+          <strong>Oportunidades disponibles hoy</strong>
+          <span>La Base Nacional de Subvenciones y los financiadores privados se revisan de forma periódica. Solo se muestran oportunidades con vigencia suficiente.</span>
         </div>
         <div class="fit-legend">
-          <span class="is-current"><span class="dot active"></span><b>${publicTotal}/${publicPotential}</b> Publicas BDNS</span>
-          <span><span class="dot discarded"></span><b>${coverage?.privateOpen?.sourcesReviewed || "?"}</b><span>Fuentes privadas<small>${coverage?.privateOpen?.activeOrOpen || "?"} activas/open</small></span></span>
-          <span><span class="dot archived"></span><b>${platformTotal}</b> Filas cargadas</span>
+          <span class="is-current"><span class="dot active"></span><b>${counts.active}</b> En seguimiento</span>
+          <span><span class="dot discarded"></span><b>${privateSources}</b> Financiadores privados</span>
+          <span><span class="dot archived"></span><b>${privateOpen}</b> Convocatorias privadas abiertas</span>
         </div>`;
       return;
     }
@@ -530,7 +525,7 @@
       heading.insertAdjacentHTML("afterend", `
         <div class="plain-note entity-fit-note" id="entity-fit-note">
           <strong>Radar de entidad</strong>
-          <span>Corpus plataforma: ${radarCounts().active} oportunidades vivas o revisables. ${fit.entityDiscardedCount} descartadas por territorio y ${fit.entityArchivedClosedCount || 0} archivadas por plazo cerrado.</span>
+          <span>${radarCounts().active} oportunidades en seguimiento. ${fit.entityDiscardedCount} no encajan por territorio y ${fit.entityArchivedClosedCount || 0} están archivadas por plazo cerrado.</span>
         </div>`);
     }
     const filters = [...heading.querySelectorAll(".segmented")].find((group) => group.querySelector("[data-filter]"));

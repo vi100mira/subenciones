@@ -20,8 +20,8 @@
   const platformMetrics = [
     ["Ingresos MRR", "0 EUR", "Piloto interno; sin pasarela activa"],
     ["Gasto IA real hoy", "0,00 EUR", "OpenAI sin clave; ninguna llamada"],
-    ["Workers alojados", "2", "Radares diario y redactor cada 5 minutos"],
-    ["Tenants piloto", "1", "Novaterra; RAG privado no operativo"]
+    ["Automatizaciones activas", "2", "Búsqueda diaria y revisión del redactor cada 5 minutos"],
+    ["Entidades piloto", "1", "Novaterra; análisis privado aún no disponible"]
   ];
   const platformRows = [
     ["Novaterra", "Piloto activo", "0 EUR", "0,00 EUR", "Encaje local; IA pendiente"]
@@ -118,7 +118,7 @@
     document.querySelector("#plan-features").innerHTML = `
       <article class="plan-feature is-enabled"><strong>Balance operativo</strong><span>Ingresos menos costes IA, blob, ejecuciones y soporte. Pendiente conectar facturacion real.</span></article>
       <article class="plan-feature is-enabled"><strong>Consumo IA</strong><span>Control diario por agente, tenant y motivo de ejecucion. Maximo una IA diaria salvo accion manual auditada.</span></article>
-      <article class="plan-feature is-enabled"><strong>Procesos alojados</strong><span>Busqueda de convocatorias y redactor en cola. Investigador de entidad, RAG privado y canales externos no operativos.</span></article>
+      <article class="plan-feature is-enabled"><strong>Servicios automáticos</strong><span>La búsqueda está activa y el redactor está preparado. La investigación web, los documentos privados y los avisos externos siguen en preparación.</span></article>
       <article class="plan-feature is-enabled"><strong>Riesgo economico</strong><span>Bloquea ejecuciones si superan presupuesto o si no hay cambio detectable previo.</span></article>
     `;
     document.querySelector("#plan .plain-note").innerHTML = "<strong>Seguimiento superadmin</strong><span>Esta pantalla no vende planes. Sirve para controlar sostenibilidad: ingresos, costes, consumo IA, tenants, agentes activos y limites de ejecucion.</span>";

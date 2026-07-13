@@ -147,17 +147,17 @@ window.MOCK = {
   alerts: [
     { type: "deadline", title: "IRPF estatal cierra esta semana", detail: "Faltan 2 documentos administrativos por confirmar." },
     { type: "risk", title: "Dato interno pendiente de aprobar", detail: "Un fragmento de memoria incluye datos personales indirectos." },
-    { type: "source", title: "BDNS refrescada", detail: "12 nuevas convocatorias normalizadas en el radar." }
+    { type: "source", title: "Fuentes públicas revisadas", detail: "12 nuevas convocatorias incorporadas a la revisión." }
   ],
   sources: [
-    { name: "BDNS", kind: "Publica oficial", scope: "Plataforma", status: "Operativa parcial", health: "healthy", priority: 95, control: "30/572 cargadas" },
-    { name: "GVA", kind: "Portal autonomico", scope: "Plataforma", status: "Fuente validada", health: "degraded", priority: 82, control: "Conector pendiente" },
-    { name: "LABORA", kind: "Empleo", scope: "Plataforma", status: "Monitor activo", health: "healthy", priority: 88, control: "Revision si cambia" },
-    { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Conector pendiente", health: "degraded", priority: 74, control: "Regla de extraccion" },
-    { name: "Fundaciones y obra social", kind: "Privada abierta", scope: "Plataforma curada", status: "Catalogo semilla", health: "unknown", priority: 84, control: "Revision editorial" },
+    { name: "Base Nacional de Subvenciones", kind: "Publica oficial", scope: "Plataforma", status: "Revisión automática activa", health: "healthy", priority: 95, control: "Seguimiento diario" },
+    { name: "GVA", kind: "Portal autonomico", scope: "Plataforma", status: "Disponible para consulta", health: "degraded", priority: 82, control: "Automatización pendiente" },
+    { name: "LABORA", kind: "Empleo", scope: "Plataforma", status: "Seguimiento activo", health: "healthy", priority: 88, control: "Revisión si cambia" },
+    { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Pendiente de automatizar", health: "degraded", priority: 74, control: "Lectura pendiente" },
+    { name: "Fundaciones y obra social", kind: "Privada abierta", scope: "Plataforma curada", status: "15 financiadores en seguimiento", health: "unknown", priority: 84, control: "Revisión humana" },
     { name: "Alertas federacion CV", kind: "Privada tenant", scope: "Tenant privado", status: "No conectada", health: "unknown", priority: 78, control: "Requiere aprobacion" },
-    { name: "Drive entidad", kind: "Privativa", scope: "Tenant privado", status: "No conectado", health: "unknown", priority: 90, control: "Requiere aprobacion" },
-    { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "Bloqueada", health: "blocked", priority: 0, control: "No indexar" }
+    { name: "Documentos de la entidad", kind: "Privativa", scope: "Tenant privado", status: "Pendiente de autorización", health: "unknown", priority: 90, control: "Requiere aprobación" },
+    { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "No se utiliza", health: "blocked", priority: 0, control: "Uso no permitido" }
   ],
   facts: [
     { label: "Actuacion CV", class: "Sugerido", text: "Dato propuesto para que la entidad lo confirme antes de usarlo en el analisis de encaje." },
@@ -179,9 +179,9 @@ window.MOCK = {
     { name: "Busqueda de convocatorias", icon: "radar", purpose: "Localiza convocatorias y detecta novedades.", access: "Fuentes publicas", status: "Listo" },
     { name: "Investigador de entidad", icon: "globe-2", purpose: "Analiza web publica y propone perfil, logo y temas.", access: "Web publica consentida", status: "Listo" },
     { name: "Asistente de encaje", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + informacion validada", status: "Listo" },
-    { name: "Politicas de datos", icon: "shield-check", purpose: "Clasifica datos y bloquea usos inseguros.", access: "Metadatos y textos autorizados", status: "Revision" },
-    { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y checklist.", access: "Bases y PDFs", status: "Listo" },
-    { name: "Borrador de memoria", icon: "pen-tool", purpose: "Prepara esquemas y borradores revisables.", access: "Evidencia + informacion validada", status: "Controlado" },
+    { name: "Politicas de datos", icon: "shield-check", purpose: "Protege la información y evita usos no autorizados.", access: "Información autorizada", status: "Revision" },
+    { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y listas de comprobación.", access: "Bases y documentos", status: "Listo" },
+    { name: "Borrador de memoria", icon: "pen-tool", purpose: "Prepara esquemas y borradores para revisar.", access: "Bases e información validada", status: "Controlado" },
     { name: "Avisos y recordatorios", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
   ],
   runs: [
@@ -193,18 +193,18 @@ window.MOCK = {
   platformAlerts: [
     { title: "Revision de plazo pendiente", detail: "228 convocatorias publicas requieren interpretar el anuncio o las bases." },
     { title: "Fuente territorial con avisos", detail: "DOGV/BOP necesita revision del conector; no afecta a datos privados tenant." },
-    { title: "BDNS sincronizada", detail: "Corpus publico disponible para todos los tenants sin mezclar contexto interno." }
+    { title: "Fuentes públicas actualizadas", detail: "Las oportunidades públicas están disponibles para todas las entidades sin mezclar información interna." }
   ],
   platformRuns: [
-    { agent: "Busqueda de convocatorias", detail: "Refresco global BDNS/SNPSAP; solo fuentes publicas" },
-    { agent: "Normalizacion de fuentes", detail: "Revision de evidencias, versiones y plazos de plataforma" },
-    { agent: "Orquestador de tenants", detail: "1 tenant operativo; solo metadatos de estado y coste" }
+    { agent: "Busqueda de convocatorias", detail: "Revisión general de fuentes públicas" },
+    { agent: "Revision de fuentes", detail: "Comprobación de procedencia, versiones y plazos" },
+    { agent: "Coordinacion de entidades", detail: "1 entidad activa; solo estado, permisos y coste" }
   ],
   platformAgents: [
-    { name: "Busqueda global", icon: "radar", purpose: "Mantiene el corpus publico comun y sus evidencias.", access: "Fuentes platform-public", status: "Listo" },
-    { name: "Normalizacion", icon: "file-search", purpose: "Versiona bases, plazos y procedencia antes de publicar cambios.", access: "Documentos publicos", status: "Revision" },
-    { name: "Orquestador de tenants", icon: "network", purpose: "Coordina altas, permisos, salud y costes sin abrir contenido privado.", access: "Metadatos de gobierno tenant", status: "Controlado" },
-    { name: "Politicas de acceso", icon: "shield-check", purpose: "Impide recuperacion cruzada y exige seleccion explicita de tenant.", access: "Politicas y auditoria global", status: "Listo" }
+    { name: "Busqueda global", icon: "radar", purpose: "Mantiene actualizadas las oportunidades públicas y su procedencia.", access: "Fuentes públicas compartidas", status: "Listo" },
+    { name: "Revision de fuentes", icon: "file-search", purpose: "Comprueba bases, plazos y procedencia antes de publicar cambios.", access: "Documentos públicos", status: "Revision" },
+    { name: "Coordinacion de entidades", icon: "network", purpose: "Coordina altas, permisos y costes sin abrir información privada.", access: "Estado y permisos de cada entidad", status: "Controlado" },
+    { name: "Politicas de acceso", icon: "shield-check", purpose: "Evita que una entidad acceda a información de otra.", access: "Permisos y registro de actividad", status: "Listo" }
   ],
   platformAudit: [
     { event: "Fuente BDNS sincronizada", actor: "Radar publico", time: "12:05", detail: "Operacion global sin datos privados.", info: "Evento de plataforma sobre una fuente publica reutilizable por todos los tenants." },

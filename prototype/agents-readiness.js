@@ -1,70 +1,70 @@
 (function () {
   const readiness = {
     "Busqueda global": {
-      status: "Operativo alojado",
+      status: "Disponible",
       tone: "safe",
       disabled: false,
       platformOnly: true,
-      note: "Consume las campañas BDNS y privadas desde GitHub Actions; no usa IA generativa para descubrir convocatorias."
+      note: "Revisa automáticamente las fuentes públicas y los financiadores privados, aunque el ordenador esté apagado."
     },
-    "Normalizacion": {
-      status: "Operativo determinista",
+    "Revision de fuentes": {
+      status: "Disponible",
       tone: "safe",
       disabled: false,
       platformOnly: true,
-      note: "Versiona, extrae PDF, aplica OCR y puertas de evidencia mediante código y hashes, sin modelo externo."
+      note: "Lee las bases, conserva su versión y comprueba la procedencia antes de mostrar una oportunidad."
     },
-    "Orquestador de tenants": {
-      status: "Infraestructura parcial",
+    "Coordinacion de entidades": {
+      status: "Disponible con límites",
       tone: "review",
       disabled: false,
       platformOnly: true,
-      note: "Autenticación, permisos y RLS existen; todavía no planifica cadenas de agentes ni consume la ingesta privada."
+      note: "Controla accesos y permisos por entidad. El análisis automático de documentos privados aún no está disponible."
     },
     "Politicas de acceso": {
       status: "Controles parciales",
       tone: "review",
       disabled: false,
       platformOnly: true,
-      note: "Las APIs y RLS aíslan tenants; no existe un agente autónomo de gobierno ni un índice privado operativo."
+      note: "Mantiene separada la información de cada entidad y registra las acciones relevantes."
     },
     "Busqueda de convocatorias": {
-      status: "Operativo alojado",
+      status: "Disponible",
       tone: "safe",
       disabled: false,
       platformOnly: true,
-      note: "Radar determinista alojado: Vercel encola y GitHub Actions consume BDNS y 15 financiadores. No usa un modelo generativo."
+      note: "Revisa cada día la Base Nacional de Subvenciones y 15 financiadores privados, aunque el ordenador esté apagado."
     },
     "Investigador de entidad": {
-      status: "Diseñado, sin worker",
+      status: "En preparación",
       tone: "warning",
       disabled: true,
       platformOnly: true,
-      note: "La interfaz y el contrato de consentimiento existen, pero no hay rastreador alojado que investigue la web de la entidad."
+      note: "La autorización ya está prevista, pero todavía no analiza automáticamente la web de la entidad."
     },
     "Asistente de encaje": {
-      status: "Operativo en prototipo",
+      status: "Disponible en esta versión",
       tone: "safe",
       disabled: false,
-      note: "Disponible como radar conversacional local sobre oportunidades filtradas. Sin IA externa."
+      note: "Ayuda a comparar oportunidades y explicar encaje, riesgos e información pendiente."
     },
     "Politicas de datos": {
       status: "En desarrollo",
       tone: "warning",
       disabled: true,
-      note: "Hay reglas visibles, pero no bloqueo automatico en servidor."
+      note: "Hay normas visibles de protección, pero algunos bloqueos automáticos siguen en preparación."
     },
     "Revision documental": {
       status: "Parcial con revision",
       tone: "review",
       disabled: false,
-      note: "Extrae bases publicas y restricciones con reglas; el checklist semantico de agente y la lectura privada siguen pendientes."
+      note: "Lee bases públicas y sus límites. La lista automática de requisitos y la documentación privada requieren revisión."
     },
     "Borrador de memoria": {
-      status: "Cola alojada; IA pendiente",
+      status: "Preparado, pendiente de activación",
       tone: "review",
       disabled: false,
-      note: "API y worker alojado preparan evidencia publica. Sin clave OpenAI quedan en espera y no simulan una redaccion."
+      note: "El servicio está preparado, pero todavía no genera textos porque la conexión con IA no está activada."
     },
     "Avisos y recordatorios": {
       status: "En desarrollo",
@@ -128,8 +128,8 @@
     const panel = runs?.closest(".panel");
     if (!runs || !panel || panel.dataset.readinessApplied) return;
     panel.dataset.readinessApplied = "true";
-    panel.querySelector("h2").textContent = "Trazas demo";
-    runs.insertAdjacentHTML("beforebegin", `<p class="agent-panel-note">Eventos simulados para mostrar auditoria futura. No son ejecuciones reales de servicios en servidor.</p>`);
+    panel.querySelector("h2").textContent = "Actividad de ejemplo";
+    runs.insertAdjacentHTML("beforebegin", `<p class="agent-panel-note">Ejemplos de cómo se mostrará la actividad. No son acciones realizadas hoy.</p>`);
     runs.querySelectorAll(".stack-item").forEach((item) => item.classList.add("is-demo-run"));
   }
 
@@ -138,8 +138,8 @@
     if (!screen || document.querySelector("#agents-readiness-note")) return;
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
-        <strong>Estado real del prototipo</strong>
-        <span>La busqueda y el redactor ya tienen consumidores alojados. El investigador de entidad, el RAG privado y los canales externos aun no tienen consumidor productivo.</span>
+        <strong>Qué está disponible hoy</strong>
+        <span>La búsqueda funciona automáticamente y el redactor está preparado. La investigación web de la entidad, el análisis de documentos privados y los avisos externos siguen en preparación.</span>
       </div>`);
   }
 

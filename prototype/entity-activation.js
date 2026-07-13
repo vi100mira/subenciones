@@ -1,11 +1,11 @@
 (function () {
   const agents = [
-    { name: "Busqueda de convocatorias", role: "Plataforma", contract: "Contratado", state: "Operativo alojado", tone: "safe", detail: "Vercel encola y GitHub Actions consume diariamente BDNS y 15 financiadores oficiales sin depender del PC." },
-    { name: "Asistente de encaje", role: "Entidad", contract: "Contratado", state: "Operativo prototipo", tone: "safe", detail: "Conversacion local con oportunidades filtradas para Novaterra." },
-    { name: "Politicas de datos", role: "Transversal", contract: "Incluido", state: "Normas", tone: "review", detail: "Politicas visibles en footer; falta bloqueo automatico en servidor." },
-    { name: "Revision documental", role: "Entidad", contract: "Contratado", state: "Parcial", tone: "review", detail: "Extrae bases y limites publicos con reglas; la lectura semantica privada aun no esta conectada." },
-    { name: "Borrador de memoria", role: "Entidad", contract: "Contratado", state: "IA pendiente", tone: "review", detail: "Cola y worker alojado operativos; sin clave OpenAI no redacta ni envia contenido." },
-    { name: "Avisos y recordatorios", role: "Entidad", contract: "Contratado", state: "En desarrollo", tone: "warning", detail: "Pendiente de conectar email, Teams o WhatsApp." }
+    { name: "Busqueda de convocatorias", role: "Servicio general", contract: "Incluido", state: "Disponible", tone: "safe", detail: "Revisa cada día la Base Nacional de Subvenciones y 15 financiadores privados, aunque el ordenador esté apagado." },
+    { name: "Asistente de encaje", role: "Entidad", contract: "Incluido", state: "Disponible", tone: "safe", detail: "Compara oportunidades y explica su posible encaje para Novaterra." },
+    { name: "Politicas de datos", role: "Protección", contract: "Incluido", state: "Disponible con límites", tone: "review", detail: "Mantiene separada la información de la entidad; algunos bloqueos automáticos siguen en preparación." },
+    { name: "Revision documental", role: "Entidad", contract: "Incluido", state: "Disponible con revisión", tone: "review", detail: "Lee las bases públicas. La documentación privada todavía no se analiza automáticamente." },
+    { name: "Borrador de memoria", role: "Entidad", contract: "Incluido", state: "Pendiente de activación", tone: "review", detail: "Está preparado, pero aún no genera textos porque la conexión con IA no está activada." },
+    { name: "Avisos y recordatorios", role: "Entidad", contract: "Incluido", state: "En preparación", tone: "warning", detail: "Los avisos por correo, Teams o WhatsApp todavía no están conectados." }
   ];
   const badge = (text, tone) => `<span class="badge ${tone}">${text}</span>`;
   const agentStatusDot = (agent) => `
@@ -14,9 +14,9 @@
     </span>`;
   const agentStatusLegend = () => `
     <div class="agent-status-legend" aria-label="Leyenda de estado de asistentes">
-      <span><i class="legend-dot review"></i>Solo plataforma o norma</span>
-      <span><i class="legend-dot safe"></i>Operativo en prototipo</span>
-      <span><i class="legend-dot warning"></i>En desarrollo</span>
+      <span><i class="legend-dot safe"></i>Disponible</span>
+      <span><i class="legend-dot review"></i>Disponible con revisión</span>
+      <span><i class="legend-dot warning"></i>En preparación</span>
     </div>`;
   function renderActivation() {
     const screen = document.querySelector("#entity");
@@ -30,7 +30,7 @@
         </div>
         <div class="entity-contract-grid">
           <div><span>Alta institucional</span><strong>Verificada</strong><small>Email admin validado y condiciones aceptadas.</small></div>
-          <div><span>Rol actual</span><strong>Docente/gestor</strong><small>Puede usar radar, candidaturas y contexto aprobado.</small></div>
+          <div><span>Rol actual</span><strong>Gestor de subvenciones</strong><small>Puede usar oportunidades, candidaturas e información aprobada.</small></div>
           <div><span>Web publica</span><strong>Autorizada</strong><small>Solo lectura de informacion abierta de la entidad.</small></div>
           <div><span>Repositorio privado</span><strong>Pendiente</strong><small>Drive no conectado hasta consentimiento expreso.</small></div>
         </div>

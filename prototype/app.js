@@ -1,7 +1,6 @@
-const state = { selectedOpportunityId: (window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
-const privateOpenRows = () => [...(window.MOCK.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant") && item.actionable === true);
+const state = { selectedOpportunityId: (window.OpportunityScope?.rows() || window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
 function opportunities() {
-  const baseRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [], rows = [...new Map([...baseRows, ...(window.MUNICIPAL_RADAR?.opportunities || [])].map((item) => [item.id, item])).values()], today = new Date().toISOString().slice(0, 10), isActionable = (item) => item.actionable === true || (item.actionable !== false && item.deadlineStatus !== "closed" && (item.deadlineEnd ? item.deadlineEnd >= today : item.deadlineStatus === "open" && String(item.deadlineEvidenceDate || item.deadlineStart || "").startsWith(today.slice(0, 4)))); return rows.length ? [...rows, ...privateOpenRows()].filter(isActionable) : window.MOCK.opportunities.filter(isActionable);
+  return window.OpportunityScope?.rows() || [];
 }
 const titles = {
   dashboard: "Panel de oportunidades",
@@ -25,22 +24,19 @@ function scoreLabel(score) {
 }
 function renderDashboard() {
   const isPlatform = document.body.dataset.role === "superadmin";
-  const radarCount = opportunities().length;
-  const openCount = opportunities().filter((item) => item.deadlineStatus === "open").length;
-  const metrics = document.querySelectorAll(".metric");
-  metrics[0].querySelector("strong").textContent = radarCount;
-  metrics[0].querySelector("small").textContent = `${openCount} abiertas segun radar`;
-  if (window.RADAR?.quality) {
-    metrics[1].querySelector("span").textContent = "Plazos inciertos";
-    metrics[1].querySelector("strong").textContent = window.RADAR.quality.uncertainDeadline;
-    metrics[1].querySelector("small").textContent = "Plazos inciertos a revisar";
-    metrics[2].querySelector("span").textContent = "Errores BDNS";
-    metrics[2].querySelector("strong").textContent = window.RADAR.quality.detailErrorCount;
-    metrics[2].querySelector("small").textContent = "Errores de detalle BDNS";
-    metrics[3].querySelector("span").textContent = "Corpus publico";
-    metrics[3].querySelector("strong").textContent = window.RADAR.totalElements || radarCount;
-    metrics[3].querySelector("small").textContent = "Resultados potenciales BDNS";
-  }
+  const summary = window.OpportunityScope?.summary() || { total: 0, open: 0, highPriority: 0, uncertain: 0 };
+  const metrics = document.querySelectorAll("#dashboard .metric");
+  const values = [
+    ["Oportunidades en seguimiento", summary.total, "Coincide con la vista Oportunidades"],
+    ["Con plazo abierto", summary.open, "Solicitud abierta confirmada"],
+    ["Prioridad alta", summary.highPriority, "Segun el perfil de la entidad"],
+    ["Plazo por confirmar", summary.uncertain, "Requiere revision antes de decidir"]
+  ];
+  metrics.forEach((metric, index) => {
+    metric.querySelector("span").textContent = values[index][0];
+    metric.querySelector("strong").textContent = values[index][1];
+    metric.querySelector("small").textContent = values[index][2];
+  });
   document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
   document.querySelector("#agent-runs-small").innerHTML = (isPlatform ? window.MOCK.platformRuns : window.MOCK.runs).slice(0, 3).map(renderStackItem).join("");
   document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
@@ -79,7 +75,7 @@ function renderOpportunities() {
           <button class="ghost-action" data-opportunity="${item.id}">Ver analisis</button>
           ${item.basesUrl ? `<a class="ghost-action" href="${item.basesUrl}" target="_blank" rel="noreferrer">Bases</a>` : ""}
           ${item.extractedText ? `<button class="text-action" data-text-opportunity="${item.id}">Ver texto original usado</button>` : ""}
-          ${item.officialUrl ? `<a class="text-action" href="${item.officialUrl}" target="_blank" rel="noreferrer">API oficial</a>` : ""}
+          ${item.officialUrl ? `<a class="text-action" href="${item.officialUrl}" target="_blank" rel="noreferrer">Fuente oficial</a>` : ""}
         </div>
       </div>
     `;
@@ -100,7 +96,7 @@ function renderOpportunities() {
   const item = opportunities().find((opportunity) => opportunity.id === state.selectedOpportunityId) || opportunities()[0];
   const documents = [...(item.documents || []), ...(item.announcements || [])].slice(0, 4);
   const sourceLinks = [
-    item.officialUrl ? `<a href="${item.officialUrl}" target="_blank" rel="noreferrer">Abrir API oficial BDNS (vista tecnica)</a>` : "",
+    item.officialUrl ? `<a href="${item.officialUrl}" target="_blank" rel="noreferrer">Abrir ficha oficial de la convocatoria</a>` : "",
     item.basesUrl ? `<a href="${item.basesUrl}" target="_blank" rel="noreferrer">Abrir bases reguladoras</a>` : ""
   ].filter(Boolean).join("");
   const documentSection = documents.length ? `
@@ -297,7 +293,7 @@ function showScreen(screenId) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.screen === screenId);
   });
-  const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Corpus RAG plataforma", agents: "Agentes de plataforma", audit: "Auditoria global" };
+  const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Oportunidades de la plataforma", agents: "Asistentes de la plataforma", audit: "Auditoria global" };
   document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && platformTitles[screenId] ? platformTitles[screenId] : titles[screenId];
   document.querySelector(".top-actions .primary-action").innerHTML = (screenId === "platform" || screenId === "operations" || document.body.dataset.role === "superadmin") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
