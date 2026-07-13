@@ -35,11 +35,13 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "@vercel/blob": "^2.3.3",
+    "pdfkit": "^0.19.1",
     "ws": "^8.21.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@types/node": "^20.11.24",
+    "@types/pdfkit": "^0.17.6",
     "@types/ws": "^8.18.1",
     "@vercel/node": "^5.5.28",
     "typescript": "^5.2.2"
