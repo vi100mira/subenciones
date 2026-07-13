@@ -19,6 +19,7 @@ const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
 const profileReviewApi = fs.readFileSync("api/tenant-profile-review.ts", "utf8");
 const lifecycleApi = fs.readFileSync("api/admin-tenant-lifecycle.ts", "utf8");
 const authApi = fs.readFileSync("api/auth-session.ts", "utf8");
+const recoveryVerifier = fs.readFileSync("scripts/admin/verify-tenant-recovery.mjs", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -92,6 +93,10 @@ assert(lifecycleApi.includes('hard_delete: false'), "El archivo se confunde con 
 assert(lifecycleApi.includes("reconcile_tenant_agent_suite"), "Restaurar no reconcilia agentes");
 assert(authApi.includes("auth.login_blocked"), "Un tenant archivado todavía puede iniciar sesión");
 assert(!authApi.includes("Novaterra tiene todos los agentes"), "Login conserva habilitación específica del piloto");
+assert(recoveryVerifier.includes("recovery-fixture-"), "La prueba de recuperación no limita el tenant desechable");
+assert(!recoveryVerifier.toLowerCase().includes('slug: "novaterra'), "La prueba de recuperación apunta al piloto");
+assert(recoveryVerifier.includes("recreateSameSlug"), "La prueba no demuestra reconstrucción del mismo slug");
+assert(recoveryVerifier.includes("consentsRegrantedAutomatically: false"), "La prueba copia consentimientos tras borrar");
 
 console.log(JSON.stringify({
   ok: true,

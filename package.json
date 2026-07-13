@@ -19,6 +19,7 @@
     "check:stability": "npm run typecheck && npm run check:line-budgets && npm run check:hosted-workers && npm run check:runtime-truth && npm run check:tenant-agents && npm run check:entity-research && npm run check:tenant-match && npm run check:document-review && npm run check:evidence",
     "auth:seed-users": "node scripts/admin/upsert-auth-users.mjs",
     "auth:verify-users": "node scripts/admin/verify-auth-users.mjs",
+    "tenant:verify-recovery": "node scripts/admin/verify-tenant-recovery.mjs",
     "radar:bdns": "node scripts/radar/fetch-bdns-latest.mjs",
     "radar:bdns:municipal": "node scripts/radar/fetch-bdns-latest.mjs --campaign=municipal-social --pages=2 --page-size=50 --max-details=300 --output-name=bdns-municipal-social.json --prototype-out=prototype/municipal-radar-data.js",
     "radar:bdns:municipal:bases": "node scripts/radar/prepare-bdns-bases-scan.mjs && node scripts/platform/deep-scan-open-funders.mjs --catalog=.tmp/bdns-bases-scan-catalog.json --write=data/public-radar/bdns-municipal-bases-scan.json && node scripts/radar/apply-bdns-bases-scan.mjs",
