@@ -9,6 +9,7 @@ Despertar el worker del redactor cuando una persona solicita un borrador y conse
 - `api/draft-agent-runs.ts`: solicita el workflow tras encolar y registra `requested` o `fallback_cron` en auditoría.
 - `.github/workflows/workers-alojados.yml`: reduce el sondeo de cinco a quince minutos.
 - `.env.example`: documenta la credencial, repositorio y rama del despacho.
+- `scripts/admin/configure-draft-worker-dispatch.ps1`: instala el token en Vercel mediante entrada oculta, sin escribirlo en disco.
 - `scripts/guardrails/check-hosted-workers.mjs`: verifica la nueva cadencia.
 - `docs/product/agentic-architecture.md` y `docs/security/credentials-and-logging.md`: documentan flujo y custodia del secreto.
 - `prototype/operations-platform.js`, `prototype/tenant-plan.js` y `docs/architecture/arquitectura-actual-del-sistema.md`: alinean el estado visible y la arquitectura vigente.
