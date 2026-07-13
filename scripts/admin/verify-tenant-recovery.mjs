@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -47,7 +48,7 @@ async function main() {
   const url = process.env.APP_SUPABASE_URL || process.env.SUPABASE_URL;
   const key = process.env.APP_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   assert(url && key, "Faltan SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY");
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const supabase = createClient(url, key, { auth: { persistSession: false }, realtime: { transport: WebSocket } });
   let tenantId = null;
   try {
     const first = await provision(supabase, blueprint);

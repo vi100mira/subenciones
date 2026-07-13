@@ -10,6 +10,7 @@ Demostrar con un tenant desechable que la estructura puede eliminarse y reconstr
 - Con `--apply`, limita el slug a `recovery-fixture-*`.
 - Verifica seis agentes, archivo, restauración, borrado y recreación del mismo slug.
 - Comprueba que los consentimientos no reaparecen automáticamente tras borrar.
+- Declara transporte WebSocket compatible con el Node 20 del proyecto.
 
 ## Verificación
 
