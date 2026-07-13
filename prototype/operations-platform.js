@@ -36,7 +36,7 @@
     const health = [
       { title: "Accesos de cada entidad", detail: "Los accesos y avisos requieren una sesión válida de la entidad.", state: "Disponible", tone: "safe" },
       { title: "Separación de información", detail: "La información privada de una entidad no se muestra a otra.", state: "Protegida", tone: "safe" },
-      { title: "Procesos automáticos", detail: "La búsqueda se revisa cada día y el redactor comprueba tareas pendientes cada cinco minutos.", state: "Activos", tone: "safe" },
+      { title: "Procesos automáticos", detail: "La búsqueda se revisa cada día. El redactor arranca al solicitarlo y recupera tareas pendientes cada quince minutos.", state: "Activos", tone: "safe" },
       { title: "Documentos de candidatura", detail: "La generación está preparada; falta activar el almacenamiento privado antes de usar documentación real.", state: "Pendiente", tone: "warning" },
       { title: "Canales externos", detail: "Sin envio automatico. Email/Teams/WhatsApp quedan bloqueados hasta aprobacion humana y auditoria.", state: "Bloqueado seguro", tone: "warning" }
     ];

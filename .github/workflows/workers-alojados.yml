@@ -3,7 +3,7 @@ name: Workers alojados de radares y redactor
 on:
   schedule:
     - cron: "15 5 * * *"
-    - cron: "*/5 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       proceso:
@@ -61,7 +61,7 @@ jobs:
 
   redactor:
     if: >-
-      (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') ||
+      (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') ||
       (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
