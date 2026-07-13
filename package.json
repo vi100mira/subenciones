@@ -30,6 +30,7 @@
     "worker:municipal-radar": "node scripts/workers/run-municipal-radar.mjs",
     "worker:general-radar": "node scripts/workers/run-municipal-radar.mjs --campaign=general-social",
     "worker:private-funder-radar": "node scripts/workers/run-private-funder-radar.mjs",
+    "worker:draft-agent": "node scripts/workers/run-draft-agent.mjs",
     "deploy": "npx vercel deploy --prod --yes"
   },
   "dependencies": {
