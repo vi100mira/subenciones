@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime", "tenant-recommendations-runtime", "document-review-ui"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
+const files = Object.fromEntries(["runtime-truth", "agents-readiness", "entity-activation", "operations-platform", "tenant-plan", "tenant-agent-runtime", "tenant-recommendations-runtime", "document-review-ui", "tenant-admin-runtime"].map((name) => [name, fs.readFileSync(`prototype/${name}.js`, "utf8")]));
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -24,6 +24,9 @@ assert(files["tenant-agent-runtime"].includes("consent?.status !== \"granted\"")
 assert(!files["tenant-plan"].includes("Todos los agentes habilitados para Novaterra"), "Plan habilita agentes por ser el piloto");
 assert(files["document-review-ui"].includes("/api/document-review-runs"), "La revisión documental sigue siendo solo local");
 assert(files["document-review-ui"].includes("Revisión humana"), "La revisión documental no muestra control humano");
+assert(files["tenant-admin-runtime"].includes("/api/admin-tenant-provision"), "Plataforma no permite exportar o reconstruir tenants");
+assert(files["tenant-admin-runtime"].includes("/api/admin-tenant-lifecycle"), "Plataforma no opera el ciclo de vida tenant");
+assert(files["tenant-admin-runtime"].includes("No contiene consentimientos"), "La exportación no avisa sus límites de privacidad");
 assert(!fs.readFileSync("prototype/index.html", "utf8").includes("entity-fit.js"), "La UI todavía carga reglas específicas del piloto");
 assert(files["operations-platform"].includes("Publicaciones revisadas"), "Operaciones no diferencia publicaciones revisadas y oportunidades");
 assert(files["operations-platform"].includes("Financiadores privados"), "Operaciones no explica el seguimiento privado");
