@@ -1092,8 +1092,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .opportunity-grid-tools {
-  position: sticky;
-  top: 266px;
+  position: static;
   z-index: 6;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1181,7 +1180,9 @@ body.sidebar-collapsed .sidebar-note {
 
 .opportunity-grid {
   overflow: auto;
-  max-height: calc(100vh - 354px);
+  height: max(360px, calc(100dvh - 470px));
+  max-height: 680px;
+  overscroll-behavior: contain;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #ffffff;
@@ -1195,7 +1196,8 @@ body.sidebar-collapsed .sidebar-note {
 .opportunity-grid table {
   width: 100%;
   min-width: 1140px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .opportunity-grid th,
@@ -1304,8 +1306,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 #opportunities .list-panel > .panel-heading {
-  position: sticky;
-  top: 96px;
+  position: static;
   z-index: 7;
   margin: -4px -4px 0;
   padding: 10px 4px;
@@ -1314,8 +1315,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 #entity-fit-note {
-  position: sticky;
-  top: 164px;
+  position: static;
   z-index: 6;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(250px, auto);

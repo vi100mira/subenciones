@@ -1,5 +1,6 @@
 .opportunity-grid .grid-filter-row th {
-  top: 39px;
+  top: 40px;
+  z-index: 6;
   padding-top: 6px;
   padding-bottom: 8px;
   background: #f4fbf8;

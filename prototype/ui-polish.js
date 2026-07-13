@@ -64,15 +64,16 @@
     }).observe(list, { childList: true });
   }
 
-  const gridState = { sort: "score", dir: "desc", query: "", scope: "active", page: 1, pageSize: 15, filters: {} };
+  const gridState = { sort: "score", dir: "desc", query: "", scope: "active", visibleRows: 30, loadStep: 30, filters: {} };
+  let lastFilteredRowCount = 0;
   const filterColumns = [
     ["title", "Convocatoria"],
     ["source", "Fuente"],
     ["score", "Prioridad"],
     ["deadline", "Plazo"],
     ["theme", "Ambito"],
-    ["candidate", "Candidatura"],
-    ["status", "Estado"]
+    ["status", "Estado"],
+    ["actions", "Acciones"]
   ];
   const candidateKey = "workspace-candidates-v1";
   const documentBlobKey = "tenant-document-blob-demo-v1";
@@ -132,7 +133,7 @@
 
   function setEntityScope(scope) {
     gridState.scope = scope;
-    gridState.page = 1;
+    gridState.visibleRows = gridState.loadStep;
     renderEntityFitDashboard();
     renderOpportunityGrid();
   }
@@ -200,7 +201,7 @@
     if (key === "score") return `${item.score} ${priorityLabel(item)}`;
     if (key === "deadline") return compactText([item.deadline, item.deadlineConfidence].join(" "));
     if (key === "theme") return compactText([item.theme, item.territory, operationalAreaLabel(item)].join(" "));
-    if (key === "candidate") return candidateLabel(item);
+    if (key === "actions") return candidateLabel(item);
     if (key === "status") return compactText([statusLabel(item), item.entityFit?.reason || item.amount || "Sin importe"].join(" "));
     return compactText(item[key]);
   }
@@ -225,7 +226,7 @@
         options.add(operationalAreaLabel(item));
       } else if (key === "status") {
         options.add(statusLabel(item));
-      } else if (key === "candidate") {
+      } else if (key === "actions") {
         options.add(candidateLabel(item));
       } else {
         options.add(filterValue(item, key));
@@ -353,7 +354,7 @@
       const options = filterOptions(optionRows, key).slice(0, 80).map((option) => `<option value="${escapeAttr(option)}"></option>`).join("");
       return `<th><label class="grid-filter"><span>${label}</span><input data-grid-filter="${key}" list="${listId}" value="${escapeAttr(value)}" placeholder="Filtrar..." autocomplete="off" /><datalist id="${listId}">${options}</datalist></label></th>`;
     }).join("");
-    return `<tr class="grid-filter-row">${cells}<th></th></tr>`;
+    return `<tr class="grid-filter-row">${cells}</tr>`;
   }
 
   function selectGridOpportunity(id) {
@@ -370,6 +371,7 @@
     const officialLabel = isPublicOfficial ? "API oficial BDNS" : "Fuente externa";
     return `
       <div class="opportunity-toolbar grid-actions">
+        ${candidateCell(item)}
         <button class="icon-action" data-grid-opportunity="${item.id}" title="Ver" aria-label="Ver"><i data-lucide="eye"></i><span class="sr-only">Ver</span></button>
         ${item.basesUrl ? `<a class="icon-action" href="${item.basesUrl}" target="_blank" rel="noreferrer" title="${basesLabel}" aria-label="${basesLabel}"><i data-lucide="scale"></i><span class="sr-only">${basesLabel}</span></a>` : ""}
         ${item.extractedText ? `<button class="icon-action" data-grid-text="${item.id}" title="${textLabel}" aria-label="${textLabel}"><i data-lucide="file-text"></i><span class="sr-only">${textLabel}</span></button>` : ""}
@@ -382,23 +384,17 @@
     return `<small class="grid-program-features">${item.programFeatures.slice(0, 3).join(" · ")}</small>`;
   }
 
-  function renderGridPagination(totalRows) {
+  function renderGridStatus(totalRows, visibleRows) {
     const holder = document.querySelector("#opportunity-pagination");
     if (!holder) return;
-    const maxPage = Math.max(1, Math.ceil(totalRows / gridState.pageSize));
-    const start = totalRows ? ((gridState.page - 1) * gridState.pageSize) + 1 : 0;
-    const end = Math.min(totalRows, gridState.page * gridState.pageSize);
     const publicLoaded = window.RADAR_PLATFORM_OPPORTUNITIES?.length || window.RADAR?.count || 0;
     const publicPotential = window.RADAR?.totalElements || publicLoaded;
     holder.innerHTML = `
-      <span><strong>${start}-${end}</strong> de ${totalRows} filas cargadas</span>
+      <span><strong>${visibleRows}</strong> de ${totalRows} resultados visibles</span>
       <div class="pager-buttons">
-        <button class="ghost-action" data-grid-page="prev" type="button" ${gridState.page <= 1 ? "disabled" : ""}>Anterior</button>
-        <span>Pagina ${gridState.page}/${maxPage}</span>
-        <button class="ghost-action" data-grid-page="next" type="button" ${gridState.page >= maxPage ? "disabled" : ""}>Siguiente</button>
         ${hasColumnFilters() ? `<button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>` : ""}
       </div>
-      <small>BDNS publico cargado: ${publicLoaded}/${publicPotential}. Esta tabla pagina las filas visibles tras filtros, territorio y fuentes privadas abiertas.</small>`;
+      <small>BDNS público cargado: ${publicLoaded}/${publicPotential}. Desplázate dentro de la tabla para cargar más resultados; la cabecera permanece visible.</small>`;
   }
 
   function renderOpportunityGrid() {
@@ -417,9 +413,9 @@
         const result = av > bv ? 1 : av < bv ? -1 : 0;
         return gridState.dir === "asc" ? result : -result;
       });
-    const maxPage = Math.max(1, Math.ceil(filteredRows.length / gridState.pageSize));
-    gridState.page = Math.min(gridState.page, maxPage);
-    const rows = filteredRows.slice((gridState.page - 1) * gridState.pageSize, gridState.page * gridState.pageSize);
+    lastFilteredRowCount = filteredRows.length;
+    gridState.visibleRows = Math.min(Math.max(gridState.loadStep, gridState.visibleRows), Math.max(gridState.loadStep, filteredRows.length));
+    const rows = filteredRows.slice(0, gridState.visibleRows);
     const emptyMessage = hasColumnFilters()
       ? `No hay oportunidades con esta combinacion. <button class="ghost-action grid-clear-inline" data-grid-clear-filters type="button">Limpiar filtros</button>`
       : "No hay oportunidades con estos filtros.";
@@ -430,10 +426,9 @@
         <td><strong>${item.score}</strong><span>${item.score >= 75 ? "Alta" : item.score >= 55 ? "Media" : "Baja"}</span></td>
         <td>${window.deadlineTrace ? window.deadlineTrace.cell(item) : `${item.deadline}<span>${item.deadlineConfidence || "Sin valorar"}</span>`}</td>
         <td>${item.theme}<span>${item.territory}</span></td>
-        <td>${candidateCell(item)}</td>
         <td>${statusLabel(item)}<span>${statusDetail(item)}</span></td>
         <td>${gridActions(item)}</td>
-      </tr>`).join("") : `<tr><td colspan="8" class="grid-empty">${emptyMessage}</td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="7" class="grid-empty">${emptyMessage}</td></tr>`;
     grid.innerHTML = `
       <table>
         <thead><tr>
@@ -442,12 +437,11 @@
           <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
           <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
-          <th aria-sort="${sortAria("candidate")}"><button data-grid-sort="candidate">${document.body.dataset.role === "superadmin" ? "Uso tenant" : "Candidatura"} ${sortMark("candidate")}</button></th>
           <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Acciones</th>
         </tr>${renderFilterHeaders(baseRows)}</thead>
         <tbody>${body}</tbody>
       </table>`;
-    renderGridPagination(filteredRows.length);
+    renderGridStatus(filteredRows.length, Math.min(rows.length, filteredRows.length));
     syncGridTopScroll();
     window.lucide?.createIcons();
   }
@@ -560,8 +554,14 @@
       if (grid) grid.scrollLeft = topScroll.scrollLeft;
     });
     document.querySelector("#opportunity-grid")?.addEventListener("scroll", (event) => {
+      const grid = event.currentTarget;
       const scroller = document.querySelector("#opportunity-grid-x-scroll");
-      if (scroller) scroller.scrollLeft = event.currentTarget.scrollLeft;
+      if (scroller) scroller.scrollLeft = grid.scrollLeft;
+      const isNearBottom = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 120;
+      if (isNearBottom && gridState.visibleRows < lastFilteredRowCount) {
+        gridState.visibleRows = Math.min(lastFilteredRowCount, gridState.visibleRows + gridState.loadStep);
+        renderOpportunityGrid();
+      }
     });
     document.addEventListener("click", (event) => {
       const sort = event.target.closest("[data-grid-sort]");
@@ -569,15 +569,10 @@
       const candidateAction = event.target.closest("[data-candidate-action]");
       const entityScope = event.target.closest("[data-entity-scope]");
       const fitChart = event.target.closest("[data-fit-chart]");
-      const gridPage = event.target.closest("[data-grid-page]");
       const clearFilters = event.target.closest("[data-grid-clear-filters]");
       if (clearFilters) {
         gridState.filters = {};
-        gridState.page = 1;
-        renderOpportunityGrid();
-      }
-      if (gridPage) {
-        gridState.page += gridPage.dataset.gridPage === "next" ? 1 : -1;
+        gridState.visibleRows = gridState.loadStep;
         renderOpportunityGrid();
       }
       if (entityScope) {
@@ -590,7 +585,7 @@
       if (sort) {
         gridState.dir = gridState.sort === sort.dataset.gridSort && gridState.dir === "desc" ? "asc" : "desc";
         gridState.sort = sort.dataset.gridSort;
-        gridState.page = 1;
+        gridState.visibleRows = gridState.loadStep;
         renderOpportunityGrid();
       }
       if (rowAction?.dataset.gridOpportunity) {
@@ -620,7 +615,7 @@
       const filter = event.target.closest("[data-grid-filter]");
       if (!filter) return;
       gridState.filters[filter.dataset.gridFilter] = filter.value;
-      gridState.page = 1;
+      gridState.visibleRows = gridState.loadStep;
       renderOpportunityGrid();
       document.querySelector(`[data-grid-filter="${filter.dataset.gridFilter}"]`)?.focus();
     });
@@ -630,7 +625,7 @@
       event.preventDefault();
       entityScope.click();
     });
-    document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.page = 1; setTimeout(renderOpportunityGrid, 0); }));
+    document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.visibleRows = gridState.loadStep; setTimeout(renderOpportunityGrid, 0); }));
     window.addEventListener("workspace-candidates-changed", () => { applyOpportunityCandidateState(); renderOpportunityGrid(); });
     window.addEventListener("role-session-applied", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
     renderEntityFitDashboard();

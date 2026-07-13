@@ -1,15 +1,5 @@
 (function () {
   const flows = {
-    opportunities: {
-      eyebrow: "Decidir con evidencia",
-      title: "Como leer una oportunidad",
-      steps: [
-        ["list-filter", "Vivas", "Convocatorias abiertas o revisables para la entidad."],
-        ["file-search", "Bases", "Abrir PDF, API o URL de verificacion."],
-        ["scale", "Encaje", "Comparar prioridad, riesgos y hechos internos aprobados."],
-        ["folder-plus", "Preseleccionar", "Crear expediente sin enviar nada fuera."]
-      ]
-    },
     operations: {
       eyebrow: "Salud operativa",
       title: "Del conector al coste",
@@ -21,19 +11,8 @@
       ]
     }
   };
-  const platformOpportunityFlow = {
-    eyebrow: "Gobernar el corpus",
-    title: "Como revisar una oportunidad global",
-    steps: [
-      ["database", "Corpus", "Convocatorias publicas y privadas abiertas, sin fuentes tenant-private."],
-      ["file-search", "Evidencia", "Comprobar bases, texto original y procedencia."],
-      ["shield-check", "Calidad", "Revisar plazo, cobertura y riesgos de normalizacion."],
-      ["network", "Distribuir", "Publicar metadatos comunes; cada tenant calcula su propio encaje."]
-    ]
-  };
-
   function selectedFlow(screenId) {
-    return screenId === "opportunities" && document.body.dataset.role === "superadmin" ? platformOpportunityFlow : flows[screenId];
+    return flows[screenId];
   }
 
   function installStyles() {
@@ -130,7 +109,7 @@
   window.addEventListener("hashchange", () => setTimeout(renderFlows, 0));
   window.addEventListener("workspace-candidates-changed", () => setTimeout(renderFlows, 0));
   window.addEventListener("tenant-watch-changed", () => setTimeout(renderFlows, 0));
-  window.addEventListener("role-session-applied", () => { document.querySelector('[data-visual-flow="opportunities"]')?.remove(); renderFlows(); });
+  window.addEventListener("role-session-applied", () => renderFlows());
   document.addEventListener("click", (event) => {
     const open = event.target.closest?.("[data-open-visual-flow]");
     const close = event.target.closest?.("[data-close-visual-flow]");
