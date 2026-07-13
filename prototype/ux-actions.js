@@ -13,16 +13,6 @@ function downloadWord(filename, title, sections) {
 }
 window.downloadWord = downloadWord;
 
-function exportAudit() {
-  const auditRows = (window.getAuditEvents?.() || window.MOCK.audit).map((item) => `${item.time} - ${item.event}: ${item.actor}. ${item.detail}`);
-  downloadWord("auditoria-subvenciones.doc", "Auditoría de trazabilidad", [
-    { title: "Alcance", lines: "Solo la lectura BDNS procede de la copia pública cargada; los demás registros ilustran la trazabilidad prevista." },
-    { title: "Eventos", lines: auditRows },
-    { title: "Control humano", lines: "Ningun evento implica envio, presentacion ni uso externo de informacion sin revision humana." }
-  ]);
-  showToast("Auditoria exportada en formato Word editable.");
-}
-
 function exportProposal() {
   downloadWord("borrador-candidatura-empleo-inclusivo.doc", "Borrador de candidatura - empleo inclusivo 2026", [
     { title: "Aviso de revision", lines: "Documento editable para Word. No esta aprobado para presentar hasta revision humana." },
@@ -100,7 +90,6 @@ function bindStaticActions() {
     const button = event.target.closest("button");
     if (!button) return;
     const text = button.textContent.trim();
-    if (text === "Exportar auditoria") exportAudit();
     if (text === "Exportar borrador Word" || text === "Exportar cuando se apruebe") exportProposal();
     if (button.dataset.policyModal !== undefined) showPolicyModal();
     if (text === "Solicitar fuente") showToast("Solicitud registrada. La aprueba el responsable de datos de la entidad.");

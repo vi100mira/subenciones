@@ -6,7 +6,7 @@
     <title>Subvenciones con IA</title>
     <link rel="stylesheet" href="./styles.css?v=20260630-platform-panes" />
     <link rel="stylesheet" href="./public-entry.css?v=20260628-stitch-entry" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260713-compact-radar-2" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260713-agent-audit-ux" />
     <link rel="stylesheet" href="./grid-filters.css?v=20260713-sticky-grid-head" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
@@ -265,9 +265,9 @@
                 <p class="eyebrow">Trazabilidad</p>
                 <h2>Eventos del piloto</h2>
               </div>
-              <button class="ghost-action">Exportar auditoria</button>
+              <button class="ghost-action" data-audit-export type="button">Exportar a Excel (.csv)</button>
             </div>
-            <div id="audit-timeline" class="timeline"></div>
+            <div id="audit-timeline"></div>
           </article>
         </section>
 
@@ -357,28 +357,28 @@
       </main>
     </div>
 
-    <script src="./mock-data.js?v=20260701-novaterra-only"></script>
+    <script src="./mock-data.js?v=20260713-agent-audit-ux"></script>
     <script src="./private-radar-data.js?v=20260706-bancaja-bases"></script>
     <script src="./radar-data.js?v=20260701-platform-raw-corpus"></script>
     <script src="./municipal-radar-data.js?v=20260713-proposal-constraints"></script>
     <script src="./deadline-trace.js?v=20260702-date-trace"></script>
-    <script src="./platform-coverage-data.js?v=20260701-functional-agents"></script>
+    <script src="./platform-coverage-data.js?v=20260713-private-coverage"></script>
     <script src="./opportunity-scope.js?v=20260713-consistent-counts-2"></script>
-    <script src="./app.js?v=20260713-compact-radar"></script><script src="./audit-runtime.js?v=20260713-beta-language"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
-    <script src="./ux-actions.js?v=20260702-document-project"></script>
+    <script src="./app.js?v=20260713-real-audit"></script><script src="./audit-runtime.js?v=20260713-real-grid"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
+    <script src="./ux-actions.js?v=20260713-real-audit"></script>
     <script src="./opportunity-actions.js?v=20260701-private-source-labels"></script><script src="./opportunity-requirements.js?v=20260713-draft-queue"></script><script src="./draft-agent-ui.js?v=20260713-draft-queue"></script>
     <script src="./opportunity-chat.js?v=20260702-document-project"></script>
-    <script src="./workspace-flow.js?v=20260709-no-inline-active"></script>
+    <script src="./workspace-flow.js?v=20260713-guide-modal"></script>
     <script src="./watch-actions.js?v=20260701-private-corpus"></script>
     <script src="./alert-actions.js?v=20260630-alert-actions"></script>
     <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260713-beta-language"></script><script src="./tenant-plan.js?v=20260713-truthful-costs"></script><script src="./public-entry.js?v=20260713-beta-language"></script>
     <script src="./ui-polish.js?v=20260713-compact-radar"></script>
     <script src="./platform-source-manager.js?v=20260706-source-normalization-read"></script>
     <script src="./runtime-truth.js?v=20260713-operational-truth"></script>
-    <script src="./agents-readiness.js?v=20260713-hosted-truth"></script>
+    <script src="./agents-readiness.js?v=20260713-private-coverage"></script>
     <script src="./entity-activation.js?v=20260713-hosted-truth"></script>
     <script src="./visual-flows.js?v=20260713-no-opportunity-guide"></script>
-    <script src="./tenant-agent-runtime.js?v=20260713-operational-suite"></script>
+    <script src="./tenant-agent-runtime.js?v=20260713-research-activity"></script>
     <script src="./tenant-recommendations-runtime.js?v=20260713-persisted-match"></script>
     <script src="./document-review-ui.js?v=20260713-persisted-review"></script>
     <script src="./tenant-admin-runtime.js?v=20260713-recovery-controls"></script>
