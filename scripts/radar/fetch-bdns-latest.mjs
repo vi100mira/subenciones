@@ -18,6 +18,7 @@ const campaign = args.get("campaign") || "";
 const mode = campaign ? "search" : args.get("mode") || "latest";
 const campaignDescriptions = campaign === "municipal-social"
   ? ["accion social", "inclusion", "empleo", "asociaciones", "entidades sin animo de lucro"]
+  : campaign === "general-social" ? ["social"]
   : [];
 const detailDelayMs = Number(args.get("detail-delay-ms") || 250);
 const retryCount = Number(args.get("retries") || 2);
@@ -354,7 +355,7 @@ function searchParams(page, description = args.get("descripcion")) {
     contribucion: args.get("contribucion"),
     fechaDesde: args.get("fecha-desde"),
     fechaHasta: args.get("fecha-hasta"),
-    tipoAdministracion: campaign === "municipal-social" ? "L" : args.get("tipo-administracion") || "C",
+    tipoAdministracion: campaign === "municipal-social" ? "L" : campaign === "general-social" ? undefined : args.get("tipo-administracion") || "C",
     organos: args.get("organos"),
     regiones: args.get("regiones"),
     tiposBeneficiario: args.get("tipos-beneficiario"),

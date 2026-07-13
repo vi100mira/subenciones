@@ -2,22 +2,36 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin } from "../src/supabaseAdmin.js";
 
-const SOURCE_URL = "https://www.infosubvenciones.es/bdnstrans/api#municipal-social";
-const SOURCE_LABEL = "BDNS/SNPSAP - radar municipal social";
 const QUERIES = ["accion social", "inclusion", "empleo", "asociaciones", "entidades sin animo de lucro"];
+const RADARS = [
+  {
+    campaign: "municipal-social",
+    label: "BDNS/SNPSAP - radar municipal social",
+    url: "https://www.infosubvenciones.es/bdnstrans/api#municipal-social",
+    administrationType: "L",
+    queries: QUERIES
+  },
+  {
+    campaign: "general-social",
+    label: "BDNS/SNPSAP - radar social general",
+    url: "https://www.infosubvenciones.es/bdnstrans/api#general-social",
+    administrationType: "todas",
+    queries: ["social"]
+  }
+] as const;
 
 function authorized(req: VercelRequest) {
   const authorization = Array.isArray(req.headers.authorization) ? req.headers.authorization[0] : req.headers.authorization;
   return Boolean(process.env.CRON_SECRET && authorization === `Bearer ${process.env.CRON_SECRET}`);
 }
 
-async function ensureMunicipalSource() {
+async function ensureSource(radar: (typeof RADARS)[number]) {
   const supabase = getSupabaseAdmin();
   const { data: existing, error: readError } = await supabase
     .from("platform_sources")
     .select("id, status")
     .eq("kind", "bdns")
-    .eq("url", SOURCE_URL)
+    .eq("url", radar.url)
     .maybeSingle();
   if (readError) throw readError;
   if (existing) return existing;
@@ -25,16 +39,16 @@ async function ensureMunicipalSource() {
   const { data, error } = await supabase
     .from("platform_sources")
     .insert({
-      label: SOURCE_LABEL,
+      label: radar.label,
       kind: "bdns",
-      url: SOURCE_URL,
+      url: radar.url,
       status: "active",
       health_status: "unknown",
       priority: 92,
       config_json: {
-        campaign: "municipal-social",
-        administration_type: "L",
-        queries: QUERIES,
+        campaign: radar.campaign,
+        administration_type: radar.administrationType,
+        queries: radar.queries,
         activation_gate: "official issuer + open applications + extracted official bases"
       }
     })
@@ -51,27 +65,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const supabase = getSupabaseAdmin();
-    const source = await ensureMunicipalSource();
-    if (source.status !== "active") return res.status(409).json(fail("Radar municipal pausado"));
-
-    const campaignKey = `municipal-social:${new Date().toISOString().slice(0, 10)}`;
-    const { data, error } = await supabase
-      .from("platform_ingestion_campaigns")
-      .insert({ platform_source_id: source.id, campaign_key: campaignKey, status: "queued" })
-      .select("id, status, created_at, campaign_key")
-      .single();
-
-    if (error?.code === "23505") {
-      const { data: existing, error: existingError } = await supabase
+    const day = new Date().toISOString().slice(0, 10);
+    const campaigns = [];
+    for (const radar of RADARS) {
+      const source = await ensureSource(radar);
+      if (source.status !== "active") {
+        campaigns.push({ campaign: radar.campaign, status: "paused" });
+        continue;
+      }
+      const campaignKey = `${radar.campaign}:${day}`;
+      const { data, error } = await supabase
         .from("platform_ingestion_campaigns")
+        .insert({ platform_source_id: source.id, campaign_key: campaignKey, status: "queued" })
         .select("id, status, created_at, campaign_key")
-        .eq("campaign_key", campaignKey)
         .single();
-      if (existingError) throw existingError;
-      return res.status(200).json(ok({ campaign: existing, duplicate: true }));
+      if (error?.code === "23505") {
+        const { data: existing, error: existingError } = await supabase
+          .from("platform_ingestion_campaigns")
+          .select("id, status, created_at, campaign_key")
+          .eq("campaign_key", campaignKey)
+          .single();
+        if (existingError) throw existingError;
+        campaigns.push({ ...existing, duplicate: true });
+        continue;
+      }
+      if (error) throw error;
+      campaigns.push({ ...data, duplicate: false });
     }
-    if (error) throw error;
-    return res.status(202).json(ok({ campaign: data, duplicate: false }));
+    const queued = campaigns.some((item) => item.status === "queued" && (!("duplicate" in item) || !item.duplicate));
+    return res.status(queued ? 202 : 200).json(ok({ campaigns }));
   } catch (error) {
     return res.status(500).json(fail(error instanceof Error ? error.message : "Error inesperado"));
   }

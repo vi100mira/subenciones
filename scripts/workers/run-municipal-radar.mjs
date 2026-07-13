@@ -15,7 +15,9 @@ const runId = apply ? "pending" : "dry-run";
 const pages = args.get("pages") || (apply ? "2" : "1");
 const pageSize = args.get("page-size") || (apply ? "50" : "10");
 const maxDetails = args.get("max-details") || (apply ? "300" : "25");
-const sourceUrl = "https://www.infosubvenciones.es/bdnstrans/api#municipal-social";
+const campaignName = args.get("campaign") || "municipal-social";
+if (!["municipal-social", "general-social"].includes(campaignName)) throw new Error(`Campaña pública no admitida: ${campaignName}`);
+const sourceUrl = `https://www.infosubvenciones.es/bdnstrans/api#${campaignName}`;
 
 function loadEnvFile(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -129,7 +131,7 @@ async function executePipeline(workDir) {
   const enrichedPrototype = path.join(workDir, "municipal-enriched.js");
 
   await runNode("scripts/radar/fetch-bdns-latest.mjs", [
-    "--campaign=municipal-social", `--pages=${pages}`, `--page-size=${pageSize}`,
+    `--campaign=${campaignName}`, `--pages=${pages}`, `--page-size=${pageSize}`,
     `--max-details=${maxDetails}`, "--detail-delay-ms=250", `--out-dir=${workDir}`,
     `--output-name=${path.basename(dataset)}`, `--prototype-out=${prototype}`
   ]);
@@ -148,9 +150,9 @@ async function main() {
   await maybeReadEnv();
   const runtime = await verifyWorkerRuntime();
   const supabase = apply ? supabaseClient() : null;
-  const campaign = supabase ? await claimCampaign(supabase) : { id: runId, campaign_key: "municipal-social:dry-run" };
+  const campaign = supabase ? await claimCampaign(supabase) : { id: runId, campaign_key: `${campaignName}:dry-run` };
   if (!campaign) {
-    console.log(JSON.stringify({ mode: "idle", message: "No hay campanas municipales en cola." }, null, 2));
+    console.log(JSON.stringify({ mode: "idle", message: `No hay campañas ${campaignName} en cola.` }, null, 2));
     return;
   }
 
@@ -160,6 +162,7 @@ async function main() {
     const quality = result.enriched.quality || {};
     const summary = {
       mode: apply ? "applied" : "dry-run",
+      radar: campaignName,
       campaignId: campaign.id,
       campaignKey: campaign.campaign_key,
       scanned: quality.normalizedCount || 0,

@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $logDir = Join-Path $repoRoot ".tmp"
-$logPath = Join-Path $logDir "municipal-radar-scheduled.log"
+$logPath = Join-Path $logDir "public-radars-scheduled.log"
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
@@ -40,25 +40,28 @@ foreach ($candidate in ($pythonCandidates | Select-Object -Unique)) {
 }
 
 if (-not $workingPython) {
-  throw "No se encontro un Python con pypdf y pdfplumber para el radar municipal."
+  throw "No se encontro un Python con pypdf y pdfplumber para los radares publicos."
 }
 
 $env:PYTHON_BIN = $workingPython
 $startedAt = Get-Date -Format "o"
-Add-LogLine "[$startedAt] Inicio del worker municipal programado"
+Add-LogLine "[$startedAt] Inicio de los workers publicos programados"
 
 Push-Location $repoRoot
 try {
-  $output = & node "scripts/workers/run-municipal-radar.mjs" "--apply=true" 2>&1 | Out-String
-  $workerExitCode = $LASTEXITCODE
-  [System.IO.File]::AppendAllText($logPath, $output, $utf8NoBom)
-  Write-Output $output.TrimEnd()
-  if ($workerExitCode -ne 0) {
-    throw "El worker municipal termino con codigo $workerExitCode."
+  foreach ($campaign in @("municipal-social", "general-social")) {
+    Add-LogLine "[$(Get-Date -Format "o")] Inicio de campaña $campaign"
+    $output = & node "scripts/workers/run-municipal-radar.mjs" "--campaign=$campaign" "--apply=true" 2>&1 | Out-String
+    $workerExitCode = $LASTEXITCODE
+    [System.IO.File]::AppendAllText($logPath, $output, $utf8NoBom)
+    Write-Output $output.TrimEnd()
+    if ($workerExitCode -ne 0) {
+      throw "El worker $campaign termino con codigo $workerExitCode."
+    }
   }
 } finally {
   Pop-Location
 }
 
 $finishedAt = Get-Date -Format "o"
-Add-LogLine "[$finishedAt] Fin del worker municipal programado"
+Add-LogLine "[$finishedAt] Fin de los workers publicos programados"
