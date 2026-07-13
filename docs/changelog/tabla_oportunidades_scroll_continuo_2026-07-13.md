@@ -25,3 +25,10 @@ Eliminar la guía visual ambigua y hacer que el corpus se pueda revisar sin pagi
 
 - La carga continua recorre únicamente las oportunidades ya disponibles en el navegador. La ampliación del corpus sigue dependiendo de los procesos de ingesta de plataforma.
 - En pantallas estrechas se conserva el desplazamiento horizontal interno para no comprimir títulos, estados y acciones hasta hacerlos ilegibles.
+
+## Auditoría transversal posterior
+
+- La aplicación solo contiene una tabla HTML paginable: Oportunidades. Ya usa carga continua.
+- Los otros grids tabulares son Entidades y Monitorización. No tienen paginación; en escritorio disponen ahora de scroll interno y cabecera adhesiva.
+- Por debajo de 1280 px esos grids se convierten en tarjetas de una columna, por lo que se elimina el scroll interno y no existe una cabecera que pueda perderse.
+- Se corrigió la especificidad del grid de Monitorización: en móvil ya no conserva las cinco columnas de escritorio ni ensancha la página.

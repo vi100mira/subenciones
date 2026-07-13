@@ -3,6 +3,8 @@ import fs from "node:fs";
 const ui = fs.readFileSync("prototype/ui-polish.js", "utf8");
 const flows = fs.readFileSync("prototype/visual-flows.js", "utf8");
 const theme = fs.readFileSync("prototype/stitch-theme.css", "utf8");
+const app = fs.readFileSync("prototype/app.js", "utf8");
+const plan = fs.readFileSync("prototype/tenant-plan.js", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -16,11 +18,16 @@ assert(ui.includes("${candidateCell(item)}"), "Preseleccionar no esta integrado 
 assert(ui.includes("gridState.visibleRows + gridState.loadStep"), "No existe carga progresiva al desplazarse");
 assert(theme.includes("border-collapse: separate"), "La tabla no usa el modo compatible con cabeceras adhesivas");
 assert(theme.includes("overscroll-behavior: contain"), "La tabla puede transferir el scroll a toda la pagina");
+assert(theme.includes(".tenant-grid-head {\n  position: sticky"), "Los grids de tenants pierden la cabecera al desplazarse");
+assert(theme.includes("max-height: min(560px, 65dvh)"), "Los grids de tenants no tienen scroll interno en escritorio");
+assert(theme.includes(".platform-monitor-grid .tenant-grid-row {\n    grid-template-columns: 1fr"), "Monitorizacion conserva cinco columnas en movil");
+assert(!app.includes("data-tenant-page") && !plan.includes("data-tenant-page"), "Un grid secundario conserva paginacion");
 
 console.log(JSON.stringify({
   ok: true,
   guide: "retirada",
   candidate: "integrada en Acciones",
   pagination: "sustituida por carga continua",
-  header: "adhesiva dentro de la tabla"
+  header: "adhesiva dentro de la tabla",
+  secondaryGrids: "continuos con cabecera adhesiva en escritorio"
 }, null, 2));
