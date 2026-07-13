@@ -15,6 +15,7 @@ Credentials live outside the repository. Logs are useful for operations, but app
 | Google Drive OAuth | encrypted DB/token store later | Start with user-delegated OAuth and narrow folders. |
 | Microsoft Graph OAuth | encrypted DB/token store later | Prefer delegated or resource-specific access for pilot. |
 | Worker webhook | `INGESTION_WORKER_SECRET` | Rotateable service-to-service secret. |
+| Draft worker dispatch | `DRAFT_WORKER_GITHUB_TOKEN` | Server-only, permiso mínimo para ejecutar Actions; nunca usar un token personal amplio. |
 
 Official references:
 

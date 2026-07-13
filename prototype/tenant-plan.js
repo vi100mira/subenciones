@@ -20,7 +20,7 @@
   const platformMetrics = [
     ["Ingresos MRR", "0 EUR", "Piloto interno; sin pasarela activa"],
     ["Gasto IA real hoy", "0,00 EUR", "OpenAI sin clave; ninguna llamada"],
-    ["Automatizaciones activas", "2", "Búsqueda diaria y revisión del redactor cada 5 minutos"],
+    ["Automatizaciones activas", "2", "Búsqueda diaria y redactor bajo demanda con recuperación cada 15 minutos"],
     ["Entidades piloto", "1", "Novaterra; análisis privado aún no disponible"]
   ];
   const platformRows = [

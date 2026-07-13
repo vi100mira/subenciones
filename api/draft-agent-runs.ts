@@ -11,6 +11,32 @@ function digest(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
+async function dispatchDraftWorker() {
+  const token = process.env.DRAFT_WORKER_GITHUB_TOKEN;
+  const repository = process.env.DRAFT_WORKER_GITHUB_REPOSITORY;
+  const ref = process.env.DRAFT_WORKER_GITHUB_REF || "main";
+  if (!token || !repository) return { status: "fallback_cron" as const };
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
+    return { status: "fallback_cron" as const };
+  }
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repository}/actions/workflows/workers-alojados.yml/dispatches`, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "subvenciones-draft-orchestrator",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      body: JSON.stringify({ ref, inputs: { proceso: "redactor" } })
+    });
+    return { status: response.status === 204 ? "requested" as const : "fallback_cron" as const };
+  } catch {
+    return { status: "fallback_cron" as const };
+  }
+}
+
 async function approvedFactIds(supabase: ReturnType<typeof getSupabaseAdmin>, tenantId: string, enabled: boolean) {
   if (!enabled) return [];
   const { data: consent, error: consentError } = await supabase.from("tenant_data_consents")
@@ -84,10 +110,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }).select("id, status, input_manifest_json, created_at").single();
     if (runError?.code === "23505") return res.status(409).json(fail("Ya existe una ejecución activa del redactor para esta oportunidad"));
     if (runError) throw runError;
+    const dispatch = await dispatchDraftWorker();
     await supabase.from("audit_events").insert({
       tenant_id: actor.tenantId, actor_user_id: actor.userId, actor_label: actor.role,
       action: "draft_agent.queued", target_type: "agent_run", target_id: run.id,
-      detail_json: { opportunity: canonicalKey, use_approved_internal_facts: useApprovedInternalFacts, fact_count: facts.length, constraints_hash: manifest.proposalConstraintsHash }
+      detail_json: { opportunity: canonicalKey, use_approved_internal_facts: useApprovedInternalFacts, fact_count: facts.length, constraints_hash: manifest.proposalConstraintsHash, worker_dispatch: dispatch.status }
     });
     return res.status(202).json(ok({ run, message: "Redactor encolado con evidencia y revisión humana obligatoria." }));
   } catch (error) {

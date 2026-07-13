@@ -42,7 +42,7 @@ flowchart LR
   colaTenant -. "sin consumidor productivo" .-> pendiente["Ingesta privada pendiente"]
 
   api --> colaRedactor["Cola: tenant_agent_runs"]
-  colaRedactor --> redactor["Worker redactor · cada 5 minutos"]
+  colaRedactor --> redactor["Worker redactor · bajo demanda + recuperación cada 15 minutos"]
   redactor --> proveedor["OpenAI Responses API · store false"]
   proveedor --> revision["Borrador estructurado · revisión humana"]
 
@@ -60,7 +60,7 @@ flowchart LR
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
 | Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
 | Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
-| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos en GitHub Actions | Consumidor alojado; falta la clave de OpenAI |
+| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | Despacho inmediato a `run-draft-agent.mjs`; cron de recuperación cada quince minutos | Consumidor alojado; clave OpenAI instalada |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
@@ -217,7 +217,7 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 - `scripts/workers/run-municipal-radar.mjs`: consumidor y orquestador del pipeline municipal.
 - `scripts/workers/run-private-funder-radar.mjs`: consumidor privado, monitor de versiones y generador de alertas.
 - `scripts/workers/run-draft-agent.mjs`: prepara contexto mínimo y revalida las puertas del redactor.
-- `scripts/workers/run-draft-agent-scheduled.ps1`: ejecuta el redactor cada cinco minutos.
+- `scripts/workers/run-draft-agent-scheduled.ps1`: lanzador local manual del redactor.
 - `scripts/workers/run-municipal-radar-scheduled.ps1`: lanzador local programado.
 - `scripts/radar/fetch-bdns-latest.mjs`: consulta y normalización BDNS.
 - `scripts/platform/deep-scan-open-funders.mjs`: descarga, extracción y validación de bases.

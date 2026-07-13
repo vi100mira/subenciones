@@ -33,7 +33,7 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 2. Requiere restricciones de redacción verificadas. Si no existen, no encola.
 3. Si se solicitan hechos internos, exige consentimiento `ai_processing` y referencias aprobadas.
 4. La API guarda identificadores, clases permitidas y huellas; no persiste un prompt ni texto interno.
-5. El worker programado cada cinco minutos vuelve a comprobar versión, plazo, consentimiento y restricciones.
+5. La API despierta al worker al recibir una solicitud; un cron cada quince minutos recupera trabajos que no pudieron despacharse.
 6. Sin proveedor autorizado, deja la ejecución en `awaiting_provider`; nunca simula una respuesta de IA.
 7. Con proveedor y clave instalados, la integración produce salida JSON estructurada, valida límites y queda en `review_required`.
 8. Ningún agente puede presentar, enviar o compartir externamente sin aprobación humana.
@@ -67,4 +67,4 @@ Antes de ordenar oportunidades, debe cargar territorio, forma jurídica, colecti
 
 - Los tres radares son deterministas y autónomos; no necesitan un LLM para descubrir y verificar convocatorias.
 - El agente redactor ya tiene API, cola Supabase, manifiesto mínimo, auditoría y worker asíncrono.
-- OpenAI está autorizado para evidencia pública con `store: false` y presupuesto de 20 € al mes. La generación permanece detenida en `awaiting_provider` porque la clave no está instalada en GitHub.
+- OpenAI está autorizado para evidencia pública con `store: false` y presupuesto de 20 € al mes. La clave está instalada en GitHub; el despacho inmediato requiere una credencial de Actions server-only en Vercel.
