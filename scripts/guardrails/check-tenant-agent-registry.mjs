@@ -83,7 +83,8 @@ assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no a
 assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
 assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");
 assert(!profileReviewApi.toLowerCase().includes("novaterra"), "La revisión depende del piloto");
-assert(lifecycleApi.includes('"archive", "restore"'), "Falta archivo reversible del tenant");
+assert(lifecycleApi.includes('"activate", "archive", "restore"'), "Falta activación o archivo reversible del tenant");
+assert(lifecycleApi.includes('currentConfig?.status !== "onboarding"'), "La activación no limita su estado de origen");
 assert(lifecycleApi.includes('hard_delete: false'), "El archivo se confunde con borrado definitivo");
 assert(lifecycleApi.includes("reconcile_tenant_agent_suite"), "Restaurar no reconcilia agentes");
 assert(authApi.includes("auth.login_blocked"), "Un tenant archivado todavía puede iniciar sesión");

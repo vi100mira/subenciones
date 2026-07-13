@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== "PATCH") return res.status(405).json(fail("Method Not Allowed"));
     const actor = await requirePlatformAdmin(req.headers.authorization);
     const { action, tenantId, slug, reason } = req.body || {};
-    if (!new Set(["archive", "restore"]).has(action)) return res.status(400).json(fail("Acción de ciclo de vida inválida"));
+    if (!new Set(["activate", "archive", "restore"]).has(action)) return res.status(400).json(fail("Acción de ciclo de vida inválida"));
     if (typeof reason !== "string" || reason.trim().length < 5) return res.status(400).json(fail("Motivo obligatorio"));
     if ((!tenantId || typeof tenantId !== "string") && (!slug || typeof slug !== "string")) {
       return res.status(400).json(fail("Falta tenantId o slug"));
@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "cancelled", error: "Tenant archivado", finished_at: now, updated_at: now
       }).eq("tenant_id", organization.id).in("status", ["queued", "preparing_context", "awaiting_provider", "generating"]);
       if (runsError) throw runsError;
-    } else {
+    } else if (action === "restore") {
       const { error: configError } = await supabase.from("tenant_configs")
         .update({ status: "active", updated_at: now }).eq("tenant_id", organization.id).eq("status", "archived");
       if (configError) throw configError;
@@ -41,6 +41,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "requested", enabled: false, status_reason: "Restauración solicitada", updated_at: now
       }).eq("tenant_id", organization.id).eq("status", "paused").eq("status_reason", "Tenant archivado");
       if (agentsError) throw agentsError;
+    } else {
+      const currentConfig = Array.isArray(organization.tenant_configs) ? organization.tenant_configs[0] : organization.tenant_configs;
+      if (currentConfig?.status !== "onboarding") return res.status(409).json(fail("Solo puede activarse una entidad en onboarding"));
+      const { error: configError } = await supabase.from("tenant_configs")
+        .update({ status: "active", updated_at: now }).eq("tenant_id", organization.id).eq("status", "onboarding");
+      if (configError) throw configError;
     }
 
     const { data: agents, error: reconcileError } = await supabase.rpc("reconcile_tenant_agent_suite", {
