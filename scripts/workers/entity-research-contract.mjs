@@ -48,7 +48,6 @@ function absoluteHttpUrl(value, pageUrl, origin) {
     const url = new URL(decodeEntities(value), pageUrl);
     url.hash = "";
     if (!/^https?:$/.test(url.protocol) || url.origin !== origin) return null;
-    if (/\.(pdf|docx?|xlsx?|zip|jpe?g|png|gif|webp|svg)$/i.test(url.pathname)) return null;
     return url.href;
   } catch {
     return null;
@@ -65,7 +64,9 @@ export function extractPublicPage(html, pageUrl, origin) {
     const url = absoluteHttpUrl(match[2], pageUrl, origin);
     if (!url) continue;
     if (/\b(logo|brand|identidad)\b/i.test(match[0])) logos.push(url);
-    if (match[1].toLowerCase() === "a") links.push(url);
+    if (match[1].toLowerCase() === "a" && !/\.(pdf|docx?|xlsx?|zip|jpe?g|png|gif|webp|svg)$/i.test(new URL(url).pathname)) {
+      links.push(url);
+    }
   }
   const text = normalizedText(html).slice(0, 250_000);
   return {

@@ -11,6 +11,12 @@ Implementar rastreo público determinista antes de conectar cola o IA.
 - Conserva URL, hash y fragmento para cada sugerencia.
 - Todas las propuestas quedan `pending` y requieren revisión humana.
 
+## Verificación
+
+- `npm run check:entity-research`
+- `npm run typecheck`
+- `git diff --check`
+
 ## Riesgo residual
 
-- Falta prueba automatizada, persistencia Supabase y ejecución alojada.
+- Falta persistencia Supabase y ejecución alojada.
