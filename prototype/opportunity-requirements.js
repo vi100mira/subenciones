@@ -369,8 +369,10 @@
         ${docs ? `<div><strong>Documentacion Word preparada</strong><span>${docs.storage === "vercel_blob" ? "Guardada en Blob tenant" : "Preparada en fallback local"}. ${docs.docs.length} documentos descargables.</span></div>` : `<div><strong>Falta estructura documental</strong><span>Para activar como proyecto, el agente debe generar memoria, checklist, anexos y presupuesto en Word.</span></div>`}
         <div class="button-row">
           ${docs ? `<button class="ghost-action" data-download-doc="all" data-package-id="${pack.id}" type="button">Descargar paquete Word (${docs.docs.length})</button>` : `<button class="primary-action" data-doc-agent-build="${pack.id}" type="button">Preparar documentacion Word</button>`}
+          ${pack.proposalConstraints?.draftingGate === "constraints_verified" ? `<button class="ghost-action" data-draft-agent-start="${pack.id}" type="button">Solicitar borrador IA</button>` : ""}
           ${docs && !active && draftingReady ? `<button class="primary-action" data-project-activate="${pack.id}" type="button">Activar como proyecto</button>` : ""}
         </div>
+        <div class="plain-note" data-draft-agent-status="${pack.id}"><strong>Agente redactor</strong><span>Consulta pendiente. La solicitud usa solo evidencia publica y queda sujeta a limites, PDF y revision humana.</span></div>
         ${docs ? `<div class="download-feedback" data-download-feedback>Al pulsar descargar, el navegador guarda los .doc en su carpeta de descargas. En el navegador integrado puede no abrirse bandeja visible.</div>` : ""}
       </div>`;
   }
@@ -604,7 +606,7 @@
           ${panel("documents", `${constructedDocsSummary(pack)}${generatedDocsPanel(docs)}`)}
           ${panel("steps", `<div class="compact-list">${list(pack.steps)}</div>`)}
           ${panel("checklist", `<div class="compact-tasks">${checklist()}</div>`)}
-          ${panel("draft", `<div class="compact-draft">${outline()}</div>`)}
+          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>El borrador real se solicita desde Proyecto y solo puede quedar listo para revision tras evidencia, limites y renderizado PDF.</span></div><div data-draft-agent-status="${pack.id}"></div><div class="compact-draft">${outline()}</div>`)}
         </div>
       </article>
     `;
