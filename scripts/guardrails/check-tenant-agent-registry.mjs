@@ -2,6 +2,10 @@ import fs from "node:fs";
 
 const migrationPath = "supabase/migrations/20260713173000_tenant_agent_registry.sql";
 const sql = fs.readFileSync(migrationPath, "utf8");
+const provisioningSql = fs.readFileSync(
+  "supabase/migrations/20260713180000_tenant_suite_provisioning.sql",
+  "utf8"
+);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -29,10 +33,20 @@ for (const agent of requiredAgents) {
   assert(sql.includes(`('${agent}'`), `Falta la capacidad ${agent}`);
 }
 
+assert(provisioningSql.includes("provision_tenant_agent_suite"), "Falta provisión idempotente");
+assert(provisioningSql.includes("reconcile_tenant_agent_suite"), "Falta reconciliar estados reales");
+assert(provisioningSql.includes("on conflict (slug) do update"), "La provisión debe poder repetirse");
+assert(provisioningSql.includes("grant execute") && provisioningSql.includes("service_role"), "RPC sin cierre service-role");
+assert(provisioningSql.includes("Falta consentimiento de web pública"), "Falta puerta del investigador");
+assert(provisioningSql.includes("Falta aprobar el perfil de entidad"), "Falta puerta del encaje");
+assert(provisioningSql.includes("Falta consentimiento de procesamiento IA"), "Falta puerta del redactor");
+assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no puede depender del piloto");
+
 console.log(JSON.stringify({
   ok: true,
   catalog: requiredAgents,
   tenantIsolation: "RLS + tenant_id",
   entityResearchGate: "public_web_analysis",
-  queue: "multi-agent e idempotente"
+  queue: "multi-agent e idempotente",
+  provisioning: "blueprint v1 + reconciliación por puertas"
 }, null, 2));
