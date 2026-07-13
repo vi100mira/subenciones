@@ -1,66 +1,70 @@
-# Agentic Architecture
+# Arquitectura de agentes
 
-## Principle
+## Principio
 
-Agents are permissioned services, not autonomous black boxes. Each agent has a scope, allowed data classes, allowed tools, output contract, and audit trail.
+Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente tiene alcance, clases de datos permitidas, herramientas, contrato de salida y rastro de auditoría.
 
-## MVP Agents
+## Agentes del MVP
 
-| Agent | Purpose | Data access | Human gate |
+| Agente | Finalidad | Acceso a datos | Puerta humana |
 | --- | --- | --- | --- |
-| Explorer Agent | Find and refresh grant calls | Public sources | No |
-| Change Monitor Agent | Detect deadline, criteria, document, budget, and submission changes | Platform-public and platform-curated evidence | No, but critical changes trigger review |
-| Entity Research Agent | Analyze an entity public website and propose profile facts, logo candidates, and matching themes | Public entity website with explicit consent | Yes before facts become approved context |
-| Match Agent | Explain fit, risks, missing data | Public grants + approved profile facts | Before action |
-| Governance Agent | Classify internal snippets and block unsafe use | Metadata + user-provided snippets | Yes for internal approval |
-| Documentary Agent | Extract requirements, build Word documentation packages, and prepare tenant-scoped draft files | Public bases/PDF text; approved tenant facts; tenant Drive only when contracted and authorized | Before candidate becomes project and before final checklist/export |
-| Draft Agent | Create proposal outlines | Public evidence + approved internal facts | Before export |
-| Monitor Agent | Produce alerts and reminders | Match summaries + deadlines | Before non-public channel send |
+| Buscador de convocatorias | Encontrar y actualizar convocatorias | Fuentes públicas | No |
+| Monitor de cambios | Detectar cambios de plazo, criterios, documentos, presupuesto y presentación | Evidencia pública o curada de plataforma | Los cambios críticos quedan pendientes de revisión |
+| Investigador de entidad | Analizar la web pública y proponer hechos, logotipos y temas | Web pública con consentimiento explícito | Antes de aprobar hechos |
+| Asistente de encaje | Explicar encaje, riesgos y datos ausentes | Convocatorias públicas y perfil aprobado | Antes de iniciar una candidatura |
+| Políticas de datos | Clasificar fragmentos internos y bloquear usos inseguros | Metadatos y fragmentos aportados | Para aprobar contexto interno |
+| Agente documental | Extraer requisitos y preparar paquetes documentales tenant-scoped | Bases públicas y hechos internos aprobados | Antes de activar proyecto y exportar |
+| Agente redactor | Crear esquemas y borradores ajustados a límites oficiales | Evidencia pública y hechos internos aprobados | Antes de exportar o compartir |
+| Agente de avisos | Producir alertas y recordatorios | Resúmenes de encaje y plazos | Antes de enviar por un canal no público |
 
-## Orchestrator Responsibilities
+## Responsabilidades del orquestador
 
-- Authenticate user and tenant.
-- Resolve intent.
-- Check permissions and data policy.
-- Route to one or more agents.
-- Attach source evidence.
-- Store audit events.
-- Recompute tenant impact when a monitored opportunity changes.
-- Return channel-safe or app-rich responses.
+- Autenticar a la persona y resolver el tenant.
+- Comprobar permisos, consentimiento y política de datos.
+- Elegir el agente adecuado.
+- Adjuntar evidencia oficial y su versión.
+- Registrar cada ejecución y evento de auditoría.
+- Recalcular el impacto en tenants cuando cambia una convocatoria.
+- Entregar respuestas adecuadas al canal sin exponer contexto privado.
 
-## Candidate To Project Gate
+## Ciclo del agente redactor
 
-A preselected candidate is not a project. The orchestrator may mark it as "in documentation" only after the Documentary Agent has produced a Word package and recorded its decisions.
+1. `POST /api/draft-agent-runs` valida que convocatoria, versión y plazo estén vigentes.
+2. Requiere restricciones de redacción verificadas. Si no existen, no encola.
+3. Si se solicitan hechos internos, exige consentimiento `ai_processing` y referencias aprobadas.
+4. La API guarda identificadores, clases permitidas y huellas; no persiste un prompt ni texto interno.
+5. El worker programado cada cinco minutos vuelve a comprobar versión, plazo, consentimiento y restricciones.
+6. Sin proveedor autorizado, deja la ejecución en `awaiting_provider`; nunca simula una respuesta de IA.
+7. Con proveedor, la futura integración deberá producir salida estructurada, pasar el renderizado PDF y quedar en `review_required`.
+8. Ningún agente puede presentar, enviar o compartir externamente sin aprobación humana.
 
-Minimum Documentary Agent output:
+## Puerta de candidata a proyecto
 
-- Word-compatible memoria tecnica draft.
-- Word-compatible checklist documental.
-- Word-compatible annex/evidence index.
-- Word-compatible budget guide.
-- Decision log explaining whether tenant Drive was used.
-- Storage pointer in tenant-scoped Blob.
+Una candidata preseleccionada no es todavía un proyecto. Solo puede pasar a documentación después de generar y revisar:
 
-If tenant Drive is not contracted or not authorized, the agent must say so explicitly and generate from public evidence plus approved tenant facts only. No document may be submitted, sent, or externally shared without human approval.
+- memoria técnica editable;
+- PDF canónico validado contra páginas, tipografía e interlineado oficiales;
+- checklist documental;
+- índice de anexos y evidencias;
+- guía presupuestaria;
+- registro de decisiones y hechos internos utilizados;
+- punteros de almacenamiento separados por tenant.
 
-The first backend surface is `POST /api/candidature-document-package`. It requires an active tenant membership, writes Word-compatible files under `tenants/{tenantId}/candidatures/{opportunityId}/...`, and records an audit event. If the API or Blob credentials are not available, the UI must keep a local download fallback and tell the user that Blob persistence did not happen.
+Si Drive no está contratado o autorizado, el agente debe indicarlo y trabajar únicamente con evidencia pública y hechos aprobados. El PDF canónico gobierna el máximo de páginas; el Word puede repaginarse de forma distinta según Office.
 
-## Match Agent Entity Context
+## Contexto del asistente de encaje
 
-Before ranking an opportunity, the Match Agent must load the active tenant profile: territory, legal form, collectives, programs, operating area, exclusions, and approved facts. Public grants outside the entity operating territory must not appear as normal candidates. They can be logged as discarded with a reason such as "territory outside active tenant scope".
+Antes de ordenar oportunidades, debe cargar territorio, forma jurídica, colectivos, programas, ámbito operativo, exclusiones y hechos aprobados del tenant. Las convocatorias fuera de territorio no se presentan como candidatas normales y las cerradas quedan como evidencia histórica.
 
-For a Valencian entity profile, statewide Spanish calls and Comunitat Valenciana calls can remain candidates. Provincial calls for Huelva, Cadiz, Teruel, Granada, London, or worldwide programs require explicit user intent before surfacing as candidates.
+## Adaptadores de canal
 
-Closed calls must not appear in the default "live opportunities" ranking. Keep them as archived or historical evidence with a clear reason, not as active candidates for preparation.
+- Teams, WhatsApp y correo son adaptadores finos.
+- Envían intención al orquestador y muestran respuestas breves.
+- La evidencia completa, los hechos privados y la edición permanecen en la aplicación.
+- Ningún adaptador contiene lógica de producto ni puede saltarse la aprobación humana.
 
-## Channel Adapters
+## Estado actual
 
-- Teams, WhatsApp, email, and future channels must stay thin.
-- Adapters send intent to the orchestrator and display short responses.
-- Full evidence, private facts, and editing remain in the web app.
-
-## Example Channel Request
-
-User: "Busca ayudas de insercion laboral abiertas en Comunitat Valenciana."
-
-Response: "He encontrado 3 candidatas. La mejor encaja por territorio y colectivo, pero falta confirmar el requisito de cofinanciacion. Ver analisis completo: /opportunities/labora-2026."
+- Los tres radares son deterministas y autónomos; no necesitan un LLM para descubrir y verificar convocatorias.
+- El agente redactor ya tiene API, cola Supabase, manifiesto mínimo, auditoría y worker asíncrono.
+- La generación con IA permanece detenida en `awaiting_provider` hasta aprobar proveedor, modelo, región, retención, subprocesadores y presupuesto.

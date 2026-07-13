@@ -8,7 +8,7 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 - Las funciones `api/*.ts` ejecutan autenticación, permisos, altas, consultas y escrituras breves.
 - Supabase/Postgres es la fuente de verdad y contiene dos tablas que actúan como colas.
 - La cola de campañas de plataforma tiene consumidores productivos para tres ciclos: BDNS municipal, BDNS social general y financiadores privados públicos.
-- No existe todavía un runtime general de agentes, un orquestador de modelos ni llamadas productivas a un LLM.
+- Existe una cola y un worker asíncrono del redactor para preparar contexto gobernado; no hay todavía proveedor LLM autorizado ni llamadas productivas a modelos.
 - Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local.
 - El OCR no es SaaS: se ejecuta en el equipo worker con Tesseract o con el OCR nativo de Windows.
 - En producción hay 626 registros, pero solo 42 pasan la compuerta reforzada de convocatoria viva, emisor oficial y bases extraídas.
@@ -40,6 +40,10 @@ flowchart LR
   api --> colaTenant["Cola: ingestion_runs"]
   colaTenant -. "sin consumidor productivo" .-> pendiente["Ingesta privada pendiente"]
 
+  api --> colaRedactor["Cola: tenant_agent_runs"]
+  colaRedactor --> redactor["Worker redactor · cada 5 minutos"]
+  redactor --> esperaIA["awaiting_provider · sin salida simulada"]
+
   db -. "alertas dentro de la app" .-> web
   db -. "sin emisor de canal" .-> canales["Correo / Teams / WhatsApp pendientes"]
 ```
@@ -54,6 +58,7 @@ flowchart LR
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
 | Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
 | Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
+| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos | Contexto operativo; generación IA pendiente de proveedor |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
@@ -100,11 +105,11 @@ El worker es un proceso determinista. En este momento no consulta un modelo gene
 | Asistente de encaje | Ranking y conversación local sobre datos cargados | JavaScript en navegador, sin modelo | Prototipo funcional |
 | Políticas de datos | RLS, permisos y exclusión de documentos sensibles al trocear | No existe agente de gobierno autónomo | Controles parciales |
 | Revisión documental | Reglas locales y API que guarda paquetes Word compatibles | Petición síncrona, sin extracción semántica de agente | Parcial |
-| Borrador de memoria | Plantillas, puerta de restricciones y bloqueo de máximos renderizados | Sin modelo ni recuperación privada productiva | Parcial y seguro por defecto |
+| Borrador de memoria | Cola, worker, contexto mínimo, restricciones y validación PDF | Asíncrono; se detiene en `awaiting_provider` | Preparación operativa, IA pendiente |
 | Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 
-Conclusión: hay un pipeline productivo automatizado, varios servicios deterministas parciales y ninguna flota de agentes LLM asíncronos en producción.
+Conclusión: los radares y el contexto del redactor son asíncronos y auditables. No hay una flota LLM en producción: el redactor se detiene antes de cualquier llamada externa hasta autorizar proveedor y modelo.
 
 ## Capacidad de búsqueda comprobada
 
@@ -187,8 +192,11 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 - `api/platform-radar-schedule.ts`: productor automático de las tres colas de radar.
 - `api/admin-platform-campaigns.ts`: consulta y alta manual de campañas.
 - `api/ingestion-dispatch.ts`: productor de la cola privada aún sin consumidor.
+- `api/draft-agent-runs.ts`: productor gobernado de la cola del redactor.
 - `scripts/workers/run-municipal-radar.mjs`: consumidor y orquestador del pipeline municipal.
 - `scripts/workers/run-private-funder-radar.mjs`: consumidor privado, monitor de versiones y generador de alertas.
+- `scripts/workers/run-draft-agent.mjs`: prepara contexto mínimo y revalida las puertas del redactor.
+- `scripts/workers/run-draft-agent-scheduled.ps1`: ejecuta el redactor cada cinco minutos.
 - `scripts/workers/run-municipal-radar-scheduled.ps1`: lanzador local programado.
 - `scripts/radar/fetch-bdns-latest.mjs`: consulta y normalización BDNS.
 - `scripts/platform/deep-scan-open-funders.mjs`: descarga, extracción y validación de bases.
@@ -207,3 +215,4 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 5. Cambiar los paquetes de candidatura de Blob público a acceso privado con descarga autorizada.
 6. Implementar el investigador de entidad con snapshots, consentimiento y aprobación humana.
 7. Traducir por bloques la documentación histórica en inglés sin cambiar sus rutas.
+8. Autorizar proveedor, modelo, región, retención y presupuesto antes de generar con IA real.
