@@ -5,10 +5,12 @@ import WebSocket from "ws";
 
 const args = new Set(process.argv.slice(2));
 const apply = args.has("--apply");
-const catalogPath = "data/private-open-funders/platform-open-funders-v1.json";
+const catalogArg = process.argv.find((item) => item.startsWith("--catalog="));
+const catalogPath = catalogArg ? catalogArg.split("=").slice(1).join("=") : "data/private-open-funders/platform-open-funders-v1.json";
 const currentYear = new Date().getUTCFullYear();
 
 function isCurrentConcreteOpportunity(item) {
+  if (item.live_evidence_gate && item.live_evidence_gate !== "passed") return false;
   if (["source_index", "programmatic_monitor", "relationship_based_manual_review", "recurring_or_programmatic"].includes(item.opportunity_status)) return false;
   const years = `${item.name} ${item.deadline_text}`.match(/20\d{2}/g)?.map(Number) || [];
   return years.includes(currentYear) || years.some((year) => year > currentYear);
@@ -176,11 +178,16 @@ async function ensureVersion(supabase, opportunityId, item, observedAt) {
     evidence_json: {
       source_url: item.url,
       evidence_quality: item.evidence_quality,
-      watch_fields: item.watch_fields
+      watch_fields: item.watch_fields,
+      proposal_constraints: item.proposal_constraints || null,
+      scan_status: item.scan_status || null,
+      basis_url: item.basis_url || null
     },
     metadata_json: {
       monitoring_cadence: item.monitoring_cadence,
-      catalogue_import: "platform-open-funders-v1"
+      catalogue_import: "platform-open-funders-v1",
+      proposal_constraints_status: item.proposal_constraints?.status || "not_found_requires_review",
+      drafting_gate: item.proposal_constraints?.draftingGate || "blocked_pending_constraint_review"
     }
   };
   const { error } = await supabase
