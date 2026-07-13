@@ -1,0 +1,89 @@
+name: Workers alojados de radares y redactor
+
+on:
+  schedule:
+    - cron: "15 5 * * *"
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      proceso:
+        description: Proceso que se ejecutará
+        required: true
+        default: todo
+        type: choice
+        options:
+          - todo
+          - radares
+          - redactor
+
+permissions:
+  contents: read
+
+jobs:
+  radares-publicos:
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '15 5 * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'radares'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    concurrency:
+      group: workers-alojados-radares
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PYTHON_BIN: python3
+      TESSERACT_CMD: tesseract
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar OCR y extracción PDF
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes poppler-utils tesseract-ocr tesseract-ocr-spa tesseract-ocr-cat tesseract-ocr-eng
+          python3 -m pip install --disable-pip-version-check pypdf pdfplumber pypdfium2 pytesseract pillow
+      - name: Instalar dependencias Node
+        run: npm ci
+      - name: Consumir campañas encoladas
+        run: |
+          node scripts/workers/run-municipal-radar.mjs --campaign=municipal-social --apply=true
+          node scripts/workers/run-municipal-radar.mjs --campaign=general-social --apply=true
+          node scripts/workers/run-private-funder-radar.mjs --apply=true
+
+  redactor:
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'redactor'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: workers-alojados-redactor
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AI_DRAFT_PROVIDER: openai
+      AI_DRAFT_MODEL: gpt-5.6-luna
+      AI_DRAFT_MONTHLY_BUDGET_EUR: "20"
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Consumir una ejecución encolada
+        run: node scripts/workers/run-draft-agent.mjs

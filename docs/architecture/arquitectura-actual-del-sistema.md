@@ -9,8 +9,9 @@ Estado comprobado el 13 de julio de 2026. Este documento distingue entre compone
 - Supabase/Postgres es la fuente de verdad y contiene dos tablas que actúan como colas.
 - La cola de campañas de plataforma tiene consumidores productivos para tres ciclos: BDNS municipal, BDNS social general y financiadores privados públicos.
 - Existe una cola y un worker asíncrono del redactor. OpenAI está autorizado para una primera fase de evidencia exclusivamente pública, con presupuesto de 20 € al mes; falta instalar la clave API en el worker para ejecutar la primera llamada real.
-- Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local.
-- El OCR no es SaaS: se ejecuta en el equipo worker con Tesseract o con el OCR nativo de Windows.
+- Los tres radares son asíncronos, deterministas y auditables; combinan API, rastreo oficial, extracción PDF y OCR local al runner.
+- GitHub Actions consume las colas en infraestructura alojada. Los lanzadores de Windows quedan como respaldo manual, no como dependencia productiva.
+- El OCR no es SaaS: Tesseract se ejecuta dentro del runner efímero de GitHub Actions.
 - En producción hay 634 registros. De los 73 marcados como abiertos, 50 han pasado por la compuerta reforzada: 2 tienen restricciones de redacción verificadas y 48 quedan bloqueados hasta revisar esas restricciones.
 
 ## Vista gráfica
@@ -25,7 +26,7 @@ flowchart LR
 
   cron["Cron de Vercel · 05:00 UTC"] --> planificador["API de planificación de radares"]
   planificador --> colaPlataforma["Cola: platform_ingestion_campaigns"]
-  tarea["Programador de Windows · 07:15"] --> workers["Workers públicos programados"]
+  alojado["GitHub Actions · runner efímero"] --> workers["Workers públicos alojados"]
   colaPlataforma --> workers
   workers --> bdns["BDNS municipal y social general"]
   workers --> privadas["15 financiadores privados oficiales"]
@@ -53,13 +54,13 @@ flowchart LR
 
 | Flujo | Cola persistida | Productor | Consumidor | Estado real |
 | --- | --- | --- | --- | --- |
-| Radar municipal | `platform_ingestion_campaigns` | Cron de Vercel o API de superadministración | `run-municipal-radar.mjs` desde Windows | Productivo |
-| Radar BDNS social general | `platform_ingestion_campaigns` | Cron de Vercel | `run-municipal-radar.mjs --campaign=general-social` desde Windows | Productivo; cobertura paginada parcial |
-| Radar de financiadores privados | `platform_ingestion_campaigns` | Cron de Vercel | `run-private-funder-radar.mjs` desde Windows | Productivo; 15 fuentes, puerta estricta |
+| Radar municipal | `platform_ingestion_campaigns` | Cron de Vercel o API de superadministración | `run-municipal-radar.mjs` en GitHub Actions | Productivo alojado |
+| Radar BDNS social general | `platform_ingestion_campaigns` | Cron de Vercel | `run-municipal-radar.mjs --campaign=general-social` en GitHub Actions | Productivo alojado; cobertura paginada parcial |
+| Radar de financiadores privados | `platform_ingestion_campaigns` | Cron de Vercel | `run-private-funder-radar.mjs` en GitHub Actions | Productivo alojado; 15 fuentes, puerta estricta |
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
 | Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
 | Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
-| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos | Integración OpenAI preparada y probada; falta la clave del worker |
+| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs` cada cinco minutos en GitHub Actions | Consumidor alojado; falta la clave de OpenAI |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
@@ -68,13 +69,13 @@ Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un age
 
 1. Vercel invoca diariamente `/api/platform-radar-schedule` con `CRON_SECRET`.
 2. La función crea tres campañas idempotentes: `municipal-social`, `general-social` y `private-open-funders`, todas con fecha diaria.
-3. El Programador de tareas de Windows inicia el worker después del cron.
+3. GitHub Actions inicia el worker alojado después del cron; no necesita que el ordenador local esté encendido.
 4. El worker reclama una única campaña `queued` y la marca `running`.
 5. El radar municipal consulta cinco familias sociales; el general busca `social` en todas las administraciones; el privado recorre 15 fuentes oficiales con profundidad máxima dos.
 6. Normaliza, deduplica y descarta convenios, ayudas nominativas, expedientes cerrados o plazos inciertos.
 7. Descarga documentos oficiales de BDNS y resuelve BOP o portales oficiales cuando la ficha los referencia.
 8. Extrae texto con `pypdf`; usa `pdfplumber` como respaldo para PDF problemáticos.
-9. Si el PDF es una imagen, usa Tesseract o el OCR nativo de Windows.
+9. Si el PDF es una imagen, usa Tesseract dentro del runner. El OCR nativo de Windows queda como respaldo local.
 10. Solo importa oportunidades abiertas con emisor oficial, bases sustantivas, URL de evidencia y SHA-256. En privadas exige además estado abierto y cierre explícito.
 11. Extrae las restricciones de redacción; si no las encuentra, bloquea el borrador para revisión. Los máximos por páginas exigen validar el documento renderizado.
 12. El radar privado compara versiones y genera alertas para tenants que siguen la oportunidad.
@@ -89,11 +90,11 @@ La prueba integral del 13 de julio de 2026 recorrió el planificador, la cola de
 | Pregunta | Respuesta actual |
 | --- | --- |
 | ¿Se usa una API externa de OCR? | No |
-| ¿Dónde se procesa el documento? | En el equipo Windows que ejecuta el worker |
-| ¿Motores disponibles? | Tesseract local o OCR nativo de Windows `es-ES` |
-| ¿Se ejecuta en Vercel? | No; Vercel solo encola |
+| ¿Dónde se procesa el documento? | En el runner efímero de GitHub Actions |
+| ¿Motores disponibles? | Tesseract con español, catalán e inglés; Windows OCR solo como respaldo local |
+| ¿Se ejecuta en Vercel? | No; Vercel solo encola y atiende APIs breves |
 | ¿Sale el PDF de nuestro entorno por el OCR? | No |
-| Riesgo operativo | El worker depende de que el equipo esté encendido; `StartWhenAvailable` recupera ejecuciones perdidas |
+| Riesgo operativo | El cron alojado puede retrasarse; Supabase conserva la cola hasta que un runner la reclame |
 
 ## Estado real de los agentes
 
@@ -112,7 +113,7 @@ La prueba integral del 13 de julio de 2026 recorrió el planificador, la cola de
 | Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 
-Conclusión: los radares y el redactor son asíncronos y auditables. El redactor usa salida JSON estricta, `store: false`, límite mensual, evidencia pública y revisión humana. Mientras no exista `OPENAI_API_KEY` en el equipo worker, las ejecuciones permanecen en `awaiting_provider` y no se transmite contenido.
+Conclusión: los radares y el redactor son asíncronos, alojados y auditables. El redactor usa salida JSON estricta, `store: false`, límite mensual, evidencia pública y revisión humana. Mientras no exista `OPENAI_API_KEY` en los secretos de GitHub, las ejecuciones permanecen en `awaiting_provider` y no se transmite contenido.
 
 ## Capacidad de búsqueda comprobada
 
@@ -195,6 +196,7 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 ## Ficheros ejecutables principales
 
 - `vercel.json`: rutas, funciones y cron diario.
+- `.github/workflows/workers-alojados.yml`: consumidores alojados de radares y redactor.
 - `api/platform-radar-schedule.ts`: productor automático de las tres colas de radar.
 - `api/admin-platform-campaigns.ts`: consulta y alta manual de campañas.
 - `api/ingestion-dispatch.ts`: productor de la cola privada aún sin consumidor.
@@ -214,11 +216,10 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 
 ## Decisiones pendientes prioritarias
 
-1. Mover el worker a un host siempre activo o mantener explícitamente la dependencia del PC Windows.
-2. Crear el consumidor de `ingestion_runs` antes de ofrecer conectores privados como operativos.
-3. Revalidar los 23 registros abiertos heredados o excluirlos de cualquier vista accionable.
-4. Añadir emisor autorizado para alertas externas; la generación dentro de la app ya está programada.
-5. Cambiar los paquetes de candidatura de Blob público a acceso privado con descarga autorizada.
-6. Implementar el investigador de entidad con snapshots, consentimiento y aprobación humana.
-7. Traducir por bloques la documentación histórica en inglés sin cambiar sus rutas.
-8. Autorizar proveedor, modelo, región, retención y presupuesto antes de generar con IA real.
+1. Crear el consumidor de `ingestion_runs` antes de ofrecer conectores privados como operativos.
+2. Revalidar los 23 registros abiertos heredados o excluirlos de cualquier vista accionable.
+3. Añadir emisor autorizado para alertas externas; la generación dentro de la app ya está programada.
+4. Cambiar los paquetes de candidatura de Blob público a acceso privado con descarga autorizada.
+5. Implementar el investigador de entidad con snapshots, consentimiento y aprobación humana.
+6. Traducir por bloques la documentación histórica en inglés sin cambiar sus rutas.
+7. Instalar la clave de OpenAI en GitHub solo después de revisar proveedor, región, retención, subprocesadores y presupuesto.
