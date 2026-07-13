@@ -64,8 +64,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
     const blueprint = req.body?.blueprint;
     if (!validBlueprint(blueprint)) return res.status(400).json(fail("Blueprint v1 invalido"));
+    const ownerEmail = typeof req.body?.ownerEmail === "string" ? req.body.ownerEmail.trim().toLowerCase() : "";
+    let ownerUserId = typeof blueprint.ownerUserId === "string" ? blueprint.ownerUserId : "";
+    if (!ownerUserId && ownerEmail) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) return res.status(400).json(fail("Email propietario invalido"));
+      const { data: users, error: usersError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (usersError) throw usersError;
+      ownerUserId = users.users.find((user) => user.email?.toLowerCase() === ownerEmail)?.id || "";
+      if (!ownerUserId) return res.status(409).json(fail("El propietario debe existir primero en Supabase Auth"));
+    }
+    const resolvedBlueprint = ownerUserId ? { ...blueprint, ownerUserId } : blueprint;
     const { data, error } = await supabase.rpc("provision_tenant_agent_suite", {
-      blueprint,
+      blueprint: resolvedBlueprint,
       actor_user_id: actor.userId,
       actor_label: actor.email
     });

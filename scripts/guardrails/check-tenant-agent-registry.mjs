@@ -58,6 +58,9 @@ assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no p
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
+assert(provisioningApi.includes("supabase.auth.admin.listUsers"), "La provisión no resuelve un propietario Auth existente");
+assert(provisioningApi.includes("El propietario debe existir primero"), "La provisión crea propietarios implícitamente");
+assert(!provisioningApi.includes("createUser"), "La provisión no debe crear cuentas sin flujo de invitación");
 assert(provisioningApi.includes("tenant.blueprint_exported"), "Falta exportar blueprint antes de borrar");
 assert(provisioningApi.includes("consents_exported: false"), "El blueprint no advierte que excluye consentimientos");
 assert(!provisioningApi.includes('from("tenant_data_consents")'), "El blueprint exporta consentimientos");
