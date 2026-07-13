@@ -1,62 +1,81 @@
 (function () {
-  const key = "subvenciones.audit.events.v1";
-  const safeRead = () => {
-    try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; }
+  const state = { events: [], filters: { search: "", actor: "", date: "" }, loading: false, error: "" };
+  const labels = {
+    "entity_research.queued": "Investigación de entidad encolada",
+    "entity_research.generated_for_review": "Investigación preparada para revisión",
+    "entity_profile.suggestions_reviewed": "Sugerencias de perfil revisadas",
+    "entity_profile.approved": "Perfil de entidad aprobado",
+    "tenant_match.queued": "Cálculo de encaje encolado",
+    "tenant_match.generated_for_review": "Encaje preparado para revisión",
+    "document_review.queued": "Revisión documental encolada",
+    "draft_agent.queued": "Borrador documental encolado",
+    "audit.exported": "Auditoría exportada"
   };
-  const safeWrite = (events) => localStorage.setItem(key, JSON.stringify(events.slice(-80)));
-  const nowTime = () => new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-  const id = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
 
+  function session() { const value = window.CredentialsAuth?.getSession?.(); return value?.role === "entity" && value?.tenantId ? value : null; }
+  function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])); }
+  function actionLabel(action) { return labels[action] || String(action || "Evento").replaceAll(".", " · ").replaceAll("_", " "); }
+  function detailText(detail) {
+    if (!detail || typeof detail !== "object") return "Sin detalle adicional";
+    return Object.entries(detail).slice(0, 8).map(([key, value]) => `${key.replaceAll("_", " ")}: ${typeof value === "object" ? JSON.stringify(value) : value}`).join(" · ") || "Sin detalle adicional";
+  }
+  async function request(method = "GET", body) {
+    const current = session(); if (!current) throw new Error("Inicia sesión como entidad para consultar la auditoría real.");
+    const response = await fetch("/api/tenant-audit-events", {
+      method,
+      headers: { "Content-Type": "application/json", "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) throw new Error(payload?.error || `Error HTTP ${response.status}`);
+    return payload.data;
+  }
+  function filteredEvents() {
+    const search = state.filters.search.toLowerCase();
+    return state.events.filter((item) => {
+      const haystack = [actionLabel(item.action), item.actor_label, item.target_type, item.target_id, detailText(item.detail_json)].join(" ").toLowerCase();
+      return (!search || haystack.includes(search)) && (!state.filters.actor || item.actor_label === state.filters.actor) && (!state.filters.date || item.created_at.slice(0, 10) === state.filters.date);
+    });
+  }
+  function row(item) {
+    const date = new Date(item.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+    return `<div class="audit-grid-row" role="row"><time role="cell">${escapeHtml(date)}</time><span role="cell">${escapeHtml(item.actor_label)}</span><strong role="cell">${escapeHtml(actionLabel(item.action))}</strong><span role="cell">${escapeHtml(item.target_type)}</span><span role="cell">${escapeHtml(detailText(item.detail_json))}</span></div>`;
+  }
   function render() {
-    const target = document.querySelector("#audit-timeline");
-    if (!target) return;
-    const events = safeRead();
-    document.querySelector("#audit .panel-heading h2").textContent = "Eventos reales de sesion";
-    target.innerHTML = `<div class="plain-note"><strong>Auditoria local activa</strong><span>Estos eventos se registran al interactuar con la app. No contienen datos privados ni sustituyen la tabla Supabase audit_events productiva.</span></div>` + events.slice().reverse().map((item) => `
-      <div class="timeline-item">
-        <time>${item.time}</time>
-        <div><strong>${item.event}</strong><span>${item.actor} - ${item.scope} - ${item.detail}</span></div>
-        <button class="info-dot" title="${item.info}" aria-label="Informacion de auditoria">i</button>
-      </div>`).join("");
+    const target = document.querySelector("#audit-timeline"); if (!target) return;
+    document.querySelector("#audit .panel-heading h2").textContent = "Eventos reales de la entidad";
+    const actors = [...new Set(state.events.map((item) => item.actor_label).filter(Boolean))].sort();
+    const events = filteredEvents();
+    target.innerHTML = `<div class="audit-filter-grid"><label><span>Buscar</span><input data-audit-filter="search" value="${escapeHtml(state.filters.search)}" placeholder="Acción, recurso o detalle" /></label><label><span>Actor</span><select data-audit-filter="actor"><option value="">Todos</option>${actors.map((actor) => `<option value="${escapeHtml(actor)}" ${state.filters.actor === actor ? "selected" : ""}>${escapeHtml(actor)}</option>`).join("")}</select></label><label><span>Fecha</span><input data-audit-filter="date" type="date" value="${escapeHtml(state.filters.date)}" /></label><button class="ghost-action" data-audit-clear type="button">Limpiar filtros</button></div>
+      <div class="plain-note"><strong>${events.length} eventos visibles</strong><span>Registro persistido y aislado para esta entidad. La exportación también queda auditada.</span></div>
+      ${state.loading ? '<div class="empty-state">Cargando eventos reales…</div>' : state.error ? `<div class="empty-state warning">${escapeHtml(state.error)}</div>` : `<div class="audit-table" role="table" aria-label="Eventos de auditoría"><div class="audit-grid-row audit-grid-header" role="row"><span role="columnheader">Fecha</span><span role="columnheader">Actor</span><span role="columnheader">Acción</span><span role="columnheader">Recurso</span><span role="columnheader">Detalle</span></div>${events.length ? events.map(row).join("") : '<div class="empty-state">No hay eventos con estos filtros.</div>'}</div>`}`;
   }
-
-  window.getAuditEvents = safeRead;
-  window.auditEvent = (event) => {
-    const entry = {
-      id: id(),
-      time: nowTime(),
-      iso: new Date().toISOString(),
-      actor: document.body.dataset.role === "superadmin" ? "Superadmin plataforma" : "Usuario entidad",
-      scope: document.body.dataset.role === "superadmin" ? "platform" : "tenant:novaterra",
-      event: event.event || "Evento",
-      detail: event.detail || "Sin detalle",
-      info: event.info || "Evento registrado localmente desde la interaccion de usuario."
-    };
-    safeWrite([...safeRead(), entry]);
-    render();
-    return entry;
-  };
-
-  function classify(button) {
-    if (button.dataset.tenantAction) return { event: `Tenant ${button.dataset.tenantAction}`, detail: "Operacion abierta sobre Novaterra.", info: "Accion de gobierno tenant iniciada por superadmin." };
-    if (button.dataset.tenantConfirm) return { event: `Tenant ${button.dataset.tenantConfirm} confirmado`, detail: "Operación confirmada con controles visibles.", info: "El registro conserva permisos, motivo, resultado y relación con la acción." };
-    if (button.dataset.reviewAction) return { event: `Revision ${button.dataset.reviewAction}`, detail: "Accion de campana de plataforma.", info: "Manual runs requieren motivo, coste estimado y auditoria persistida." };
-    if (button.dataset.sourceManage || button.dataset.sourceAction) return { event: "Fuente gestionada", detail: "Apertura de criterio o permisos de fuente.", info: "No accede a tenant-private sin politica explicita." };
-    if (button.dataset.analyzeSource !== undefined) return { event: "Agente analiza fuente", detail: "Validacion guiada de fuente oficial candidata.", info: "IA solo si hay duda o cambio; primero hash/etag/reglas." };
-    if (button.textContent.trim() === "Ejecutar ahora") return { event: "Invocacion agentica solicitada", detail: "Revision de plataforma bajo demanda.", info: "Debe crear ingestion_run/agent_run en backend productivo." };
-    if (button.textContent.trim() === "Exportar auditoria") return { event: "Auditoria exportada", detail: "Exportacion solicitada por usuario.", info: "La exportacion no debe incluir secretos ni datos privados no autorizados." };
-    return null;
+  async function load() {
+    state.loading = true; state.error = ""; render();
+    try { state.events = await request(); } catch (error) { state.error = error.message; }
+    state.loading = false; render();
   }
-
-  document.addEventListener("click", (event) => {
-    const button = event.target.closest("button");
-    if (!button) return;
-    const classified = classify(button);
-    if (classified) window.auditEvent(classified);
-  }, true);
-  window.addEventListener("hashchange", () => window.auditEvent({ event: "Navegacion", detail: location.hash || "#view-dashboard", info: "Cambio de pantalla registrado en cliente." }));
-  setTimeout(() => {
-    if (!safeRead().length) safeWrite([{ id: id(), time: nowTime(), iso: new Date().toISOString(), actor: "Runtime auditoria", scope: "local", event: "Auditoria iniciada", detail: "Registro local preparado para la sesion.", info: "Primer evento real del runtime de auditoria local." }]);
-    render();
-  }, 0);
+  function csvCell(value) {
+    let text = String(value ?? "").replace(/\r?\n/g, " ");
+    if (/^[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  async function exportExcel(button) {
+    const events = filteredEvents(); if (!events.length) return window.showToast?.("No hay eventos para exportar con estos filtros.");
+    button.disabled = true;
+    try {
+      await request("POST", { action: "record_export", count: events.length, filters: state.filters });
+      const rows = [["Fecha", "Actor", "Acción", "Recurso", "ID recurso", "Detalle"], ...events.map((item) => [item.created_at, item.actor_label, actionLabel(item.action), item.target_type, item.target_id, detailText(item.detail_json)])];
+      const blob = new Blob(["\ufeff", rows.map((values) => values.map(csvCell).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `auditoria-entidad-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
+      window.showToast?.("Auditoría exportada para Excel y registrada."); await load();
+    } catch (error) { window.showToast?.(error.message); }
+    button.disabled = false;
+  }
+  document.addEventListener("input", (event) => { const input = event.target.closest?.("[data-audit-filter]"); if (!input) return; state.filters[input.dataset.auditFilter] = input.value; render(); });
+  document.addEventListener("change", (event) => { const input = event.target.closest?.("[data-audit-filter]"); if (!input) return; state.filters[input.dataset.auditFilter] = input.value; render(); });
+  document.addEventListener("click", (event) => { const clear = event.target.closest?.("[data-audit-clear]"); if (clear) { state.filters = { search: "", actor: "", date: "" }; render(); } const button = event.target.closest?.("[data-audit-export]"); if (button) exportExcel(button); });
+  window.addEventListener("role-session-applied", () => setTimeout(load, 0));
+  window.addEventListener("hashchange", () => { if (location.hash === "#view-audit") load(); });
+  setTimeout(load, 0);
 })();

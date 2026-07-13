@@ -1905,7 +1905,65 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .candidate-guide {
-  margin: -2px 0 22px;
+  margin: 0;
+}
+
+.audit-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) minmax(150px, 190px) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.audit-filter-grid label span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.audit-filter-grid input,
+.audit-filter-grid select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.audit-table {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.audit-grid-row {
+  display: grid;
+  grid-template-columns: 150px 150px minmax(220px, 1.1fr) 150px minmax(280px, 1.5fr);
+  gap: 12px;
+  min-width: 980px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  align-items: start;
+}
+
+.audit-grid-row:last-child { border-bottom: 0; }
+.audit-grid-row time,
+.audit-grid-row span { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.audit-grid-header { background: var(--surface-2); }
+.audit-grid-header span { color: var(--ink); font-weight: 900; }
+
+.candidate-guide-modal {
+  width: min(980px, calc(100vw - 32px));
+  background: #ffffff;
+}
+
+.candidate-guide-modal .candidate-guide-heading h2 {
+  font-size: clamp(24px, 3vw, 34px);
 }
 
 .candidate-guide-heading {
@@ -1957,48 +2015,13 @@ body.sidebar-collapsed .sidebar-note {
   gap: 10px;
 }
 
-.candidate-guide-toggle {
-  width: max-content;
-  margin-top: 12px;
-}
-
-.candidate-guide-toggle,
 .candidate-guide-actions .ghost-action {
   gap: 7px;
 }
 
-.candidate-guide-toggle svg,
 .candidate-guide-actions svg {
   width: 16px;
   height: 16px;
-}
-
-.candidate-guide.is-collapsed {
-  margin-bottom: 16px;
-}
-
-.candidate-guide.is-collapsed .candidate-guide-heading {
-  margin-bottom: 0;
-}
-
-.candidate-guide.is-collapsed .candidate-guide-heading h2 {
-  max-width: 760px;
-  margin-bottom: 6px;
-  font-size: clamp(24px, 2.7vw, 34px);
-}
-
-.candidate-guide.is-collapsed .candidate-guide-heading p:last-child {
-  max-width: 860px;
-  font-size: 15px;
-}
-
-.candidate-guide.is-collapsed .candidate-guide-toggle {
-  margin-top: 8px;
-}
-
-.candidate-guide.is-collapsed .candidate-guide-timeline,
-.candidate-guide.is-collapsed .candidate-guide-notes {
-  display: none;
 }
 
 .candidate-guide-timeline {
@@ -2124,9 +2147,7 @@ body.sidebar-collapsed .sidebar-note {
 }
 
 .candidate-list-heading {
-  margin-top: 4px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
+  margin-top: 0;
 }
 
 .candidate-card {
@@ -2451,8 +2472,7 @@ body.sidebar-collapsed .sidebar-note {
     margin-bottom: 20px;
   }
 
-  .candidate-guide-heading h2,
-  .candidate-guide.is-collapsed .candidate-guide-heading h2 {
+  .candidate-guide-heading h2 {
     font-size: 24px;
   }
 

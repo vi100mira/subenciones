@@ -230,17 +230,8 @@ function renderWorkspace() {
 
 function renderAudit() {
   const isPlatform = document.body.dataset.role === "superadmin";
-  document.querySelector("#audit .panel-heading h2").textContent = isPlatform ? "Eventos globales de plataforma" : "Eventos del piloto";
-  document.querySelector("#audit-timeline").innerHTML = (isPlatform ? window.MOCK.platformAudit : window.MOCK.audit).map((item) => `
-    <div class="timeline-item">
-      <time>${item.time}</time>
-      <div>
-        <strong>${item.event}</strong>
-        <span>${item.actor} · ${item.detail}</span>
-      </div>
-      <button class="info-dot" title="${item.info}" aria-label="Informacion de auditoria">i</button>
-    </div>
-  `).join("");
+  document.querySelector("#audit .panel-heading h2").textContent = isPlatform ? "Auditoría de plataforma" : "Eventos reales de la entidad";
+  document.querySelector("#audit-timeline").innerHTML = '<div class="plain-note"><strong>Cargando trazabilidad</strong><span>Consultando el registro persistido autorizado para esta sesión.</span></div>';
 }
 
 function renderPlatform() {
