@@ -16,6 +16,7 @@ const matchSql = fs.readFileSync(
   "utf8"
 );
 const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
+const profileReviewApi = fs.readFileSync("api/tenant-profile-review.ts", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -72,6 +73,11 @@ assert(governanceApi.includes("reconcile_tenant_agent_suite"), "Los cambios no r
 assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa reversible de agentes");
 assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");
 assert(!governanceApi.toLowerCase().includes("novaterra"), "El gobierno depende del piloto");
+assert(profileReviewApi.includes('.eq("status", "pending")'), "La revisión puede sobrescribir decisiones previas");
+assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no aprueba el perfil explícitamente");
+assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
+assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");
+assert(!profileReviewApi.toLowerCase().includes("novaterra"), "La revisión depende del piloto");
 
 console.log(JSON.stringify({
   ok: true,
