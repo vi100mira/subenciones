@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createHash } from "node:crypto";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
+import { loadApprovedBases } from "../src/platformBases.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -9,6 +11,11 @@ function requestedTenant(req: VercelRequest) {
 
 function digest(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+function isMissingDraftReviewSchema(error: any) {
+  return ["42P01", "PGRST205"].includes(String(error?.code || ""))
+    || /tenant_draft_reviews.*(?:not exist|schema cache)/i.test(String(error?.message || ""));
 }
 
 async function dispatchDraftWorker() {
@@ -53,7 +60,7 @@ async function approvedFactIds(supabase: ReturnType<typeof getSupabaseAdmin>, te
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const actor = await requireSourcePermission(req.headers.authorization, "sources:read", requestedTenant(req));
+    const actor = await requireSourcePermission(req.headers.authorization, req.method === "GET" ? "sources:read" : "sources:write", requestedTenant(req));
     const supabase = getSupabaseAdmin();
 
     if (req.method === "GET") {
@@ -62,14 +69,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq("tenant_id", actor.tenantId).eq("agent_key", "draft_agent")
         .order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
-      return res.status(200).json(ok(data || []));
+      const runIds = (data || []).map((run) => run.id);
+      const reviews = runIds.length ? await supabase.from("tenant_draft_reviews")
+        .select("id, agent_run_id, status, review_note, reviewed_at, docx_blob_path, pdf_blob_path, validation_json")
+        .eq("tenant_id", actor.tenantId).in("agent_run_id", runIds) : { data: [], error: null };
+      if (reviews.error && !isMissingDraftReviewSchema(reviews.error)) throw reviews.error;
+      const reviewByRun = new Map((reviews.data || []).map((review) => [review.agent_run_id, review]));
+      return res.status(200).json(ok((data || []).map((run) => ({ ...run, human_review: reviewByRun.get(run.id) || null }))));
+    }
+
+    if (req.method === "PATCH") {
+      const { runId, reviewStatus, note = "" } = req.body || {};
+      if (typeof runId !== "string" || !runId) return res.status(400).json(fail("Falta runId"));
+      if (!new Set(["approved", "rejected"]).has(reviewStatus)) return res.status(400).json(fail("reviewStatus invalido"));
+      if (reviewStatus === "rejected" && !String(note || "").trim()) return res.status(400).json(fail("Indica el motivo del rechazo"));
+      const { data: run, error: runError } = await supabase.from("tenant_agent_runs")
+        .select("id, opportunity_version_id, status, output_json").eq("id", runId).eq("tenant_id", actor.tenantId)
+        .eq("agent_key", "draft_agent").maybeSingle();
+      if (runError) throw runError;
+      if (!run) return res.status(404).json(fail("Borrador no encontrado"));
+      if (run.status !== "review_required") return res.status(409).json(fail("El borrador aun no esta listo para revision humana"));
+      const outputHash = digest(run.output_json);
+      const now = new Date().toISOString();
+      const { data: review, error } = await supabase.from("tenant_draft_reviews").upsert({
+        tenant_id: actor.tenantId, agent_run_id: run.id, opportunity_version_id: run.opportunity_version_id,
+        status: reviewStatus, output_hash: outputHash, review_note: String(note || "").trim().slice(0, 3000),
+        reviewed_by: actor.userId, reviewed_at: now, updated_at: now
+      }, { onConflict: "agent_run_id" }).select("id, agent_run_id, status, review_note, reviewed_at").single();
+      if (error) throw error;
+      await supabase.from("audit_events").insert({
+        tenant_id: actor.tenantId, actor_user_id: actor.userId, actor_label: actor.role,
+        action: `draft_agent.${reviewStatus}`, target_type: "draft_review", target_id: review.id,
+        detail_json: { agent_run_id: run.id, output_hash: outputHash, export_allowed: reviewStatus === "approved", submission_allowed: false }
+      });
+      return res.status(200).json(ok({ review, message: reviewStatus === "approved"
+        ? "Expediente aprobado para generar el ZIP documental, DOCX y PDF privados; la presentacion sigue prohibida."
+        : "Borrador rechazado. No puede exportarse." }));
     }
 
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
+    await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
     const { canonicalKey, useApprovedInternalFacts = false } = req.body || {};
     if (typeof canonicalKey !== "string" || !canonicalKey) return res.status(400).json(fail("Falta canonicalKey"));
     if (typeof useApprovedInternalFacts !== "boolean") return res.status(400).json(fail("useApprovedInternalFacts debe ser booleano"));
-    if (useApprovedInternalFacts) return res.status(409).json(fail("La fase autorizada del redactor solo utiliza evidencia pública"));
 
     const { data: opportunity, error: opportunityError } = await supabase.from("platform_opportunities")
       .select("id, canonical_key, title, status").eq("canonical_key", canonicalKey).maybeSingle();
@@ -84,7 +126,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!version) return res.status(409).json(fail("La oportunidad no tiene versión oficial vigente"));
     if (version.deadline_status !== "open") return res.status(409).json(fail("El plazo vigente no está confirmado como abierto"));
 
-    const constraints = version.evidence_json?.proposal_constraints;
+    const approvedBases = await loadApprovedBases(supabase, version.id);
+    if (approvedBases.requirementsContract.documentaryGate !== "requirements_approved") {
+      return res.status(409).json(fail("Redaccion bloqueada: faltan bases aprobadas sobre beneficiarios, actuaciones, documentos o presentacion"));
+    }
+    const constraints = approvedBases.proposalConstraints?.draftingGate === "constraints_verified"
+      ? approvedBases.proposalConstraints : version.evidence_json?.proposal_constraints;
     if (constraints?.draftingGate !== "constraints_verified") {
       return res.status(409).json(fail("Redacción bloqueada: faltan límites oficiales verificados"));
     }
@@ -95,6 +142,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sourceUrl: version.source_url,
       versionContentHash: version.content_hash,
       proposalConstraintsHash: digest(constraints),
+      requirementsContractHash: digest(approvedBases.requirementsContract),
+      basesInterpretationIds: approvedBases.approvedInterpretationIds,
       approvedFactRefs: facts,
       allowedDataClasses: useApprovedInternalFacts ? ["public", "internal_approved"] : ["public"],
       humanReviewRequired: true,
@@ -120,8 +169,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     return res.status(202).json(ok({ run, message: "Redactor encolado con evidencia y revisión humana obligatoria." }));
   } catch (error) {
+    if (isMissingDraftReviewSchema(error)) return res.status(503).json(fail("La revision final de borradores aun no esta activada en este entorno"));
     const message = error instanceof Error ? error.message : "Error inesperado";
-    const status = message.includes("Permiso") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : message.includes("consentimiento") ? 409 : 400;
+    const status = message.includes("Permiso") || message.includes("no incluido") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : message.includes("consentimiento") ? 409 : 400;
     return res.status(status).json(fail(message));
   }
 }

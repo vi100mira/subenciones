@@ -16,6 +16,7 @@ assert(workflow.includes('cron: "15 5 * * *"'), "Falta el consumo diario de rada
 assert(workflow.includes('cron: "*/15 * * * *"'), "Falta el cron de recuperación del redactor");
 assert(workflow.includes("tesseract-ocr-spa"), "El runner no instala OCR en español");
 assert(workflow.includes("secrets.SUPABASE_SERVICE_ROLE_KEY"), "Supabase no se obtiene desde secretos");
+assert(workflow.includes("secrets.BLOB_READ_WRITE_TOKEN"), "Los artefactos de bases no pueden preservarse en Blob");
 assert(!workflow.includes("Programador de Windows"), "El workflow conserva una dependencia de Windows");
 assert(!/SUPABASE_SERVICE_ROLE_KEY:\s*[^$\s]/.test(workflow), "Hay una clave de servicio literal en el workflow");
 assert(draftApi.includes("DRAFT_WORKER_GITHUB_TOKEN"), "Falta la credencial server-only del despacho inmediato");
@@ -25,6 +26,7 @@ assert(draftApi.includes('status: "fallback_cron"'), "Falta la recuperación seg
 assert(draftApi.includes('agent_key: "draft_agent"'), "La API no etiqueta la ejecucion del redactor");
 assert(draftApi.includes('.eq("agent_key", "draft_agent")'), "La lectura del redactor mezcla otros agentes");
 assert(draftWorker.includes('.eq("agent_key", "draft_agent")'), "El worker redactor puede reclamar otra cola");
+assert(draftWorker.includes("approvedFactContext") && draftWorker.includes('consent_type", "ai_processing"'), "El redactor personalizado no revalida consentimiento y hechos aprobados");
 assert(workflow.includes("scripts/workers/run-entity-research.mjs"), "El investigador no tiene runner alojado");
 assert(workflow.includes("inputs.proceso == 'investigador'"), "Falta despacho selectivo del investigador");
 assert(researchApi.includes('agent_key: "entity_research"'), "La API no etiqueta la investigacion");
@@ -35,7 +37,8 @@ assert(matchApi.includes('agent_key: "match_agent"'), "La API no etiqueta el enc
 assert(matchApi.includes('inputs: { proceso: "encaje" }'), "La API no despacha el encaje");
 assert(workflow.includes("scripts/workers/run-document-review.mjs"), "La revisión documental no tiene runner alojado");
 assert(workflow.includes("inputs.proceso == 'documentos'"), "Falta despacho selectivo documental");
-assert(documentReviewApi.includes('inputs: { proceso: "documentos" }'), "La API no despacha revisión documental");
+assert(documentReviewApi.includes("status(410)") && !documentReviewApi.includes('inputs: { proceso: "documentos" }'), "La API aun despacha nuevas revisiones documentales planas");
 assert(matchApi.includes("human_review_status"), "La API no permite revisión humana del encaje");
 
-console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", investigador: "alojado y bajo demanda", encaje: "alojado y revisable", documentos: "alojado y revisable", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));
+assert(workflow.includes("scripts/workers/run-bases-interpreter.mjs") && workflow.includes("inputs.proceso == 'bases'"), "El interpretador de bases no tiene consumidor alojado selectivo");
+console.log(JSON.stringify({ ok: true, radares: "alojados", redactor: "alojado y aislado", investigador: "alojado y bajo demanda", encaje: "alojado y revisable", documentos: "consumidor historico sin nuevas altas", ocr: "Tesseract en runner", permissions: "contents: read" }, null, 2));

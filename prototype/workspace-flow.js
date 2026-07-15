@@ -9,12 +9,11 @@
   }
 
   function defaultSelection() {
-    const rows = opportunities();
-    const activeId = rows.find((item) => item.id === "bdns-908014")?.id || rows[0]?.id || "";
-    return { activeId, selectedIds: rows.slice(0, 4).map((item) => item.id) };
+    return { activeId: "", selectedIds: [] };
   }
 
   function candidateSelection() {
+    if (document.body.dataset.role === "entity" && !window.TENANT_RECOMMENDATIONS_APPLIED) return defaultSelection();
     try {
       return { ...defaultSelection(), ...JSON.parse(localStorage.getItem(candidateKey) || "{}") };
     } catch {
@@ -41,25 +40,33 @@
   function selectedOpportunities() {
     const rows = opportunities();
     const selection = candidateSelection();
-    const active = rows.find((item) => item.id === selection.activeId) || rows[0];
-    const alternatives = selection.selectedIds
-      .filter((id) => id !== active?.id)
+    const selectedIds = [...new Set(selection.selectedIds || [])];
+    const active = rows.find((item) => item.id === selection.activeId && selectedIds.includes(item.id));
+    const selected = selectedIds
       .map((id) => rows.find((item) => item.id === id))
       .filter(Boolean);
-    const fallback = rows.filter((item) => item.id !== active?.id && !selection.selectedIds.includes(item.id)).slice(0, Math.max(0, 3 - alternatives.length));
     const watched = watchedIds();
-    const activeDocs = documentState(active?.id);
-    const activeState = activeDocs?.projectState === "active" ? "Proyecto activo" : activeDocs ? "Documentacion preparada" : "Documentacion pendiente";
-    return [
-      { item: active, active: true, state: activeState, tone: activeDocs?.projectState === "active" ? "safe" : "warning", note: activeDocs ? "Paquete Word preparado; falta revision humana antes de uso externo." : "Debe preparar documentacion Word antes de activar como proyecto." },
-      ...[...alternatives, ...fallback].slice(0, 3).map((item, index) => ({
+    return selected.map((item) => {
+      const persistedStage = item.matchRecommendation?.candidacy_stage || "none";
+      const localDocs = documentState(item.id);
+      const stage = persistedStage !== "none" ? persistedStage : localDocs?.projectState === "active" ? "active" : localDocs ? "documents_ready" : "none";
+      const state = stage === "active" ? "Proyecto activo" : stage === "documents_ready" ? "Documentacion preparada" : stage === "documents_pending" ? "Documentacion pendiente" : "Preseleccionada";
+      const note = stage === "active"
+        ? "Proyecto activado tras revision humana."
+        : stage === "documents_ready"
+          ? "Paquete Word preparado; falta revision humana antes de uso externo."
+          : stage === "documents_pending"
+            ? "Debe preparar documentacion Word antes de activar como proyecto."
+            : "Seleccionada por el validador humano; todavia no se ha abierto expediente.";
+      return {
         item,
-        active: false,
-        state: index === 0 ? "En evaluacion" : "Preseleccionada",
-        tone: index === 0 ? "warning" : "review",
-        note: index === 0 ? "Requiere confirmar plazo y requisitos." : "Guardada para comparar antes de decidir."
-      }))
-    ].filter((entry) => entry.item).map((entry) => ({ ...entry, watched: watched.has(entry.item.id) || entry.state === "Proyecto activo" || entry.state === "Documentacion preparada" }));
+        active: item.id === active?.id,
+        state,
+        tone: stage === "active" ? "safe" : stage === "none" ? "review" : "warning",
+        note,
+        watched: watched.has(item.id) || ["active", "documents_ready"].includes(stage)
+      };
+    });
   }
 
   function card(entry) {
@@ -153,7 +160,11 @@
               <button class="icon-button" data-open-candidate-guide type="button" title="Guía de candidatura" aria-label="Abrir guía de candidatura"><i data-lucide="circle-help"></i></button>
             </div>
           </div>
-          <div class="candidate-list">${selected.map(card).join("")}</div>
+          <div class="candidate-list">${selected.length ? selected.map(card).join("") : `
+            <div class="plain-note candidate-empty-state">
+              <strong>${window.TENANT_MATCH_LOAD_STATE === "error" ? "No se ha podido recuperar el encaje" : window.TENANT_MATCH_LOAD_STATE === "loading" ? "Cargando decisiones del encaje" : "Todavia no hay candidaturas"}</strong>
+              <span>${window.TENANT_MATCH_LOAD_STATE === "error" ? `${window.TENANT_MATCH_LOAD_ERROR || "La conexion con el estado de la entidad ha fallado."} No se muestran expedientes locales para evitar informacion contradictoria.` : window.TENANT_MATCH_LOAD_STATE === "loading" ? "Estamos recuperando las decisiones guardadas para esta entidad." : "Las candidaturas apareceran aqui solo cuando el validador humano preseleccione una oportunidad."}</span>
+            </div>`}</div>
         </article>
         <div id="workspace-detail-anchor" class="workspace-detail-anchor" aria-live="polite"></div>
       </div>`;
@@ -243,5 +254,7 @@
   window.addEventListener("hashchange", renderWorkspaceFlow);
   window.addEventListener("workspace-candidates-changed", renderWorkspaceFlow);
   window.addEventListener("tenant-watch-changed", renderWorkspaceFlow);
+  window.addEventListener("role-session-applied", renderWorkspaceFlow);
+  window.addEventListener("tenant-match-load-state", renderWorkspaceFlow);
   window.openActiveCandidateModal = openActiveCandidateModal;
 })();

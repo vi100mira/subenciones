@@ -33,6 +33,32 @@ function providerReady() {
   return process.env.AI_DRAFT_PROVIDER === "openai" && Boolean(process.env.OPENAI_API_KEY);
 }
 
+async function approvedRequirements(supabase, versionId) {
+  const { data, error } = await supabase.from("platform_bases_interpretations")
+    .select("id, citations_verified, contract_json").eq("opportunity_version_id", versionId)
+    .eq("status", "approved");
+  if (error) throw error;
+  const rows = (data || []).filter((row) => row.citations_verified);
+  const sections = {};
+  const limits = [];
+  const formatRules = [];
+  for (const row of rows) {
+    for (const [key, clauses] of Object.entries(row.contract_json?.sections || {})) {
+      sections[key] = [...(sections[key] || []), ...(clauses || [])];
+    }
+    limits.push(...(row.contract_json?.proposalConstraints?.limits || []));
+    formatRules.push(...(row.contract_json?.proposalConstraints?.formatRules || []));
+  }
+  const missing = ["beneficiaries", "eligibleActivities", "requiredDocuments", "submission"]
+    .filter((key) => !sections[key]?.length);
+  if (!rows.length || missing.length) throw new Error(`Las bases aprobadas dejaron de estar completas: ${missing.join(", ") || "sin interpretacion aprobada"}.`);
+  return { schemaVersion: 1, status: "approved", documentaryGate: "requirements_approved", sections,
+    proposalConstraints: { status: limits.length ? "verified" : "not_found_requires_review",
+      draftingGate: limits.length ? "constraints_verified" : "blocked_pending_constraint_review",
+      requiresRenderedValidation: limits.some((item) => ["pages", "folios", "sides"].includes(item.unit)),
+      limits, formatRules }, interpretationIds: rows.map((row) => row.id) };
+}
+
 async function claim(supabase, ready) {
   const statuses = ready ? ["queued", "awaiting_provider"] : ["queued"];
   const { data: queued, error: queueError } = await supabase.from("tenant_agent_runs")
@@ -48,14 +74,36 @@ async function claim(supabase, ready) {
   return data ? queued : null;
 }
 
+async function approvedFactContext(supabase, run) {
+  if (!run.use_approved_internal_facts) return [];
+  const { data: consent, error: consentError } = await supabase.from("tenant_data_consents")
+    .select("id").eq("tenant_id", run.tenant_id).eq("consent_type", "ai_processing").eq("status", "granted")
+    .order("granted_at", { ascending: false }).limit(1).maybeSingle();
+  if (consentError) throw consentError;
+  if (!consent) throw new Error("El consentimiento para usar hechos internos con IA ya no esta vigente.");
+  const ids = (run.input_manifest_json?.approvedFactRefs || []).map((fact) => fact.id).filter(Boolean).slice(0, 40);
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from("tenant_profile_suggestions")
+    .select("id, field_key, suggested_value, source_type, confidence, source_sha256")
+    .eq("tenant_id", run.tenant_id).eq("status", "approved").in("id", ids);
+  if (error) throw error;
+  return (data || []).map((fact) => ({
+    id: fact.id, fieldKey: String(fact.field_key || "").slice(0, 100),
+    value: String(fact.suggested_value || "").slice(0, 1200), sourceType: fact.source_type,
+    confidence: fact.confidence, sourceSha256: fact.source_sha256 || null
+  }));
+}
+
 async function contextManifest(supabase, run) {
-  if (run.use_approved_internal_facts) throw new Error("La fase autorizada solo permite evidencia pública; los hechos internos no se enviarán.");
+  const approvedFacts = await approvedFactContext(supabase, run);
   const { data: version, error: versionError } = await supabase.from("platform_opportunity_versions")
     .select("id, source_url, official_url, bases_url, content_hash, deadline_text, deadline_status, amount_text, eligibility_text, criteria_text, required_documents_text, submission_channel_text, evidence_json")
     .eq("id", run.opportunity_version_id).eq("version_status", "current").maybeSingle();
   if (versionError) throw versionError;
   if (!version || version.deadline_status !== "open") throw new Error("La versión oficial o el plazo dejaron de estar vigentes.");
-  const constraints = version.evidence_json?.proposal_constraints;
+  const requirementsContract = await approvedRequirements(supabase, version.id);
+  const constraints = requirementsContract.proposalConstraints.draftingGate === "constraints_verified"
+    ? requirementsContract.proposalConstraints : version.evidence_json?.proposal_constraints;
   if (constraints?.draftingGate !== "constraints_verified") throw new Error("Los límites de redacción dejaron de estar verificados.");
   const { data: opportunity, error: opportunityError } = await supabase.from("platform_opportunities")
     .select("title, funder_name").eq("id", run.opportunity_id).single();
@@ -68,10 +116,12 @@ async function contextManifest(supabase, run) {
       deadlineHash: hash(version.deadline_text),
       criteriaHash: hash(version.criteria_text),
       submissionChannelHash: hash(version.submission_channel_text),
-      constraints
+      constraints,
+      requirementsContractHash: hash(JSON.stringify(requirementsContract)),
+      basesInterpretationIds: requirementsContract.interpretationIds
     },
-    approvedFacts: [],
-    allowedDataClasses: ["public"],
+    approvedFactRefs: approvedFacts.map((fact) => ({ id: fact.id, sourceType: fact.sourceType, sourceSha256: fact.sourceSha256 })),
+    allowedDataClasses: approvedFacts.length ? ["public", "internal_approved"] : ["public"],
     rawPrivateTextPersisted: false,
     humanReviewRequired: true,
     externalSubmissionAllowed: false,
@@ -82,7 +132,7 @@ async function contextManifest(supabase, run) {
     deadlineText: version.deadline_text, amountText: version.amount_text,
     eligibilityText: version.eligibility_text, criteriaText: version.criteria_text,
     requiredDocumentsText: version.required_documents_text,
-    submissionChannelText: version.submission_channel_text, constraints
+    submissionChannelText: version.submission_channel_text, constraints, requirementsContract, approvedFacts
   } };
 }
 
@@ -118,18 +168,18 @@ async function main() {
     const { error: generatingError } = await supabase.from("tenant_agent_runs").update({ status: "generating", provider, model: process.env.AI_DRAFT_MODEL || "gpt-5.6-luna", context_manifest_json: manifest, updated_at: new Date().toISOString() }).eq("id", run.id);
     if (generatingError) throw generatingError;
     const generated = await generatePublicDraft(prepared.publicContext);
-    const validation = validateDraftOutput(generated.output, prepared.publicContext.constraints);
+    const validation = validateDraftOutput(generated.output, prepared.publicContext.constraints, prepared.publicContext.requirementsContract);
     const status = validation.valid ? "review_required" : "failed";
     const { error } = await supabase.from("tenant_agent_runs").update({
       status, provider, model: generated.model, context_manifest_json: manifest, output_json: generated.output,
-      usage_json: { ...generated.usage, validationState: validation.validationState, validationErrors: validation.errors, publicOnly: true, responseId: generated.responseId },
+      usage_json: { ...generated.usage, validationState: validation.validationState, validationErrors: validation.errors, documentCoverage: validation.documentCoverage, generatedDocuments: validation.generatedDocuments, publicOnly: !run.use_approved_internal_facts, approvedFactCount: prepared.publicContext.approvedFacts.length, responseId: generated.responseId },
       error: validation.valid ? null : validation.errors.join(" ").slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).eq("id", run.id);
     if (error) throw error;
     await supabase.from("audit_events").insert({
       tenant_id: run.tenant_id, actor_user_id: run.requested_by, actor_label: "draft-agent-worker",
       action: "draft_agent.generated_for_review", target_type: "agent_run", target_id: run.id,
-      detail_json: { status, provider, model: generated.model, tokens: generated.usage.total_tokens, estimated_eur: generated.usage.estimated_eur, public_only: true, output_hash: hash(JSON.stringify(generated.output)), validation_state: validation.validationState }
+      detail_json: { status, provider, model: generated.model, tokens: generated.usage.total_tokens, estimated_eur: generated.usage.estimated_eur, public_only: !run.use_approved_internal_facts, approved_fact_count: prepared.publicContext.approvedFacts.length, output_hash: hash(JSON.stringify(generated.output)), validation_state: validation.validationState, document_coverage: validation.documentCoverage, generated_documents: validation.generatedDocuments }
     });
     console.log(JSON.stringify({ mode: "generated", runId: run.id, status, provider, model: generated.model, usage: generated.usage, validation: validation.validationState }, null, 2));
   } catch (error) {

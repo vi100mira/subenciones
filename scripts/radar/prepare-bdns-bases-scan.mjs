@@ -16,20 +16,21 @@ async function main() {
       name: `Official bases scan from ${dataset.source}`,
       observed_at: dataset.generatedAt,
       source_authority: "official_registry",
+      supplementary_source_id: null,
       rules: [
         "The issuing body or official registry is the only accepted provenance.",
         "A beneficiary publication can never activate an opportunity.",
         "Each candidate is open and has an official bases URL before scanning."
       ]
     },
-    sources: candidates.flatMap((item) => (item.basesUrls?.length ? item.basesUrls : [item.basesUrl]).map((basisUrl, index) => ({
+    sources: candidates.flatMap((item) => (item.basisDocuments?.length ? item.basisDocuments : (item.basesUrls?.length ? item.basesUrls : [item.basesUrl]).map((url, index) => ({ url, role: index ? "supporting" : "primary" }))).map((basisDocument, index) => ({
       id: `${item.id}-bases-${index + 1}`,
-      name: item.title,
+      name: `${item.title} [${basisDocument.role || "supporting"}]`,
       url: item.officialUrl,
-      basis_url: basisUrl,
+      basis_url: basisDocument.url,
       navigation_path: [
         { url: item.officialUrl, label: `Ficha oficial ${item.id}` },
-        { url: basisUrl, label: `Bases oficiales ${index + 1}` }
+        { url: basisDocument.url, label: `Documento oficial ${index + 1} · ${basisDocument.role || "supporting"}` }
       ],
       source_authority: "official_registry",
       opportunity_status: "open",

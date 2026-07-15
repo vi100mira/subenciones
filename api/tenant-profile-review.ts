@@ -56,6 +56,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const invalid = reviews.some((review) => typeof review?.id !== "string" || !["approved", "rejected"].includes(review?.status));
     if (invalid) return res.status(400).json(fail("Decisión de revisión inválida"));
 
+    if (approveProfile) {
+      const { data: pending, error: pendingError } = await supabase.from("tenant_profile_suggestions")
+        .select("id").eq("tenant_id", actor.tenantId).eq("status", "pending").limit(200);
+      if (pendingError) throw pendingError;
+      const decidedIds = new Set(reviews.map((review) => review.id));
+      const unresolved = (pending || []).filter((item) => !decidedIds.has(item.id));
+      if (unresolved.length) return res.status(409).json(fail(`Quedan ${unresolved.length} sugerencias por revisar antes de aprobar el perfil`));
+    }
+
     const now = new Date().toISOString();
     for (const status of ["approved", "rejected"]) {
       const ids = reviews.filter((review) => review.status === status).map((review) => review.id);

@@ -114,7 +114,7 @@
     return `
       <p>Puedo razonar sobre las convocatorias activas de esta entidad, no sobre todo internet. Algunas preguntas utiles:</p>
       <div class="prompt-chips">
-        <button data-chat-prompt="Que candidaturas convienen mas para Novaterra?">Que conviene mas</button>
+        <button data-chat-prompt="Que candidaturas convienen mas para esta entidad?">Que conviene mas</button>
         <button data-chat-prompt="Cuales tienen plazo abierto y buen encaje?">Plazo abierto</button>
         <button data-chat-prompt="Que riesgos debo revisar antes de activar candidatura?">Riesgos</button>
         <button data-chat-prompt="Compara las tres mejores candidatas">Comparar mejores</button>

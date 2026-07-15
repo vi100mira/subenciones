@@ -115,8 +115,11 @@ The prototype now treats monetization as feature entitlement, not payment proces
 - Platform superadmin sees platform and operations surfaces, plus global radar/audit views.
 - Tenant users never see `Plataforma` or `Operaciones`.
 - Tenant menus are filtered by the active plan features returned in the authenticated session.
-- Novaterra uses `mission_full` / `Plan integral piloto`, with all tenant-facing agents and workflows enabled.
-- The `Plan` screen shows contracted modules and billing status, but does not process payments yet.
+- Novaterra uses `mission_full` / `Misión integral` as a sponsored pilot, with all tenant-facing areas contracted.
+- The tenant plan is part of `Entidad`; it is not a separate navigation destination.
+- Contracted access and operational readiness are different: an included assistant can still require consent, human approval, configuration, or channel connection.
+- Platform superadmins retain a separate internal monitoring view; it is not a commercial plan screen.
+- Payment processing remains disabled.
 
 Never monetizable:
 
@@ -152,6 +155,24 @@ Recommended model:
 - No paywall around basic public grant discovery.
 - Transparent cost line for AI/vector usage when private RAG is enabled.
 - Discounts or sponsored seats for very small entities, federations, or pilot cohorts.
+
+Reference offer prepared in the prototype (before taxes and before enabling a payment gateway):
+
+| Plan | Reference price | Operational value |
+| --- | ---: | --- |
+| Radar público | EUR 0, always | Official opportunities, sources, evidence, and no private entity data. |
+| Equipo social | EUR 29/month | Up to three people, entity profile, explainable matching, and in-app alerts. |
+| Misión integral | EUR 79/month | Up to ten people, bases review, draft preparation, audit, and data controls. |
+
+The active pilot fee is EUR 0. Before payment is enabled, the product must publish taxes, cancellation terms, sponsored-access rules, total payable price, and any usage limits. There must be no token/credit mechanism that obscures the real cost.
+
+Tenant plan contract before payment integration:
+
+- Each entity stores a whitelisted `commercial_plan` inside its isolated configuration: `code`, `billing_mode`, and `current_monthly_eur`.
+- The authenticated session resolves navigation features and included assistants from the server-side plan catalogue; Novaterra is not detected by name.
+- Starting entity research, matching, or drafting is rejected by the server when its assistant is not included in the entity plan, even if browser state is modified.
+- Historic results remain readable after a downgrade so the entity does not lose its own audit trail.
+- The current configuration is an entitlement/display contract, not authoritative payment evidence. A future gateway must persist its signed subscription event separately and then update the plan through a server-only audited transition.
 
 Ethical constraints:
 

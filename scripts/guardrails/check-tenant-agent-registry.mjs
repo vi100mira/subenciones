@@ -83,11 +83,13 @@ assert(governanceApi.includes("requireSourcePermission"), "El gobierno no exige 
 assert(governanceApi.includes("Falta alcance explícito"), "El consentimiento no exige alcance");
 assert(governanceApi.includes("validConsentScope"), "El consentimiento no valida su alcance");
 assert(governanceApi.includes("scope_keys"), "La auditoría conserva el alcance completo");
+assert(governanceApi.includes("profileReviewState"), "El gobierno no expone la finalización persistida del perfil");
 assert(governanceApi.includes("reconcile_tenant_agent_suite"), "Los cambios no reconcilian agentes");
 assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa reversible de agentes");
 assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");
 assert(!governanceApi.toLowerCase().includes("novaterra"), "El gobierno depende del piloto");
 assert(profileReviewApi.includes('.eq("status", "pending")'), "La revisión puede sobrescribir decisiones previas");
+assert(profileReviewApi.includes("sugerencias por revisar antes de aprobar el perfil"), "El perfil puede aprobarse con sugerencias pendientes");
 assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no aprueba el perfil explícitamente");
 assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
 assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");

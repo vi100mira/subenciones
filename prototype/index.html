@@ -10,9 +10,9 @@
     <link rel="icon" type="image/png" href="./assets/insertia/favicon-32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="./assets/insertia/apple-touch-icon.png" />
     <link rel="manifest" href="./site.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=20260713-dashboard-radar-alerts" />
-    <link rel="stylesheet" href="./public-entry.css?v=20260628-stitch-entry" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260713-agent-audit-ux" />
+    <link rel="stylesheet" href="./styles.css?v=20260715-match-accounting" />
+    <link rel="stylesheet" href="./public-entry.css?v=20260715-public-pricing" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260715-sync-review" />
     <link rel="stylesheet" href="./grid-filters.css?v=20260713-sticky-grid-head" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
@@ -58,7 +58,7 @@
         <div class="sidebar-note version-note">
           <div>
             <strong>Versión estable</strong>
-            <span>2026.07</span>
+            <span data-build-version>Versión de compilación no disponible</span>
           </div>
         </div>
       </aside>
@@ -82,26 +82,10 @@
 
         <section class="screen is-visible" id="dashboard" aria-labelledby="screen-title">
           <div class="metric-grid">
-            <article class="metric">
-              <span>Convocatorias candidatas</span>
-              <strong>18</strong>
-              <small>5 con plazo critico</small>
-            </article>
-            <article class="metric">
-              <span>Encaje alto</span>
-              <strong>6</strong>
-              <small>Con evidencia completa</small>
-            </article>
-            <article class="metric">
-              <span>Riesgo de datos</span>
-              <strong>2</strong>
-              <small>Requieren revision</small>
-            </article>
-            <article class="metric">
-              <span>Fuentes activas</span>
-              <strong>7</strong>
-              <small>BDNS, GVA, LABORA...</small>
-            </article>
+            <details class="metric"><summary><span>Convocatorias candidatas</span><strong>18</strong><small>5 con plazo critico</small><i data-lucide="chevron-down"></i></summary><div class="metric-preview"></div></details>
+            <details class="metric"><summary><span>Encaje alto</span><strong>6</strong><small>Con evidencia completa</small><i data-lucide="chevron-down"></i></summary><div class="metric-preview"></div></details>
+            <details class="metric"><summary><span>Riesgo de datos</span><strong>2</strong><small>Requieren revision</small><i data-lucide="chevron-down"></i></summary><div class="metric-preview"></div></details>
+            <details class="metric"><summary><span>Fuentes activas</span><strong>7</strong><small>BDNS, GVA, LABORA...</small><i data-lucide="chevron-down"></i></summary><div class="metric-preview"></div></details>
           </div>
 
           <div class="dashboard-grid">
@@ -113,6 +97,7 @@
                 </div>
                 <button class="text-action" data-jump="governance">Gestionar</button>
               </div>
+              <p class="source-map-accounting-note">Cobertura por fuente: una misma oportunidad puede aparecer en BDNS y tambien en DOGV/BOP. Estos contadores no se suman entre si ni representan el calculo de encaje.</p>
               <div class="source-map" id="source-map" aria-label="Mapa visual de fuentes conectadas"></div>
             </article>
 
@@ -275,6 +260,19 @@
             </div>
             <div id="platform-campaigns" class="stack-list"></div>
           </article>
+          <article class="panel" data-platform-pane="reviews">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Bases oficiales</p><h2>Interpretaciones pendientes de validacion</h2></div>
+            </div>
+            <div id="platform-bases-reviews" class="stack-list"></div>
+          </article>
+          <article class="panel" data-platform-pane="reviews">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Evidencia que falta</p><h2>Fuentes oficiales suplementarias</h2></div>
+              <span class="badge review">Requiere aprobación</span>
+            </div>
+            <div id="platform-supplementary-bases"></div>
+          </article>
           <div class="two-column" data-platform-pane="entities" hidden>
             <article class="panel">
               <div class="panel-heading">
@@ -352,6 +350,10 @@
       </main>
     </div>
 
+    <script src="./build-info.js"></script>
+    <script>
+      document.querySelector("[data-build-version]").textContent = `${window.INSERTIA_BUILD_INFO.builtAt} · ${window.INSERTIA_BUILD_INFO.version}`;
+    </script>
     <script src="./mock-data.js?v=20260713-agent-audit-ux"></script>
     <script src="./tenant-grid.js?v=20260713-sort-filter-icons"></script>
     <script src="./private-radar-data.js?v=20260706-bancaja-bases"></script>
@@ -360,23 +362,25 @@
     <script src="./deadline-trace.js?v=20260702-date-trace"></script>
     <script src="./platform-coverage-data.js?v=20260713-private-coverage"></script>
     <script src="./opportunity-scope.js?v=20260713-consistent-counts-2"></script>
-    <script src="./app.js?v=20260713-real-audit"></script><script src="./audit-runtime.js?v=20260713-real-grid"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
+    <script src="./match-accounting.js?v=20260715-match-accounting-fallback"></script>
+    <script src="./app.js?v=20260715-sync-review"></script><script src="./audit-runtime.js?v=20260713-real-grid"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
     <script src="./ux-actions.js?v=20260713-real-audit"></script>
-    <script src="./opportunity-actions.js?v=20260701-private-source-labels"></script><script src="./opportunity-requirements.js?v=20260713-draft-queue"></script><script src="./draft-agent-ui.js?v=20260713-draft-queue"></script>
+    <script src="./opportunity-actions.js?v=20260701-private-source-labels"></script><script src="./opportunity-requirements.js?v=20260715-preselection-gate"></script><script src="./draft-agent-ui.js?v=20260714-document-types-2"></script>
     <script src="./opportunity-chat.js?v=20260702-document-project"></script>
-    <script src="./workspace-flow.js?v=20260713-guide-modal"></script>
+    <script src="./help-assistant-knowledge.js?v=20260715-novice-guide"></script><script src="./help-assistant.js?v=20260715-novice-guide"></script>
+    <script src="./workspace-flow.js?v=20260714-consistent-workflow-1"></script>
     <script src="./watch-actions.js?v=20260701-private-corpus"></script>
     <script src="./alert-actions.js?v=20260630-alert-actions"></script>
-    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260713-beta-language"></script><script src="./tenant-plan.js?v=20260713-truthful-costs"></script><script src="./public-entry.js?v=20260713-beta-language"></script>
-    <script src="./ui-polish.js?v=20260713-compact-radar"></script>
+    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260713-beta-language"></script><script src="./tenant-plan.js?v=20260715-public-pricing"></script><script src="./public-entry.js?v=20260715-public-pricing"></script>
+    <script src="./ui-polish.js?v=20260715-sync-review-2"></script>
     <script src="./platform-source-manager.js?v=20260706-source-normalization-read"></script>
     <script src="./agents-readiness.js?v=20260713-private-coverage"></script>
-    <script src="./entity-activation.js?v=20260713-hosted-truth"></script>
+    <script src="./entity-activation.js?v=20260715-entity-plans"></script>
     <script src="./visual-flows.js?v=20260713-no-opportunity-guide"></script>
-    <script src="./tenant-agent-runtime.js?v=20260713-research-activity"></script>
-    <script src="./tenant-recommendations-runtime.js?v=20260713-persisted-match"></script>
-    <script src="./document-review-ui.js?v=20260713-persisted-review"></script>
+    <script src="./tenant-agent-runtime.js?v=20260715-plan-state"></script>
+    <script src="./recommendation-reconciliation.js?v=20260715-sync-review"></script><script src="./tenant-recommendations-runtime.js?v=20260715-sync-review"></script>
+    <script src="./tenant-match-review.js?v=20260715-preselection-gate"></script>
     <script src="./tenant-admin-runtime.js?v=20260713-recovery-controls"></script>
-    <script src="./platform-runtime.js?v=20260713-real-global-state"></script>
+    <script src="./platform-runtime.js?v=20260714-bases-clarity"></script><script src="./supplementary-basis-sources.js?v=20260714-source-review-1"></script>
   </body>
 </html>

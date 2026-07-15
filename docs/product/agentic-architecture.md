@@ -12,7 +12,7 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 | Monitor de cambios | Detectar cambios de plazo, criterios, documentos, presupuesto y presentación | Evidencia pública o curada de plataforma | Los cambios críticos quedan pendientes de revisión |
 | Investigador de entidad | Analizar la web pública y proponer hechos, logotipos y temas | Web pública con consentimiento explícito | Antes de aprobar hechos |
 | Asistente de encaje | Explicar encaje, riesgos y datos ausentes | Convocatorias públicas y perfil aprobado | Antes de iniciar una candidatura |
-| Políticas de datos | Clasificar fragmentos internos y bloquear usos inseguros | Metadatos y fragmentos aportados | Para aprobar contexto interno |
+| Control de datos (transversal, no agente) | Autorizar o bloquear capacidades según permisos, consentimiento y clase de datos | Metadatos, alcance del consentimiento y referencias aprobadas | Para aprobar contexto interno y cualquier uso externo |
 | Agente documental | Extraer requisitos y preparar paquetes documentales tenant-scoped | Bases públicas y hechos internos aprobados | Antes de activar proyecto y exportar |
 | Agente redactor | Crear esquemas y borradores ajustados a límites oficiales | Evidencia pública y hechos internos aprobados | Antes de exportar o compartir |
 | Agente de avisos | Producir alertas y recordatorios | Resúmenes de encaje y plazos | Antes de enviar por un canal no público |

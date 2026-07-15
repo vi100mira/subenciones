@@ -1,54 +1,61 @@
-# App Flow
+# Flujo de la aplicación
 
-## Primary Navigation
+## Navegación de entidad
 
-1. Dashboard
-2. Opportunities
-3. Entity Profile
-4. Data Governance
-5. Agents
-6. Candidate Workspace
-7. Audit
+1. Panel: situación, alertas y siguientes acciones.
+2. Oportunidades: corpus vivo y resultados de encaje.
+3. Entidad: perfil aprobado y fuentes autorizadas.
+4. Asistentes: capacidades, permisos, colas y resultados.
+5. Candidatura: preselecciones y expedientes.
+6. Auditoría: decisiones, cambios y evidencias.
+7. Plan: límites contratados y capacidades reales.
 
-## Core Flow
+La superadministración añade entidades, fuentes, campañas, operaciones y revisiones de plataforma sin entrar en el espacio privado de un tenant.
 
-1. Entity completes minimal onboarding: name, public website, admin email, and public-web analysis consent.
-2. Entity Research Agent reads the public website within limits and proposes logo, territory, entity type, themes, collectives, and programs.
-3. Entity admin reviews suggested facts before they become approved matching context.
-4. User lands on dashboard with prioritized live opportunities from the platform public/private-open radar.
-5. User searches iteratively with AI: filters, clarifications, exclusions, priorities, and deadline constraints.
-6. Matching Agent ranks calls against approved profile facts and explains evidence.
-7. User optionally enables tenant-private opportunity sources.
-8. Explorer Agent refreshes public sources and, when approved, tenant-private opportunity sources.
-9. User opens a call detail panel.
-10. System shows fit reasons, risks, deadline confidence, public evidence, and any approved tenant facts used.
-11. User preselects one or more candidates for comparison.
-12. To promote a candidate, Documentary Agent must build the required Word documentation structure: memoria, checklist, annex/evidence index, and budget guide.
-13. If tenant Drive is contracted and authorized, Documentary Agent may use approved tenant documents to personalize wording. If not, it must warn the user and generate only from public evidence plus approved tenant facts.
-14. Generated Word files are stored in tenant-scoped Blob and remain editable/downloadable for human review.
-15. Only after the documentation package exists can the candidate become an active project.
-16. User reviews, edits, and exports.
-17. Audit records retrieval, generation, review, project activation, and export.
+## Alta y perfil
 
-## Search Modes
+1. La persona solicita registrar una entidad.
+2. La plataforma valida el alta y crea un tenant aislado.
+3. El análisis de la web pública solo se ejecuta con consentimiento.
+4. El investigador propone hechos y logotipos con evidencia visible.
+5. Una persona acepta o descarta cada sugerencia y aprueba el perfil.
+6. El encaje solo utiliza hechos aprobados.
 
-- Public/open radar: default mode after onboarding; uses platform-managed public grants, private-open funder calls, and minimal tenant profile.
-- Private opportunity radar: optional mode; uses tenant-approved opportunity sources only.
-- Combined view: merges public, private-open, and tenant-private opportunities while keeping evidence and scopes visible.
-- Historical view: includes closed or archived opportunities only when the user asks for planning or precedent analysis.
+Si no existe consentimiento de web pública, el tenant puede completar el perfil manualmente. No se rastrea la web y el encaje queda bloqueado hasta disponer de información mínima aprobada.
 
-## Channel Flow
+## Radar y encaje
 
-1. Teams/WhatsApp/email adapter receives a user message or scheduled alert.
-2. Adapter passes intent, channel, user identity, and tenant to the orchestrator.
-3. Orchestrator applies permissions and calls the right agent.
-4. Agent returns a short channel-safe response.
-5. Sensitive details and full analysis remain in the web app through a deep link.
+1. Los radares públicos se ejecutan por cron y campañas idempotentes.
+2. Las convocatorias se normalizan, deduplican, versionan y vinculan a evidencia oficial.
+3. El agente de encaje cruza una versión pública con el perfil aprobado de un tenant.
+4. El resultado explica razones, riesgos, datos ausentes, plazo y hechos usados.
+5. La persona revisa resultados y decide preseleccionar o descartar.
 
-## Human Review Gates
+## Bases y candidatura
 
-- Approve internal knowledge for matching.
-- Confirm uncertain eligibility.
-- Generate documentation before candidate-to-project activation.
-- Approve proposal export or generated Word package.
-- Approve any external channel send containing non-public content.
+1. Una preselección puede abrir expediente sin aprobar todavía la candidatura.
+2. La plataforma localiza bases, anexos y formularios; conserva URL, hash y páginas.
+3. Extrae beneficiarios, finalidad, documentación y presentación.
+4. Una persona revisa las citas y aprueba o rechaza la interpretación.
+5. El plan documental separa borradores, modelos oficiales, evidencias y declaraciones.
+6. El redactor trabaja de forma asíncrona con contexto mínimo permitido.
+7. La revisión humana aprueba el hash completo antes de exportar.
+8. La aplicación no firma ni presenta en portales externos.
+
+## Cambios
+
+Una versión nueva de la convocatoria recalcula únicamente los encajes afectados. Si modifica un requisito usado por una candidatura o borrador, estos pasan a `Revisión necesaria`; la versión y decisión anteriores permanecen en auditoría.
+
+## Canales
+
+Los adaptadores futuros de correo, Teams o WhatsApp autentican usuario y tenant, llaman al orquestador y devuelven información mínima. Los detalles privados permanecen en la aplicación mediante enlace profundo. El envío externo todavía no está operativo.
+
+## Puertas humanas
+
+- Aprobar perfil y hechos internos.
+- Decidir preselección o descarte.
+- Confirmar elegibilidad incierta.
+- Aprobar interpretación de bases y citas.
+- Completar modelos oficiales y evidencias.
+- Revisar y aprobar la salida documental.
+- Autorizar cualquier exportación o comunicación externa.

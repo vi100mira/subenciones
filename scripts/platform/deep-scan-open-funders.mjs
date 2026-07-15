@@ -30,6 +30,7 @@ const linkTerms = [
 
 const closedTerms = ["cerrada", "cerrado", "finalizada", "finalizado", "resuelta", "resuelto", "fuera de plazo"];
 const weakTokens = new Set(["fundacion", "convocatoria", "convocatorias", "proyectos", "sociales", "ayudas", "bases", "programa", "programas", "espana"]);
+const trustedCuratedAuthorities = new Set(["official_registry", "official_journal", "issuing_body"]);
 
 function normalizeUrl(value, base) {
   try {
@@ -59,6 +60,19 @@ function stripHtml(html) {
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
+    .trim();
+}
+
+function structuredText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(?:h[1-6]|p|li|section|article|div)>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -110,10 +124,16 @@ function evidenceTokenMatches(source, page) {
 function linksFrom(html, base, origin) {
   const links = [];
   for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
-    const href = normalizeUrl(match[1], base);
+    const rawHref = match[1];
+    const resolutionBase = rawHref.startsWith("?") && new URL(base).hostname.endsWith(".sedelectronica.es") ? origin : base;
+    const resolved = normalizeUrl(rawHref, resolutionBase);
+    const resolvedUrl = resolved ? new URL(resolved) : null;
+    if (resolvedUrl?.hostname.endsWith(".sedelectronica.es") && resolvedUrl.pathname === "/info.0" && resolvedUrl.search.startsWith("?x=")) resolvedUrl.pathname = "/";
+    const href = resolvedUrl?.href || "";
     if (!href || (!sameOrigin(href, origin) && !isPublicDocument(href))) continue;
     const label = stripHtml(match[2]).slice(0, 120);
-    links.push({ href, label, score: scoreUrl(href, label) });
+    const sessionProcedure = resolvedUrl?.hostname.endsWith(".sedelectronica.es") && resolvedUrl.search.startsWith("?x=");
+    links.push({ href, label, score: scoreUrl(href, label) + (sessionProcedure ? 50 : 0) });
   }
   return links.sort((a, b) => b.score - a.score || a.href.localeCompare(b.href));
 }
@@ -127,9 +147,21 @@ async function fetchText(url) {
       headers: { "user-agent": "SubvencionesRAG prototype source-depth audit (+human-review)" }
     });
     const contentType = response.headers.get("content-type") || "";
+    const contentDisposition = response.headers.get("content-disposition") || "";
     if (!response.ok) return { ok: false, url, status: response.status, contentType, text: "" };
-    if (contentType.includes("pdf") || contentType.includes("application/octet-stream") || /\.pdf(?:$|[?#])/i.test(url)) {
-      return { ok: true, url, status: response.status, contentType: "application/pdf", bytes: Buffer.from(await response.arrayBuffer()), text: "" };
+    const declaredDocx = contentType.includes("wordprocessingml.document") || /\.docx(?:$|[?#])/i.test(url) || /\.docx["']?/i.test(contentDisposition);
+    const declaredPdf = contentType.includes("pdf") || /\.pdf(?:$|[?#])/i.test(url) || /\.pdf["']?/i.test(contentDisposition);
+    if (declaredDocx || declaredPdf || contentType.includes("application/octet-stream")) {
+      const bytes = Buffer.from(await response.arrayBuffer());
+      const zipMagic = bytes[0] === 0x50 && bytes[1] === 0x4b;
+      return {
+        ok: true,
+        url,
+        status: response.status,
+        contentType: declaredDocx || zipMagic ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf",
+        bytes,
+        text: ""
+      };
     }
     const text = await response.text();
     return { ok: true, url, status: response.status, contentType, text };
@@ -164,10 +196,37 @@ async function extractPdf(bytes, url) {
   }
 }
 
-async function renderPublicPage(url) {
+async function extractDocx(bytes, url) {
+  const temporaryPath = path.join(os.tmpdir(), `grant-${crypto.randomUUID()}.docx`);
+  try {
+    await fs.writeFile(temporaryPath, bytes);
+    const { stdout } = await execFileAsync(pythonCommand, ["scripts/workers/extract-public-docx.py", temporaryPath], { maxBuffer: 2_000_000 });
+    const extracted = JSON.parse(stdout);
+    return {
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+      page_count: null,
+      extracted_text: extracted.text,
+      page_evidence: [{ page: null, text: extracted.text, method: "docx_xml", confidence: null, ocr_engine: null, ocr_error: null }],
+      ocr_required: false,
+      ocr_unavailable: false,
+      extraction_status: extracted.text ? "ready" : "empty",
+      source_url: url
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "docx_extraction_error";
+    return { extraction_status: "error", extraction_error: message.slice(-500), source_url: url };
+  } finally {
+    await fs.rm(temporaryPath, { force: true });
+  }
+}
+
+async function renderPublicPage(url, label = "") {
   if (!browserFallback) return null;
   try {
-    const { stdout } = await execFileAsync(process.execPath, ["scripts/workers/render-public-page.mjs", url], { maxBuffer: 4_000_000, timeout: 30000 });
+    const target = new URL(url);
+    const sessionBound = target.hostname.endsWith(".sedelectronica.es") && target.search.startsWith("?x=");
+    const renderArgs = ["scripts/workers/render-public-page.mjs", sessionBound ? `${target.origin}/` : url, ...(sessionBound && label ? [label] : [])];
+    const { stdout } = await execFileAsync(process.execPath, renderArgs, { maxBuffer: 4_000_000, timeout: 30000 });
     return JSON.parse(stdout);
   } catch {
     return null;
@@ -175,13 +234,14 @@ async function renderPublicPage(url) {
 }
 
 function classifyPage(url, html) {
-  const pageText = stripHtml(html);
+  const pageText = structuredText(html);
   const text = pageText.toLowerCase();
   const urlScore = scoreUrl(url);
   const hasBasis = /bases|convocatoria|solicitud|formulario|plazo|documentaci/.test(text);
   const hasDeadline = /plazo|fecha|hasta el|abierto|cierre|presentaci/.test(text);
   const hasAmount = /eur|euros|dotaci|importe|cuant/.test(text);
   const hasEligibility = /beneficiari|requisit|criteri|obligacion|obligaci[oó]|documentaci[oó]n|solicitante/.test(text);
+  const hasOfficialProcedure = /c.digo sia/.test(text) && /documentaci.n (?:opcional|obligatoria)/.test(text);
   const isClosed = closedTerms.some((term) => text.includes(term));
   return {
     url,
@@ -189,8 +249,8 @@ function classifyPage(url, html) {
     status_facts: extractStatusFacts(html),
     evidence_excerpt: pageText.slice(0, 4000),
     extracted_text: pageText.slice(0, 120000),
-    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (hasEligibility ? 2 : 0) + (isClosed ? 1 : 0),
-    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", hasEligibility && "eligibility", isClosed && "closed_or_resolved"].filter(Boolean)
+    score: urlScore + (hasBasis ? 4 : 0) + (hasDeadline ? 2 : 0) + (hasAmount ? 1 : 0) + (hasEligibility ? 2 : 0) + (hasOfficialProcedure ? 6 : 0) + (isClosed ? 1 : 0),
+    signals: [hasBasis && "bases_or_call", hasDeadline && "deadline", hasAmount && "amount", hasEligibility && "eligibility", hasOfficialProcedure && "official_procedure", isClosed && "closed_or_resolved"].filter(Boolean)
   };
 }
 
@@ -259,9 +319,11 @@ function sourceEditionIsCurrent(source) {
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
-  const queue = [{ href: start, depth: 0, label: source.name, score: 99, path: [{ url: start, label: source.name }] }];
   const curatedBasis = source.basis_url ? normalizeUrl(source.basis_url, start) : "";
-  if (curatedBasis && (sameOrigin(curatedBasis, origin) || source.source_authority === "official_registry")) {
+  const curatedStart = curatedBasis === start;
+  const queue = [{ href: start, depth: 0, label: source.name, score: 99, path: [{ url: start, label: source.name }],
+    curated_basis: curatedStart, curated_basis_origin: curatedStart ? curatedBasis : "" }];
+  if (curatedBasis && !curatedStart && (sameOrigin(curatedBasis, origin) || trustedCuratedAuthorities.has(source.source_authority))) {
     queue.push({
       href: curatedBasis,
       depth: 1,
@@ -282,7 +344,7 @@ async function scanSource(source) {
     seen.add(next.href);
     const fetched = await fetchText(next.href);
     if (!fetched.ok) {
-      const rendered = next.depth <= 1 ? await renderPublicPage(next.href) : null;
+      const rendered = next.depth <= 1 ? await renderPublicPage(next.href, next.label) : null;
       if (!rendered?.html) {
         failures.push({ url: next.href, status: fetched.status, reason: fetched.text.slice(0, 120) });
         continue;
@@ -291,15 +353,16 @@ async function scanSource(source) {
       fetched.text = rendered.html;
       fetched.contentType = "text/html; rendered=browser";
     }
-    if (fetched.contentType.includes("pdf")) {
-      const document = await extractPdf(fetched.bytes, next.href);
+    if (fetched.contentType.includes("pdf") || fetched.contentType.includes("wordprocessingml.document")) {
+      const isDocx = fetched.contentType.includes("wordprocessingml.document");
+      const document = isDocx ? await extractDocx(fetched.bytes, next.href) : await extractPdf(fetched.bytes, next.href);
       document.curated_basis_origin = next.curated_basis_origin || (next.curated_basis ? next.href : "");
       const documentText = document.extracted_text || "";
       pages.push({
         url: next.href,
-        title: next.label || "PDF",
+        title: next.label || (isDocx ? "DOCX" : "PDF"),
         score: 8 + scoreUrl(next.href, next.label) + (document.extraction_status === "ready" ? 8 : 0),
-        signals: ["pdf", documentText && "document_text", /requisitos|beneficiari|criterios|plazo/i.test(documentText) && "eligibility"].filter(Boolean),
+        signals: [isDocx ? "docx" : "pdf", documentText && "document_text", /requisitos|beneficiari|criterios|plazo/i.test(documentText) && "eligibility"].filter(Boolean),
         document,
         evidence_excerpt: documentText.slice(0, 4000),
         navigation_path: next.path,
@@ -307,9 +370,18 @@ async function scanSource(source) {
       });
       continue;
     }
+    const nextUrl = new URL(next.href);
+    const sessionProcedure = nextUrl.hostname.endsWith(".sedelectronica.es") && nextUrl.search.startsWith("?x=");
+    if (sessionProcedure) {
+      const rendered = await renderPublicPage(next.href, next.label);
+      if (rendered?.html) {
+        fetched.text = rendered.html;
+        fetched.contentType = "text/html; rendered=browser";
+      }
+    }
     let page = classifyPage(next.href, fetched.text);
     if (page.score < 6 && next.depth === 0 && !fetched.contentType.includes("rendered=browser")) {
-      const rendered = await renderPublicPage(next.href);
+      const rendered = await renderPublicPage(next.href, next.label);
       if (rendered?.html) {
         page = classifyPage(rendered.rendered_url || next.href, rendered.html);
         page.signals.push("browser_rendered");
@@ -323,12 +395,18 @@ async function scanSource(source) {
     page.navigation_path = next.path;
     pages.push(page);
     if (next.depth >= 2) continue;
-    for (const link of linksFrom(fetched.text, next.href, origin).filter((item) => item.score > 0 || isPublicDocument(item.href)).slice(0, 18)) {
+    const rankedLinks = linksFrom(fetched.text, next.href, origin)
+      .map((item) => ({ ...item, score: item.score + Math.min(60, evidenceTokenMatches(source, { url: item.href, title: item.label }).length * 8) }))
+      .filter((item) => item.score > 0 || isPublicDocument(item.href)).sort((a, b) => b.score - a.score).slice(0, 18);
+    for (const link of rankedLinks) {
+      const linkedUrl = new URL(link.href);
+      const curatedProcedure = Boolean(page.curated_basis_origin && linkedUrl.hostname.endsWith(".sedelectronica.es") && linkedUrl.search.startsWith("?x="));
       queue.push({
         ...link,
         depth: next.depth + 1,
         path: [...next.path, { url: link.href, label: link.label || link.href }],
-        curated_basis_origin: page.curated_basis_origin
+        curated_basis_origin: page.curated_basis_origin,
+        curated_basis: curatedProcedure
       });
     }
     queue.sort((a, b) => b.score - a.score);
@@ -348,6 +426,8 @@ async function scanSource(source) {
   const status = blocked ? "fetch_blocked" : usableEvidence && closed ? "closed_archive_candidate" : usableEvidence ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
   return {
     id: source.id,
+    source_authority: source.source_authority,
+    supplementary_source_id: source.supplementary_source_id || null,
     name: source.name,
     start_url: source.url,
     pages_visited: pages.length,

@@ -7,6 +7,7 @@ import WebSocket from "ws";
 import { fail, ok } from "../src/apiResponse.js";
 import { logInfo, logWarn } from "../src/logger.js";
 import { getSupabaseAdmin, isPlatformAdminEmail } from "../src/supabaseAdmin.js";
+import { resolveTenantPlan } from "../src/tenantPlan.js";
 
 function loadLocalEnv() {
   const file = resolve(process.cwd(), ".env.local");
@@ -50,7 +51,7 @@ async function tenantSession(userId: string, email: string, accessToken: string,
 
   const { data: config } = await supabase
     .from("tenant_configs")
-    .select("display_name, logo_url, primary_color, status")
+    .select("display_name, logo_url, primary_color, status, motivations_json")
     .eq("tenant_id", membership.tenant_id)
     .maybeSingle();
 
@@ -84,13 +85,7 @@ async function tenantSession(userId: string, email: string, accessToken: string,
     tenantId: membership.tenant_id,
     tenantStatus: config?.status || "unknown",
     label: config?.display_name || "Admin entidad",
-    plan: {
-      code: "mission_full",
-      label: "Plan integral piloto",
-      billingStatus: "Contratado",
-      features: ["dashboard", "opportunities", "entity", "agents", "workspace", "audit", "plan"],
-      note: "Las capacidades se habilitan según permisos, consentimientos y estado verificado."
-    },
+    plan: resolveTenantPlan(config?.motivations_json),
     screen: "entity",
     accessToken,
     expiresAt

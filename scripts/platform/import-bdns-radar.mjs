@@ -105,6 +105,7 @@ function versionRow(opportunityId, item, versionNumber) {
       announcements: item.announcements || [],
       bases_evidence: item.basesEvidence || [],
       proposal_constraints: item.proposalConstraints || null,
+      requirements_contract: item.requirementsContract || null,
       evidence: item.evidence || []
     },
     metadata_json: {
@@ -117,7 +118,9 @@ function versionRow(opportunityId, item, versionNumber) {
       lifecycle_status: item.lifecycleStatus || "review_required",
       internal_facts: item.internalFacts || [],
       proposal_constraints_status: item.proposalConstraints?.status || "not_scanned",
-      drafting_gate: item.proposalConstraints?.draftingGate || "blocked_pending_constraint_review"
+      drafting_gate: item.proposalConstraints?.draftingGate || "blocked_pending_constraint_review",
+      requirements_status: item.requirementsContract?.status || "not_extracted",
+      documentary_gate: item.requirementsContract?.documentaryGate || "blocked_missing_core_requirements"
     },
     detected_at: item.deadlineReadAt || new Date().toISOString()
   };

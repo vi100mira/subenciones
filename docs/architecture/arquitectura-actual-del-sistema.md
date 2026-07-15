@@ -1,6 +1,6 @@
 # Arquitectura actual del sistema
 
-Estado comprobado el 13 de julio de 2026. Este documento distingue entre componentes productivos, parciales y de demostración. No describe como operativo aquello que solo existe en la interfaz o en documentos de diseño.
+Estado comprobado el 14 de julio de 2026. Este documento distingue entre componentes productivos, parciales y de demostración. No describe como operativo aquello que solo existe en la interfaz o en documentos de diseño.
 
 ## Resumen ejecutivo
 
@@ -59,8 +59,8 @@ flowchart LR
 | Radar de financiadores privados | `platform_ingestion_campaigns` | Cron de Vercel | `run-private-funder-radar.mjs` en GitHub Actions | Productivo alojado; 15 fuentes, puerta estricta |
 | Ingesta de fuentes de una entidad | `ingestion_runs` | `POST /api/ingestion-dispatch` | No existe consumidor conectado | Cola preparada, no operativa |
 | Alertas por cambios | `tenant_change_alerts.channel_status` | Worker privado tras detectar versiones | No existe emisor externo | Automáticas dentro de la app; envío externo pendiente |
-| Paquete documental | No usa cola | Petición web | Función Vercel síncrona | Parcial y bajo revisión humana |
-| Agente redactor | `tenant_agent_runs` | `POST /api/draft-agent-runs` | Despacho inmediato a `run-draft-agent.mjs`; cron de recuperación cada quince minutos | Consumidor alojado; clave OpenAI instalada |
+| Plan y borrador documental | `tenant_agent_runs` | `POST /api/draft-agent-runs` | `run-draft-agent.mjs`; contrato v3, expediente mult-documento y recuperación cada quince minutos | Implementado localmente; activación productiva pendiente |
+| Exportación aprobada | `tenant_draft_reviews` | Aprobación humana del hash | Función Vercel genera DOCX/PDF privados | Implementada; sin presentación automática |
 | Conversación de encaje | No usa cola | Navegador | Reglas JavaScript locales | Demostración, sin IA externa |
 
 Una respuesta HTTP `202` significa que el trabajo quedó encolado, no que un agente lo haya terminado. Los tres radares tienen ya productor, cola y consumidor; la ingesta privada de documentos de cada tenant sigue sin consumidor.
@@ -86,10 +86,11 @@ Consulta de solo lectura realizada en Supabase el 13 de julio de 2026:
 7. Descarga documentos oficiales de BDNS y resuelve BOP o portales oficiales cuando la ficha los referencia.
 8. Extrae texto con `pypdf`; usa `pdfplumber` como respaldo para PDF problemáticos.
 9. Si el PDF es una imagen, usa Tesseract dentro del runner. El OCR nativo de Windows queda como respaldo local.
-10. Solo importa oportunidades abiertas con emisor oficial, bases sustantivas, URL de evidencia y SHA-256. En privadas exige además estado abierto y cierre explícito.
-11. Extrae las restricciones de redacción; si no las encuentra, bloquea el borrador para revisión. Los máximos por páginas exigen validar el documento renderizado.
-12. El radar privado compara versiones y genera alertas para tenants que siguen la oportunidad.
-13. Guarda métricas y salud de fuente, y marca cada campaña `completed` o `failed`.
+10. Separa documentacion de solicitud, justificacion posterior y menciones contextuales; recupera listas que continuan en la pagina siguiente y bloquea remisiones sin contenido verificable.
+11. Solo importa oportunidades abiertas con emisor oficial, bases sustantivas, URL de evidencia y SHA-256. En privadas exige además estado abierto y cierre explícito.
+12. Extrae las restricciones de redacción; si no las encuentra, bloquea el borrador para revisión. Los máximos por páginas exigen validar el documento renderizado.
+13. El radar privado compara versiones y genera alertas para tenants que siguen la oportunidad.
+14. Guarda métricas y salud de fuente, y marca cada campaña `completed` o `failed`.
 
 El worker es un proceso determinista. En este momento no consulta un modelo generativo ni envía el texto de las bases a un tercero.
 
@@ -117,11 +118,11 @@ La primera prueba del worker alojado se completó correctamente el 13 de julio d
 | Búsqueda de convocatorias | Radares municipal, social general y 15 financiadores privados | Cron + cola + workers para los tres ciclos | Operativo con cobertura acotada |
 | Normalización y revisión de bases | Hashes, extracción, OCR, evidencia y límites de redacción | Automática dentro de cada campaña | Operativo para los tres radares |
 | Monitor de cambios | Versiones y eventos deterministas para catálogo privado | Automático al final de cada campaña privada | Operativo; cambios críticos esperan revisión |
-| Investigador de entidad | Flujo, límites de rastreo y consentimiento visibles | No existe worker de rastreo | Prototipo |
-| Asistente de encaje | Ranking y conversación local sobre datos cargados | JavaScript en navegador, sin modelo | Prototipo funcional |
-| Políticas de datos | RLS, permisos y exclusión de documentos sensibles al trocear | No existe agente de gobierno autónomo | Controles parciales |
-| Revisión documental | Reglas locales y API que guarda paquetes Word compatibles | Petición síncrona, sin extracción semántica de agente | Parcial |
-| Borrador de memoria | Cola, worker, contexto mínimo, restricciones y validación PDF | Asíncrono; se detiene en `awaiting_provider` | Preparación operativa, IA pendiente |
+| Investigador de entidad | API, cola, rastreo HTTPS del mismo dominio, snapshots y sugerencias con evidencia | Worker alojado bajo demanda; exige consentimiento y fuente aprobada | Operativo con revisión humana |
+| Asistente de encaje | API, cola y recomendaciones tenant con razones, riesgos, hechos usados y evidencia versionada | Worker alojado bajo demanda; exige perfil aprobado | Operativo cuando el tenant completa esa puerta |
+| Control de datos | RLS, permisos por rol, consentimientos con alcance, clases permitidas, auditoría y revisión humana | Control transversal aplicado por APIs, base de datos y workers; no es un agente autónomo | Operativo para las puertas implementadas |
+| Revisión documental | Contrato de bases aprobado, lista exigida y plan del agente por `requirementRef` | Toda omisión bloquea antes de revisión | Implementada localmente; requiere migraciones pendientes |
+| Borrador de memoria | Cola, worker, contexto mínimo, restricciones, plan documental y validación PDF | Asíncrono; termina en revisión humana | Implementado; activación alojada pendiente de configuración |
 | Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 
@@ -176,7 +177,7 @@ Las 50 son públicas y cubren entidades locales y resultados adicionales del rad
 | --- | --- | --- |
 | Plataforma pública | Convocatorias, bases, versiones y evidencias oficiales | Reutilizable entre tenants |
 | Tenant privado | Documentos, fragmentos, perfiles y candidaturas de una entidad | Siempre aislado por `tenant_id` |
-| Vercel Blob | Ficheros de candidatura generados | La API actual usa acceso público; debe endurecerse antes de almacenar documentación privada real |
+| Vercel Blob | Expedientes ZIP, DOCX/PDF aprobados y texto público extraído | Acceso privado; descarga autenticada por tenant y sin caché |
 | Auditoría | Importaciones, generación documental y acciones | Debe conservar actor, tenant, objeto y evidencia |
 
 En producción hay un documento público listo para procesar y cero fragmentos privados. No existe todavía un índice vectorial privado operativo.
@@ -214,12 +215,16 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 - `api/admin-platform-campaigns.ts`: consulta y alta manual de campañas.
 - `api/ingestion-dispatch.ts`: productor de la cola privada aún sin consumidor.
 - `api/draft-agent-runs.ts`: productor gobernado de la cola del redactor.
+- `api/approved-draft-document.ts`: exportación privada solo después de aprobar el hash del borrador.
+- `src/candidaturePackage.ts`: índice, DOCX separados y manifiesto del expediente aprobado.
 - `scripts/workers/run-municipal-radar.mjs`: consumidor y orquestador del pipeline municipal.
 - `scripts/workers/run-private-funder-radar.mjs`: consumidor privado, monitor de versiones y generador de alertas.
 - `scripts/workers/run-draft-agent.mjs`: prepara contexto mínimo y revalida las puertas del redactor.
 - `scripts/workers/run-draft-agent-scheduled.ps1`: lanzador local manual del redactor.
 - `scripts/workers/run-municipal-radar-scheduled.ps1`: lanzador local programado.
 - `scripts/radar/fetch-bdns-latest.mjs`: consulta y normalización BDNS.
+- `scripts/platform/apply-approved-basis-sources.mjs`: incorpora solo fuentes suplementarias aprobadas.
+- `scripts/platform/queue-bases-interpretations.mjs`: preserva artefactos e interpretaciones públicas por versión.
 - `scripts/platform/deep-scan-open-funders.mjs`: descarga, extracción y validación de bases.
 - `scripts/platform/apply-open-funder-scan.mjs`: puerta de evidencia y restricciones de redacción privadas.
 - `scripts/platform/import-bdns-radar.mjs`: compuerta e importación en Supabase.
@@ -232,7 +237,7 @@ Parte de la documentación histórica conserva títulos y contenido en inglés. 
 1. Crear el consumidor de `ingestion_runs` antes de ofrecer conectores privados como operativos.
 2. Revalidar los 23 registros abiertos heredados o excluirlos de cualquier vista accionable.
 3. Añadir emisor autorizado para alertas externas; la generación dentro de la app ya está programada.
-4. Cambiar los paquetes de candidatura de Blob público a acceso privado con descarga autorizada.
-5. Implementar el investigador de entidad con snapshots, consentimiento y aprobación humana.
+4. Aplicar las migraciones de bases, revisión de borradores y fuentes suplementarias; configurar Blob privado y ejecutar el backfill.
+5. Completar la validación humana del perfil piloto y ejecutar el primer encaje persistido de Novaterra.
 6. Traducir por bloques la documentación histórica en inglés sin cambiar sus rutas.
 7. Instalar la clave de OpenAI en GitHub solo después de revisar proveedor, región, retención, subprocesadores y presupuesto.

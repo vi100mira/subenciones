@@ -1,0 +1,14 @@
+{
+  "description": "Capturas publicas consolidadas usadas para auditar la cobertura documental sin mezclar artefactos historicos intermedios.",
+  "inputs": [
+    ".tmp/municipal-radar-fb97c71c-2380-47f3-91af-02febf620fd0/bases-scan.json",
+    ".tmp/municipal-radar-5f276e67-061b-476f-92f8-8c92d835af4e/bases-scan.json",
+    ".tmp/bases-docset-audit/scan.json",
+    ".tmp/bases-docset-audit/balmaseda-regulatory-scan.json",
+    ".tmp/remaining-bases-audit/scan.json",
+    ".tmp/remaining-bases-audit/santa-coloma-regulatory-scan.json",
+    ".tmp/remaining-bases-audit/scan-902506.json",
+    ".tmp/remaining-bases-audit/scan-918142.json",
+    ".tmp/remaining-bases-audit/vinaros-regulatory-scan.json"
+  ]
+}

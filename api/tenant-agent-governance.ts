@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 const CONSENT_TYPES = new Set(["public_web_analysis", "ai_processing"]);
 
@@ -61,16 +62,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabase = getSupabaseAdmin();
 
     if (req.method === "GET") {
-      const [agents, consents, webSource] = await Promise.all([
+      const [agents, consents, webSource, tenantConfig] = await Promise.all([
         supabase.from("tenant_agent_configs").select("agent_key, status, enabled, status_reason, permissions_json, last_verified_at")
           .eq("tenant_id", actor.tenantId).order("agent_key"),
         supabase.from("tenant_data_consents").select("consent_type, status, scope_json, granted_at, revoked_at")
           .eq("tenant_id", actor.tenantId).in("consent_type", [...CONSENT_TYPES]),
         supabase.from("source_connections").select("id, label, kind, scope, status, approved_at, config_json")
-          .eq("tenant_id", actor.tenantId).eq("label", "Web pública de la entidad").limit(1).maybeSingle()
+          .eq("tenant_id", actor.tenantId).eq("label", "Web pública de la entidad").limit(1).maybeSingle(),
+        supabase.from("tenant_configs").select("profile_json").eq("tenant_id", actor.tenantId).single()
       ]);
-      for (const result of [agents, consents, webSource]) if (result.error) throw result.error;
-      return res.status(200).json(ok({ agents: agents.data || [], consents: consents.data || [], webSource: webSource.data || null }));
+      for (const result of [agents, consents, webSource, tenantConfig]) if (result.error) throw result.error;
+      return res.status(200).json(ok({
+        agents: agents.data || [], consents: consents.data || [], webSource: webSource.data || null,
+        profileReviewState: String(tenantConfig.data?.profile_json?.review_state || "")
+      }));
     }
 
     if (req.method !== "PATCH") return res.status(405).json(fail("Method Not Allowed"));
@@ -99,6 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       targetId = data.id;
     } else if (["pause_agent", "resume_agent"].includes(action)) {
       if (typeof agentKey !== "string" || !agentKey) return res.status(400).json(fail("Falta agentKey"));
+      if (action === "resume_agent") await requireTenantAgentEntitlement(supabase, actor.tenantId, agentKey);
       const { data, error } = await supabase.from("tenant_agent_configs").update({
         status: action === "pause_agent" ? "paused" : "requested",
         enabled: false,
@@ -126,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(ok({ agents: agents || [], action, targetId }));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    const status = message.includes("Permiso") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : 400;
+    const status = message.includes("Permiso") || message.includes("no incluido") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : 400;
     return res.status(status).json(fail(message));
   }
 }

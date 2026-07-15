@@ -1,5 +1,5 @@
 (function () {
-  const state = { data: null, loading: false, error: "" };
+  const state = { data: null, bases: [], basesError: "", loading: false, error: "" };
   const activeRunStates = new Set(["queued", "preparing_context", "awaiting_provider", "generating", "running"]);
 
   function session() {
@@ -16,6 +16,7 @@
     return "review";
   }
   function date(value) { return value ? new Date(value).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) : "Sin ejecución"; }
+  function safeLink(value) { try { const url = new URL(String(value || "")); return url.protocol === "https:" ? url.href : "#"; } catch { return "#"; } }
   function organizationMap(data) { return new Map(data.organizations.map((item) => [item.id, item])); }
   async function request(path, options = {}) {
     const current = session(); if (!current) throw new Error("Sesión superadmin no disponible");
@@ -78,6 +79,26 @@
       const campaign = latestCampaign(data, source.id); const running = campaign && activeRunStates.has(campaign.status);
       return `<div class="stack-item"><div class="opportunity-topline"><div><strong>${escapeHtml(source.label)}</strong><span>${escapeHtml(source.kind)} · última sincronización: ${date(source.last_synced_at)}</span></div>${badge(source.health_status, tone(source.health_status))}</div><div class="source-state-line"><span>Última revisión: ${campaign ? `${escapeHtml(campaign.status)} · ${date(campaign.created_at)}` : "sin campañas"} · worker diario 05:15</span><button class="primary-action" data-platform-source-run="${source.id}" type="button" ${source.status !== "active" || running ? "disabled" : ""}>${running ? "En cola" : "Encolar revisión"}</button></div></div>`;
     }).join("") || '<div class="empty-state">No hay fuentes de plataforma registradas.</div>';
+    renderBasesReviews();
+  }
+  const basisLabels = { beneficiaries: "Quien puede solicitar", eligibilityRequirements: "Requisitos", eligibleActivities: "Actuaciones financiables", requiredDocuments: "Documentos obligatorios", evaluationCriteria: "Criterios", budgetRules: "Presupuesto", submission: "Presentacion", obligations: "Obligaciones", exclusions: "Exclusiones" };
+  const essentialBasisKeys = ["beneficiaries", "eligibleActivities", "requiredDocuments", "submission"];
+  function renderBasesReviews() {
+    const target = document.querySelector("#platform-bases-reviews"); if (!target) return;
+    if (state.basesError) { target.innerHTML = `<div class="plain-note"><strong>Revision de bases no disponible</strong><span>${escapeHtml(state.basesError)}</span></div>`; return; }
+    target.innerHTML = state.bases.map((item) => {
+      const version = Array.isArray(item.platform_opportunity_versions) ? item.platform_opportunity_versions[0] : item.platform_opportunity_versions;
+      const opportunity = Array.isArray(version?.platform_opportunities) ? version.platform_opportunities[0] : version?.platform_opportunities;
+      const artifact = Array.isArray(item.platform_source_artifacts) ? item.platform_source_artifacts[0] : item.platform_source_artifacts;
+      const sections = item.contract_json?.sections || {};
+      const covered = Object.entries(sections).filter(([, clauses]) => clauses?.length);
+      const essentialCovered = essentialBasisKeys.filter((key) => (sections[key] || []).some((clause) => clause.coreEvidence));
+      const constraints = item.contract_json?.proposalConstraints || { limits: [], formatRules: [] };
+      const requirementEvidence = covered.flatMap(([key, clauses]) => clauses.slice(0, 1).map((clause) => `<li><strong>${escapeHtml(basisLabels[key] || key)}</strong><span>${escapeHtml(clause.text || clause.evidenceExcerpt || "Sin fragmento")}</span><small>Pagina ${escapeHtml(clause.sourcePage ?? "HTML")} · ${clause.coreEvidence ? "clausula nuclear" : "mencion contextual"} · confianza ${escapeHtml(clause.confidence || "pendiente")}</small></li>`));
+      const constraintEvidence = [...(constraints.limits || []), ...(constraints.formatRules || [])].map((clause) => `<li><strong>Limite o formato</strong><span>${escapeHtml(clause.documentType ? `${clause.documentType}: ${clause.value} ${clause.unit}` : `${clause.kind}: ${clause.value}`)}</span><small>Pagina ${escapeHtml(clause.sourcePage ?? "HTML")} · ${escapeHtml(clause.evidenceExcerpt || "Cita pendiente")}</small></li>`);
+      const evidence = [...requirementEvidence, ...constraintEvidence].slice(0, 12).join("");
+      return `<article class="stack-item bases-review-card"><div class="opportunity-topline"><div><strong>${escapeHtml(opportunity?.title || "Convocatoria sin titulo")}</strong><span>${escapeHtml(opportunity?.funder_name || "Organismo pendiente")} · ${essentialCovered.length}/4 esenciales · ${covered.length}/9 apartados · ${(constraints.limits || []).length} limites de redaccion</span></div>${badge(item.citations_verified ? "Citas verificadas" : "Citas pendientes", item.citations_verified ? "safe" : "warning")}</div><ul class="basis-evidence-list">${evidence || "<li>Sin requisitos extraidos.</li>"}</ul><div class="source-state-line"><a href="${escapeHtml(safeLink(artifact?.source_url || version?.bases_url || version?.source_url))}" target="_blank" rel="noopener">Abrir bases oficiales</a><div class="button-row"><button class="ghost-action" data-bases-review-action="reject" data-bases-interpretation="${item.id}" type="button">Descartar lectura</button><button class="primary-action" data-bases-review-action="approve" data-bases-interpretation="${item.id}" type="button" ${item.citations_verified ? "" : "disabled"}>Aprobar interpretacion</button></div></div></article>`;
+    }).join("") || '<div class="empty-state">No hay interpretaciones de bases pendientes de validacion.</div>';
   }
   function renderOperations(data) {
     const queued = [...data.agentRuns, ...data.ingestionCampaigns].filter((item) => activeRunStates.has(item.status)).length;
@@ -103,7 +124,12 @@
   }
   async function refresh() {
     if (!session() || state.loading) return; state.loading = true;
-    try { state.data = await request("/api/admin-platform-overview"); state.error = ""; render(); }
+    try {
+      state.data = await request("/api/admin-platform-overview"); state.error = "";
+      try { state.bases = await request("/api/admin-bases-interpretations?status=review_required"); state.basesError = ""; }
+      catch (error) { state.bases = []; state.basesError = error.message; }
+      render();
+    }
     catch (error) { state.error = error.message; window.showToast?.(`Estado global no disponible: ${error.message}`); }
     state.loading = false;
   }
@@ -112,12 +138,19 @@
     try { await request("/api/admin-platform-campaigns", { method: "POST", body: JSON.stringify({ platformSourceId: button.dataset.platformSourceRun }) }); window.showToast?.("Revisión encolada; el worker diario la recogerá y conserva el superadmin solicitante."); await refresh(); }
     catch (error) { window.showToast?.(error.message); button.disabled = false; }
   }
+  async function reviewBases(button) {
+    button.disabled = true;
+    try {
+      const result = await request("/api/admin-bases-interpretations", { method: "PATCH", body: JSON.stringify({ interpretationId: button.dataset.basesInterpretation, action: button.dataset.basesReviewAction }) });
+      window.showToast?.(result.message); await refresh();
+    } catch (error) { window.showToast?.(error.message); button.disabled = false; }
+  }
   function exportAudit() {
     if (!state.data?.auditEvents.length) return;
     const orgs = organizationMap(state.data); const rows = [["Fecha", "Tenant", "Actor", "Acción", "Recurso"], ...state.data.auditEvents.map((item) => [item.created_at, orgs.get(item.tenant_id)?.name || item.tenant_id, item.actor_label, item.action, item.target_type])];
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(";")).join("\r\n"); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" })); link.download = `auditoria-plataforma-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
   }
-  document.addEventListener("click", (event) => { const run = event.target.closest?.("[data-platform-source-run]"); if (run) runSource(run); if (event.target.closest?.("[data-platform-audit-export]")) exportAudit(); });
+  document.addEventListener("click", (event) => { const run = event.target.closest?.("[data-platform-source-run]"); if (run) runSource(run); const bases = event.target.closest?.("[data-bases-review-action]"); if (bases) reviewBases(bases); if (event.target.closest?.("[data-platform-audit-export]")) exportAudit(); });
   window.PlatformRuntime = { refresh };
   window.addEventListener("role-session-applied", () => setTimeout(refresh, 0)); window.addEventListener("hashchange", () => { if (session()) setTimeout(render, 0); }); setTimeout(refresh, 0);
 })();

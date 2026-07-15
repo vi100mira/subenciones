@@ -21,14 +21,14 @@ window.PLATFORM_COVERAGE = {
   },
   privateOpen: {
     agent: "Busqueda privada abierta",
-    sourcesReviewed: 16,
-    accepted: 15,
+    sourcesReviewed: 18,
+    accepted: 18,
     activeOrOpen: 0,
-    monitorOnly: 13,
-    needsHumanReview: 13,
-    loadedRows: 0,
+    monitorOnly: 16,
+    needsHumanReview: 16,
+    loadedRows: 18,
     scrapingUsed: true,
-    state: "catalogo oficial en vigilancia; ninguna privada se activa sin bases y vigencia"
+    state: "18 iniciativas privadas catalogadas; 16 por verificar y 2 cerradas; ninguna se activa sin bases y vigencia"
   },
   entityResearch: {
     agent: "Investigador de entidad",

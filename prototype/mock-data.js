@@ -154,7 +154,7 @@ window.MOCK = {
     { name: "GVA", kind: "Portal autonomico", scope: "Plataforma", status: "Disponible para consulta", health: "degraded", priority: 82, control: "Automatización pendiente" },
     { name: "LABORA", kind: "Empleo", scope: "Plataforma", status: "Seguimiento activo", health: "healthy", priority: 88, control: "Revisión si cambia" },
     { name: "DOGV/BOP", kind: "Boletines", scope: "Plataforma", status: "Pendiente de automatizar", health: "degraded", priority: 74, control: "Lectura pendiente" },
-    { name: "Fundaciones y obra social", kind: "Privada abierta", scope: "Plataforma curada", status: "15 en seguimiento · revisión humana", health: "degraded", priority: 84, control: "Revisión humana" },
+    { name: "Fundaciones y obra social", kind: "Privada abierta", scope: "Plataforma curada", status: "18 monitorizadas · 16 por verificar", health: "degraded", priority: 84, control: "Revisión humana" },
     { name: "Alertas federacion CV", kind: "Privada tenant", scope: "Tenant privado", status: "No conectada", health: "unknown", priority: 78, control: "Requiere aprobacion" },
     { name: "Documentos de la entidad", kind: "Privativa", scope: "Tenant privado", status: "Pendiente de autorización", health: "unknown", priority: 90, control: "Requiere aprobación" },
     { name: "Casos personales", kind: "Sensible", scope: "Bloqueada", status: "No se utiliza", health: "blocked", priority: 0, control: "Uso no permitido" }
@@ -179,7 +179,7 @@ window.MOCK = {
     { name: "Busqueda de convocatorias", icon: "radar", purpose: "Localiza ayudas públicas y vigila convocatorias privadas abiertas.", access: "BDNS, portales oficiales y financiadores privados curados", status: "Listo" },
     { name: "Investigador de entidad", icon: "globe-2", purpose: "Analiza web publica y propone perfil, logo y temas.", access: "Web publica consentida", status: "Listo" },
     { name: "Asistente de encaje", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + informacion validada", status: "Listo" },
-    { name: "Politicas de datos", icon: "shield-check", purpose: "Protege la información y evita usos no autorizados.", access: "Información autorizada", status: "Revision" },
+    { name: "Control de datos", icon: "shield-check", purpose: "Aplica permisos, aislamiento y revisión humana antes de usar información.", access: "Solo datos y acciones autorizados", status: "Activo" },
     { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y listas de comprobación.", access: "Bases y documentos", status: "Listo" },
     { name: "Gestor documental", icon: "folders", purpose: "Organiza la documentación y prepara borradores para revisar.", access: "Bases, requisitos e información validada", status: "Controlado" },
     { name: "Avisos y recordatorios", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
@@ -188,7 +188,7 @@ window.MOCK = {
     { agent: "Busqueda de convocatorias", detail: "Refresco BDNS/GVA simulado", time: "Hace 18 min" },
     { agent: "Investigador de entidad", detail: "Perfil publico pendiente de aprobacion humana", time: "Hace 16 min" },
     { agent: "Asistente de encaje", detail: "Recalculo encaje para 3 convocatorias", time: "Hace 14 min" },
-    { agent: "Politicas de datos", detail: "Bloqueo de texto sensible", time: "Hace 9 min" }
+    { agent: "Control de datos", detail: "Ejemplo de bloqueo de texto sensible", time: "Hace 9 min" }
   ],
   platformAlerts: [
     { title: "Revision de plazo pendiente", detail: "228 convocatorias publicas requieren interpretar el anuncio o las bases." },

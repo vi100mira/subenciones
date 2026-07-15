@@ -22,8 +22,23 @@ try {
   await page.goto(publicUrl, { waitUntil: "networkidle" });
 
   assert(await page.locator(".public-entry").isVisible(), "No se ve la landing publica");
-  assert(await page.locator("#public-onboarding-form").isVisible(), "No se ve el formulario publico");
   assert(await page.locator("#public-login-form").isVisible(), "No se ve el acceso por credenciales");
+  assert(!(await page.locator("#public-onboarding-form").isVisible()), "El alta no debe duplicarse junto al acceso");
+  assert((await page.locator(".public-entry__product-summary").innerText()).includes("convocatoria"), "La portada no explica de forma breve qué hace INSERTIA");
+  await page.locator("[data-entry-tab='plans']").click();
+  assert(await page.locator("#public-plans-panel").isVisible(), "No se ve la pestaña Planes y precios");
+  assert((await page.locator("#public-pricing-grid .pricing-card").count()) === 3, "El catálogo público no muestra los tres planes compartidos");
+  const pricingText = await page.locator("#public-pricing-grid").innerText();
+  assert(pricingText.includes("0 €") && pricingText.includes("29 €") && pricingText.includes("79 €"), "Los precios públicos no coinciden con el catálogo de entidad");
+  const mobilePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await mobilePage.goto(publicUrl, { waitUntil: "networkidle" });
+  await mobilePage.locator("[data-entry-tab='plans']").click();
+  const mobileOverflow = await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  assert(!mobileOverflow, "La consulta de planes genera desplazamiento horizontal en móvil");
+  await mobilePage.close();
+  await page.locator("[data-entry-tab='register']").click();
+  assert(await page.locator("#public-onboarding-form").isVisible(), "No se ve el formulario en Registrar entidad");
+  assert((await page.locator("[data-entry-tab='register']").getAttribute("aria-selected")) === "true", "No se activa la pestaña de registro");
   assert((await page.locator("[data-public-action]").count()) === 0, "Sigue existiendo un acceso directo por rol");
   assert(await page.locator(".app-shell").evaluate((el) => el.hidden), "El cockpit aparece antes de acceso");
 
@@ -69,7 +84,9 @@ try {
         appUrl,
         publicUrl,
         title,
-        publicFormVisible: true,
+        publicFormVisibleInRegisterTab: true,
+        publicPricingVisible: true,
+        mobilePricingWithoutHorizontalOverflow: true,
         credentialGateVisible: true,
         cockpitOnboardingHidden: true,
         security: "sin patrones de secreto visibles"

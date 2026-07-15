@@ -48,7 +48,7 @@ See `docs/product/third-sector-principles.md`.
 
 ## MVP Scope
 
-- Static clickable prototype with realistic mock data.
+- Cockpit web conectado progresivamente a APIs reales, con mocks aislados solo para demostración y recuperación local.
 - One pilot entity profile, implemented as a generic tenant rather than a bespoke customer.
 - Minimal tenant onboarding: name, slug, owner/admin, logo/color, territory, entity type, thematic interests, alert preferences, and consent.
 - Platform radar over reusable public sources, private-open funder sources, and platform vectorization campaigns.
@@ -66,7 +66,7 @@ See `docs/product/third-sector-principles.md`.
 - No broad ingestion of company/entity data during onboarding.
 - No product strategy based on extracting value from sensitive beneficiary data or third-sector vulnerability.
 - No requirement to connect Drive/SharePoint before receiving value.
-- No live BDNS/GVA/LABORA ingestion in the visual prototype.
+- No cobertura universal o garantía de disponibilidad de todas las fuentes públicas y privadas.
 - No real WhatsApp/Teams integration yet.
 - No automated submission to public portals.
 - No use of sensitive beneficiary data.

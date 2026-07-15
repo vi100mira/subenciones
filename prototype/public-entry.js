@@ -9,6 +9,7 @@
     <div class="public-entry__grid">
       <section class="public-entry__intro">
         <div class="public-entry__brand"><img src="./assets/insertia/icon-192.png" alt="" /><strong>INSERTIA</strong></div>
+        <div class="public-entry__product-summary"><strong>De la convocatoria a la candidatura.</strong><span>Encuentra ayudas, entiende por qué encajan y prepara la documentación con fuentes verificables y revisión humana.</span></div>
         <p class="eyebrow">Compromiso administrativo</p>
         <h1>Garantia de integridad y privacidad institucional</h1>
         <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
@@ -20,7 +21,8 @@
       </section>
       <section class="public-entry__access">
         <article class="public-entry__card public-entry__card--login">
-          <div class="public-entry__tabs"><span class="is-active">Acceder</span><span>Registrar entidad</span></div>
+          <div class="public-entry__tabs" role="tablist" aria-label="Acceso, registro y precios"><button class="is-active" type="button" role="tab" aria-selected="true" aria-controls="public-login-panel" data-entry-tab="login">Acceder</button><button type="button" role="tab" aria-selected="false" aria-controls="public-register-panel" data-entry-tab="register">Registrar entidad</button><button type="button" role="tab" aria-selected="false" aria-controls="public-plans-panel" data-entry-tab="plans">Planes y precios</button></div>
+          <section id="public-login-panel" role="tabpanel">
           <div class="panel-heading"><div><p class="eyebrow">Acceso seguro</p><h2>Acceso institucional <button class="info-tip" type="button" aria-label="Cómo se asigna el acceso"><i data-lucide="info"></i><span class="info-tip__content">El sistema valida las credenciales y muestra solo las áreas autorizadas para cada persona y entidad. El rol no se elige desde esta pantalla.</span></button></h2></div><span class="badge safe">Credenciales</span></div>
           <form class="inline-form public-entry__actions" id="public-login-form">
             <label><span>Email profesional</span><input name="email" type="email" placeholder="admin@entidad.org" required /></label>
@@ -28,9 +30,10 @@
             <button class="primary-action" type="submit">Acceder al panel</button>
           </form>
           <div id="public-login-status" class="plain-note" hidden aria-live="polite"></div>
-        </article>
-        <article class="public-entry__card">
+          </section>
+          <section id="public-register-panel" role="tabpanel" hidden>
           <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad <button class="info-tip" type="button" aria-label="Qué ocurre al enviar la solicitud"><i data-lucide="info"></i><span class="info-tip__content">La solicitud queda pendiente de revisión. No crea usuarios, no conecta Drive y no usa información privada hasta que una persona responsable la apruebe.</span></button></h2></div><span class="badge review">Sin publicar</span></div>
+          <p class="plain-note"><strong>Decision de consentimiento</strong><span>Si no autorizas el analisis de web publica, la entidad se registra igualmente. No se consulta la web ni se generan sugerencias; podras autorizarlo mas adelante desde Asistentes.</span></p>
           <form class="inline-form" id="public-onboarding-form">
             <label><span>Entidad</span><input name="entityName" value="Entidad social" required /></label>
             <label><span>Web publica</span><input name="websiteUrl" placeholder="https://entidad.org" /></label>
@@ -41,11 +44,33 @@
             <button class="primary-action" type="submit">Registrar solicitud</button>
           </form>
           <div id="public-onboarding-status" class="plain-note" hidden aria-live="polite"></div>
+          </section>
+          <section id="public-plans-panel" role="tabpanel" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">Precios transparentes</p><h2>Elige según el trabajo que necesitas</h2></div><span class="badge safe">Tarifa social</span></div>
+            <p class="public-entry__pricing-intro">El radar público y las fuentes oficiales son siempre gratuitos. Los planes de pago cubren el trabajo operativo; nunca compran prioridad ni decisiones automáticas.</p>
+            <div class="pricing-grid public-pricing-grid" id="public-pricing-grid"></div>
+            <div class="plain-note"><strong>Consulta sin compromiso</strong><span>La contratación online todavía no está activa. El alta de una entidad no genera ningún cobro y toda candidatura conserva sus puntos de revisión humana.</span></div>
+          </section>
         </article>
       </section>
     </div>`;
   document.body.prepend(entry);
+  window.PlanAccess?.renderPublicPricing?.();
   window.lucide?.createIcons();
+
+  function selectEntryTab(tab) {
+    const panels = { login: "#public-login-panel", register: "#public-register-panel", plans: "#public-plans-panel" };
+    Object.entries(panels).forEach(([key, selector]) => { entry.querySelector(selector).hidden = key !== tab; });
+    entry.querySelectorAll("[data-entry-tab]").forEach((button) => {
+      const selected = button.dataset.entryTab === tab;
+      button.classList.toggle("is-active", selected);
+      button.setAttribute("aria-selected", String(selected));
+    });
+  }
+
+  entry.querySelectorAll("[data-entry-tab]").forEach((button) => {
+    button.addEventListener("click", () => selectEntryTab(button.dataset.entryTab));
+  });
 
   function setRole(session) {
     document.body.dataset.role = session.role;
@@ -54,7 +79,7 @@
     window.refreshRoleViews?.();
     window.dispatchEvent(new CustomEvent("role-session-applied"));
     window.PlanAccess?.applyMenuPolicy?.();
-    const cta = document.querySelector(".top-actions .primary-action"); if (cta) cta.innerHTML = session.role === "superadmin" ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
+    window.lucide?.createIcons();
   }
 
   function initialScreen(session, requested) {
