@@ -18,6 +18,7 @@ Recuperar los guardrails de mantenibilidad sin cambiar el comportamiento del coc
 - `npm run check:ui`: superado con servidor local.
 - `npm run check:tenant-plan-ui`: superado en escritorio y móvil.
 - `vercel build --prod`: superado.
+- Smoke test autenticado de superadministración contra Vercel: corregida y validada la alineación del mapa de fuentes.
 
 ## Riesgos residuales
 
