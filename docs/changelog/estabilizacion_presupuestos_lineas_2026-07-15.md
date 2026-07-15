@@ -19,6 +19,8 @@ Recuperar los guardrails de mantenibilidad sin cambiar el comportamiento del coc
 - `npm run check:tenant-plan-ui`: superado en escritorio y móvil.
 - `vercel build --prod`: superado.
 - Smoke test autenticado de superadministración contra Vercel: corregida y validada la alineación del mapa de fuentes.
+- El verificador de fallback global limita el valor de cada métrica a `summary > strong`, sin confundir títulos del visor con cifras tenant.
+- La extracción preserva UTF-8; se verificó la ausencia de mojibake en `app.js` y `dashboard-renderer.js`.
 
 ## Riesgos residuales
 

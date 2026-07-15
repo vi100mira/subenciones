@@ -1,4 +1,4 @@
-﻿const state = { selectedOpportunityId: (window.OpportunityScope?.rows() || window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
+const state = { selectedOpportunityId: (window.OpportunityScope?.rows() || window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
 function opportunities() {
   return window.OpportunityScope?.rows() || [];
 }
@@ -36,7 +36,7 @@ function renderOpportunities() {
         <div class="opportunity-topline">
           <div>
             <strong>${item.title}</strong>
-            <span>${item.source} Â· ${item.territory}</span>
+            <span>${item.source} · ${item.territory}</span>
           </div>
           <div class="score"><strong>${scoreLabel(item.score)}</strong><span>(${item.score}/100 estimado)</span></div>
         </div>
@@ -89,7 +89,7 @@ function renderOpportunities() {
       </div>
       <div class="score"><strong>${scoreLabel(item.score)}</strong><span>(${item.score}/100 estimado)</span></div>
     </div>
-    <p class="lead">${item.source} Â· ${item.territory}</p>
+    <p class="lead">${item.source} · ${item.territory}</p>
     <div class="detail-grid">
       <div><span>Importe</span><strong>${item.amount}</strong></div><div><span>Plazo</span><strong>${item.deadline}</strong></div>
       <div><span>Confianza plazo</span><strong>${item.deadlineConfidence}</strong></div><div><span>Origen</span><strong>${item.sourceScope || "Publica oficial"}</strong></div>
@@ -140,7 +140,7 @@ function renderGovernance() {
       <div class="source-control-row">
         <div>
           <strong>${source.name}</strong>
-          <span>${source.kind} Â· ${source.scope}</span>
+          <span>${source.kind} · ${source.scope}</span>
         </div>
         <div><span>Prioridad</span><strong>${source.priority}</strong></div>
         ${badge(source.status, tone)}
@@ -203,8 +203,8 @@ function renderWorkspace() {
 
 function renderAudit() {
   const isPlatform = document.body.dataset.role === "superadmin";
-  document.querySelector("#audit .panel-heading h2").textContent = isPlatform ? "AuditorÃ­a de plataforma" : "Eventos reales de la entidad";
-  document.querySelector("#audit-timeline").innerHTML = '<div class="plain-note"><strong>Cargando trazabilidad</strong><span>Consultando el registro persistido autorizado para esta sesiÃ³n.</span></div>';
+  document.querySelector("#audit .panel-heading h2").textContent = isPlatform ? "Auditoría de plataforma" : "Eventos reales de la entidad";
+  document.querySelector("#audit-timeline").innerHTML = '<div class="plain-note"><strong>Cargando trazabilidad</strong><span>Consultando el registro persistido autorizado para esta sesión.</span></div>';
 }
 
 function renderPlatform() {
@@ -222,10 +222,10 @@ function renderPlatform() {
     <div class="source-control-row"><div><strong>Tenant minimo</strong><span>Nombre, web publica, email admin y consentimiento.</span></div><div><strong>Agente investigador</strong><span>12 paginas, profundidad 2, 90s, 3 MB.</span></div><div><strong>Revision humana</strong><span>Tipo, territorio, temas y logo quedan pendientes.</span></div></div>
     <div class="inline-form">
       <label><span>Nombre</span><input data-tenant-create="name" value="Nueva entidad social" /></label>
-      <label><span>Web pÃºblica</span><input data-tenant-create="website" value="https://entidad.org" /></label><label><span>Email propietario existente</span><input data-tenant-create="owner-email" value="admin@entidad.org" /></label><label><span>Consentimientos</span><input value="Se solicitan despuÃ©s del alta" disabled /></label>
+      <label><span>Web pública</span><input data-tenant-create="website" value="https://entidad.org" /></label><label><span>Email propietario existente</span><input data-tenant-create="owner-email" value="admin@entidad.org" /></label><label><span>Consentimientos</span><input value="Se solicitan después del alta" disabled /></label>
       <button class="primary-action" data-tenant-provision type="button">Crear estructura tenant</button>
     </div>
-    <div class="plain-note" data-tenant-admin-status><strong>Alta gobernada</strong><span>Crea estructura y agentes bloqueados por sus puertas; no concede consentimientos ni investiga automÃ¡ticamente.</span></div>
+    <div class="plain-note" data-tenant-admin-status><strong>Alta gobernada</strong><span>Crea estructura y agentes bloqueados por sus puertas; no concede consentimientos ni investiga automáticamente.</span></div>
     <div data-tenant-grid-host></div>
   `;
   window.TenantGrid?.render(window.MOCK.tenants);
@@ -320,7 +320,7 @@ function init() {
 
   document.querySelector("#refresh-button").addEventListener("click", () => {
     if (document.body.dataset.role === "superadmin" && window.PlatformRuntime?.refresh) return window.PlatformRuntime.refresh();
-    showToast("Fuentes actualizadas. No se ha enviado ningÃºn dato privado.");
+    showToast("Fuentes actualizadas. No se ha enviado ningún dato privado.");
   });
 
   const hash = window.location.hash.replace("#", "");
@@ -333,4 +333,3 @@ function init() {
 }
 
 init();
-

@@ -104,14 +104,14 @@ try {
     title: document.querySelector("#screen-title")?.textContent.trim(),
     hash: location.hash,
     labels: [...document.querySelectorAll("#dashboard .metric span")].map((item) => item.textContent.trim()),
-    values: [...document.querySelectorAll("#dashboard .metric strong")].map((item) => item.textContent.trim()),
+    values: [...document.querySelectorAll("#dashboard .metric summary > strong")].map((item) => item.textContent.trim()),
     details: [...document.querySelectorAll("#dashboard .metric small")].map((item) => item.textContent.trim()),
     globalActionVisible: getComputedStyle(document.querySelector(".top-actions .primary-action")).display !== "none",
     programButtonVisible: document.querySelector('[data-review-action="create"]') !== null
   }));
   assert(unavailable.title === "Panel de plataforma" && unavailable.hash === "#view-dashboard", "La entrada superadmin no aterriza en Panel");
   assert(unavailable.labels.includes("Tenants activos"), "El estado sin API recupera etiquetas tenant");
-  assert(unavailable.values.every((value) => value === "—"), "El estado sin API filtra cifras tenant");
+  assert(unavailable.values.every((value) => value === "—"), `El estado sin API filtra cifras tenant: ${JSON.stringify(unavailable.values)}`);
   assert(!unavailable.details.some((value) => value.includes("perfil de la entidad")), "El estado sin API conserva contexto tenant");
   assert(!unavailable.globalActionVisible, "El estado sin API muestra la acción global simulada");
   assert(!unavailable.programButtonVisible, "El fallback conserva Programar revisión sin funcionalidad real");
