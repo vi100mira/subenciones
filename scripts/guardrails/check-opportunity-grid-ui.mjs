@@ -3,7 +3,9 @@ import fs from "node:fs";
 const ui = fs.readFileSync("prototype/ui-polish.js", "utf8");
 const flows = fs.readFileSync("prototype/visual-flows.js", "utf8");
 const theme = fs.readFileSync("prototype/stitch-theme.css", "utf8");
-const app = fs.readFileSync("prototype/app.js", "utf8");
+const app = ["prototype/app.js", "prototype/dashboard-renderer.js"]
+  .map((file) => fs.readFileSync(file, "utf8"))
+  .join("\n");
 const plan = fs.readFileSync("prototype/tenant-plan.js", "utf8");
 const scope = fs.readFileSync("prototype/opportunity-scope.js", "utf8");
 const index = fs.readFileSync("prototype/index.html", "utf8");
