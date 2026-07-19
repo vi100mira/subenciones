@@ -26,7 +26,8 @@ Consolidar y respaldar el trabajo acumulado de Insertia como versión estable an
 - `check-onboarding-ui.mjs` contra el puerto 3000: correcto; acceso, precios, responsive y ausencia de secretos visibles.
 - `check-draft-version-ui.mjs`: correcto; 11 hechos aprobados, pre-rellenado, versión generada y persistencia de la revisión.
 - `check-onboarding-e2e.mjs`: comprobación sin escritura omitida al no definir un destino API específico.
-- La URL y el estado final de producción se añadirán al completar el despliegue.
+- Producción: `https://subvenciones-rag.vercel.app` (`dpl_4QpSEbZdUX5EP3mcDFj9CvJjFFGt`), estado `READY`.
+- Smoke test de producción: landing `200`, versión `0.2.5`, interfaz pública correcta y API protegida con `401` sin sesión.
 
 ## Riesgo residual
 
