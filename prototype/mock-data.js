@@ -181,7 +181,7 @@ window.MOCK = {
     { name: "Asistente de encaje", icon: "git-compare-arrows", purpose: "Explica encaje, riesgos y datos faltantes.", access: "Publico + informacion validada", status: "Listo" },
     { name: "Control de datos", icon: "shield-check", purpose: "Aplica permisos, aislamiento y revisión humana antes de usar información.", access: "Solo datos y acciones autorizados", status: "Activo" },
     { name: "Revision documental", icon: "file-search", purpose: "Extrae requisitos, anexos y listas de comprobación.", access: "Bases y documentos", status: "Listo" },
-    { name: "Gestor documental", icon: "folders", purpose: "Organiza la documentación y prepara borradores para revisar.", access: "Bases, requisitos e información validada", status: "Controlado" },
+    { name: "Preparación documental", icon: "folders", purpose: "Curador, selección privada y redactor: recupera para cada candidatura solo los hechos de la entidad pertinentes y aprobados.", access: "Bases, fuentes autorizadas y hechos aprobados", status: "Controlado" },
     { name: "Avisos y recordatorios", icon: "bell-ring", purpose: "Envia alertas y recordatorios por canal.", access: "Resumenes seguros", status: "Canales" }
   ],
   runs: [
@@ -213,11 +213,11 @@ window.MOCK = {
     { event: "Tenant operativo verificado", actor: "Orquestador de tenants", time: "12:18", detail: "Novaterra; solo estado, plan y coste.", info: "Se auditan metadatos operativos del tenant sin mostrar sus fuentes, hechos internos o candidaturas." }
   ],
   checklist: [
-    { item: "Confirmar beneficiario elegible", state: "done", action: "Ver evidencia" },
-    { item: "Verificar cofinanciacion", state: "review", action: "Verificar" },
-    { item: "Preparar memoria tecnica", state: "todo", action: "Preparar Word" },
-    { item: "Anexar certificados y poderes", state: "todo", action: "Anexar" },
-    { item: "Revisar limite de gastos de personal", state: "review", action: "Verificar" }
+    { item: "Confirmar beneficiario elegible", state: "done", action: "Ver evidencia", purpose: "Comprobar que la entidad cumple la forma jurídica, territorio y demás condiciones exigidas para solicitar la ayuda.", checks: "Requisitos de beneficiario, exclusiones y situación de la entidad.", evidence: "Bases oficiales citadas y perfil de entidad previamente aprobado.", doneWhen: "Una persona confirma cada condición y conserva su cita o evidencia." },
+    { item: "Comprobar cofinanciación exigida", state: "review", action: "Revisar requisito", purpose: "Determinar si la convocatoria exige aportación propia o de terceros; no significa que exista cofinanciación obligatoria hasta confirmarlo en las bases.", checks: "Porcentaje mínimo o máximo, origen permitido, incompatibilidades y equilibrio del presupuesto.", evidence: "Apartado económico de las bases y, si procede, compromiso o prueba de financiación.", doneWhen: "La tasa y su origen quedan documentados y el presupuesto cuadra." },
+    { item: "Preparar memoria técnica", state: "todo", action: "Preparar Word", purpose: "Construir el borrador narrativo del proyecto con la estructura requerida por la convocatoria.", checks: "Objetivos, actividades, población agregada, calendario, indicadores y coherencia presupuestaria.", evidence: "Bases vigentes y hechos internos aprobados para esta candidatura.", doneWhen: "Existe un Word trazable y una persona ha revisado sus datos pendientes." },
+    { item: "Reunir certificados y poderes", state: "todo", action: "Añadir documentos", purpose: "Reunir los anexos que acreditan la situación de la entidad y la representación de quien firma.", checks: "Documentos obligatorios, vigencia, formato y correspondencia con el representante autorizado.", evidence: "Relación documental de las bases y archivos privados aportados por la entidad.", doneWhen: "Todos los anexos exigidos están vigentes, vinculados y revisados." },
+    { item: "Comprobar límite de gastos de personal", state: "review", action: "Revisar requisito", purpose: "Confirmar cuánto gasto de personal admite la ayuda y cómo debe imputarse al proyecto.", checks: "Topes, costes elegibles, Seguridad Social, dedicación, periodo y exclusiones.", evidence: "Reglas presupuestarias y citas de las bases oficiales vigentes.", doneWhen: "El cálculo es reproducible, respeta los límites y queda revisado por una persona." }
   ],
   outline: [
     { title: "Resumen ejecutivo", text: "Proyecto de itinerarios de empleo inclusivo con formacion, acompanamiento y seguimiento." },

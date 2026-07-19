@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>INSERTIA | Inteligencia para subvenciones</title>
     <meta name="description" content="INSERTIA: inteligencia de subvenciones con evidencia, privacidad y revisión humana." />
-    <meta name="theme-color" content="#0f766e" />
-    <link rel="icon" href="./assets/insertia/favicon.ico" sizes="any" />
+    <meta name="theme-color" content="#414f8e" />
+    <link rel="icon" href="./assets/insertia/insertia-mark.svg" type="image/svg+xml" />
     <link rel="icon" type="image/png" href="./assets/insertia/favicon-32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="./assets/insertia/apple-touch-icon.png" />
     <link rel="manifest" href="./site.webmanifest" />
     <link rel="stylesheet" href="./styles.css?v=20260715-line-budget" />
-    <link rel="stylesheet" href="./app-modals-responsive.css?v=20260715-line-budget" />
-    <link rel="stylesheet" href="./public-entry.css?v=20260715-public-pricing" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260715-sync-review" />
+    <link rel="stylesheet" href="./app-modals-responsive.css?v=20260716-readable-source-text" />
+    <link rel="stylesheet" href="./public-entry.css?v=20260716-brand-lockup" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260716-workspace-modes" />
     <link rel="stylesheet" href="./grid-filters.css?v=20260713-sticky-grid-head" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
@@ -21,10 +21,10 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="Navegacion principal">
         <div class="brand">
-          <div class="brand-mark"><img src="./assets/insertia/favicon-48.png" alt="" /></div>
+          <div class="brand-mark"><img src="./assets/insertia/insertia-mark.svg" alt="" /></div>
           <div>
             <strong>INSERTIA</strong>
-            <span>Para entidades</span>
+            <span class="brand-parent">Una app de <b>Novaterra Software</b></span>
           </div>
           <button class="sidebar-toggle" id="sidebar-toggle" title="Colapsar menu lateral"><i data-lucide="panel-left-close"></i></button>
         </div>
@@ -67,7 +67,7 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Panel de ayudas y subvenciones</p>
+            <p class="eyebrow"><span class="ecosystem-dot" aria-hidden="true"></span>Novaterra Software / Insertia</p>
             <h1 id="screen-title">Panel de oportunidades</h1>
           </div>
           <div class="top-actions">
@@ -347,7 +347,7 @@
             </div>
           </article>
         </section>
-        <footer class="app-footer"><strong>INSERTIA</strong><span>Radar publico libre | Datos privados solo con consentimiento | Sin envio automatico sin revision humana</span><button class="footer-link" data-policy-modal type="button">Politicas y modelo</button></footer>
+        <footer class="app-footer"><div class="footer-brand"><div class="footer-product"><strong>INSERTIA</strong><span>Una aplicación de <b>Novaterra Software</b></span></div><img src="./assets/novaterra-foundation-logo-transparent.png" alt="Fundación Novaterra" /></div><span>Radar público libre | Datos privados solo con consentimiento | Sin envío automático sin revisión humana</span><span class="footer-domain">novaterra.software · dominio previsto</span><button class="footer-link" data-policy-modal type="button">Políticas y modelo</button></footer>
       </main>
     </div>
 
@@ -355,7 +355,7 @@
     <script>
       document.querySelector("[data-build-version]").textContent = `${window.INSERTIA_BUILD_INFO.builtAt} · ${window.INSERTIA_BUILD_INFO.version}`;
     </script>
-    <script src="./mock-data.js?v=20260713-agent-audit-ux"></script>
+    <script src="./mock-data.js?v=20260716-progressive-knowledge"></script>
     <script src="./tenant-grid.js?v=20260713-sort-filter-icons"></script>
     <script src="./private-radar-data.js?v=20260706-bancaja-bases"></script>
     <script src="./radar-data.js?v=20260701-platform-raw-corpus"></script>
@@ -366,19 +366,20 @@
     <script src="./match-accounting.js?v=20260715-match-accounting-fallback"></script>
     <script src="./dashboard-renderer.js?v=20260715-line-budget"></script><script src="./app.js?v=20260715-line-budget"></script><script src="./audit-runtime.js?v=20260713-real-grid"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
     <script src="./ux-actions.js?v=20260713-real-audit"></script>
-    <script src="./opportunity-actions.js?v=20260701-private-source-labels"></script><script src="./opportunity-requirements.js?v=20260715-preselection-gate"></script><script src="./draft-agent-ui.js?v=20260714-document-types-2"></script>
+    <script src="./opportunity-actions.js?v=20260716-readable-source-text"></script><script src="./constructed-document-prefill.js?v=20260719-document-prefill"></script><script src="./opportunity-requirements.js?v=20260719-document-prefill"></script><script src="./draft-agent-ui.js?v=20260719-document-prefill"></script>
     <script src="./opportunity-chat.js?v=20260702-document-project"></script>
-    <script src="./help-assistant-knowledge.js?v=20260715-novice-guide"></script><script src="./help-assistant.js?v=20260715-novice-guide"></script>
-    <script src="./workspace-flow.js?v=20260714-consistent-workflow-1"></script>
+    <script src="./help-assistant-knowledge.js?v=20260716-progressive-knowledge"></script><script src="./help-assistant.js?v=20260715-novice-guide"></script>
+    <script src="./workspace-flow.js?v=20260716-workspace-modes"></script>
     <script src="./watch-actions.js?v=20260701-private-corpus"></script>
     <script src="./alert-actions.js?v=20260630-alert-actions"></script>
-    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260713-beta-language"></script><script src="./tenant-plan.js?v=20260715-public-pricing"></script><script src="./public-entry.js?v=20260715-public-pricing"></script>
+    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260716-tenant-brand"></script><script src="./tenant-plan.js?v=20260716-progressive-knowledge"></script><script src="./public-entry.js?v=20260716-brand-lockup"></script>
     <script src="./ui-polish.js?v=20260715-sync-review-2"></script>
     <script src="./platform-source-manager.js?v=20260706-source-normalization-read"></script>
-    <script src="./agents-readiness.js?v=20260713-private-coverage"></script>
+    <script src="./agents-readiness.js?v=20260716-progressive-knowledge"></script>
     <script src="./entity-activation.js?v=20260715-entity-plans"></script>
+    <script src="./master-fact-review.js?v=20260716-real-master-facts"></script><script src="./private-source-preflight.js?v=20260718-insubstantial-guard"></script><script src="./private-analysis-state.js?v=20260718-analysis-history"></script><script src="./private-knowledge.js?v=20260718-analysis-history"></script>
     <script src="./visual-flows.js?v=20260713-no-opportunity-guide"></script>
-    <script src="./tenant-agent-runtime.js?v=20260715-plan-state"></script>
+    <script src="./tenant-agent-runtime.js?v=20260716-progressive-knowledge"></script>
     <script src="./recommendation-reconciliation.js?v=20260715-sync-review"></script><script src="./tenant-recommendations-runtime.js?v=20260715-sync-review"></script>
     <script src="./tenant-match-review.js?v=20260715-preselection-gate"></script>
     <script src="./tenant-admin-runtime.js?v=20260713-recovery-controls"></script>

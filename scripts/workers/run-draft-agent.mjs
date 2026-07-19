@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { contractForConstraints, validateDraftOutput } from "./draft-agent-contract.mjs";
 import { generatePublicDraft, maximumRunCostEur } from "./openai-draft-provider.mjs";
+import { recordAgentRunAudit } from "./agent-run-audit.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -81,16 +82,21 @@ async function approvedFactContext(supabase, run) {
     .order("granted_at", { ascending: false }).limit(1).maybeSingle();
   if (consentError) throw consentError;
   if (!consent) throw new Error("El consentimiento para usar hechos internos con IA ya no esta vigente.");
-  const ids = (run.input_manifest_json?.approvedFactRefs || []).map((fact) => fact.id).filter(Boolean).slice(0, 40);
+  const selected = (run.input_manifest_json?.approvedFactRefs || []).slice(0, 20);
+  const ids = selected.map((fact) => fact.id).filter(Boolean);
+  const selectionById = new Map(selected.map((fact) => [fact.id, fact]));
   if (!ids.length) return [];
   const { data, error } = await supabase.from("tenant_profile_suggestions")
     .select("id, field_key, suggested_value, source_type, confidence, source_sha256")
-    .eq("tenant_id", run.tenant_id).eq("status", "approved").in("id", ids);
+    .eq("tenant_id", run.tenant_id).eq("status", "approved")
+    .in("source_type", ["guided_interview", "manual_entry", "uploaded_document"]).in("id", ids);
   if (error) throw error;
   return (data || []).map((fact) => ({
     id: fact.id, fieldKey: String(fact.field_key || "").slice(0, 100),
     value: String(fact.suggested_value || "").slice(0, 1200), sourceType: fact.source_type,
-    confidence: fact.confidence, sourceSha256: fact.source_sha256 || null
+    confidence: fact.confidence, sourceSha256: fact.source_sha256 || null,
+    retrievalScore: Number(selectionById.get(fact.id)?.retrievalScore || 0),
+    matchedTerms: (selectionById.get(fact.id)?.matchedTerms || []).slice(0, 8)
   }));
 }
 
@@ -121,6 +127,7 @@ async function contextManifest(supabase, run) {
       basesInterpretationIds: requirementsContract.interpretationIds
     },
     approvedFactRefs: approvedFacts.map((fact) => ({ id: fact.id, sourceType: fact.sourceType, sourceSha256: fact.sourceSha256 })),
+    privateRetrieval: run.input_manifest_json?.privateRetrieval || null,
     allowedDataClasses: approvedFacts.length ? ["public", "internal_approved"] : ["public"],
     rawPrivateTextPersisted: false,
     humanReviewRequired: true,
@@ -151,6 +158,7 @@ async function main() {
   const ready = providerReady();
   const run = await claim(supabase, ready);
   if (!run) return console.log(JSON.stringify({ mode: "idle", message: "No hay ejecuciones del redactor en cola." }, null, 2));
+  await recordAgentRunAudit(supabase, run, "draft_agent.started", "draft-agent-worker");
   try {
     const prepared = await contextManifest(supabase, run);
     const manifest = prepared.manifest;
@@ -185,6 +193,7 @@ async function main() {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
     await supabase.from("tenant_agent_runs").update({ status: "failed", error: message.slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", run.id);
+    await recordAgentRunAudit(supabase, run, "draft_agent.failed", "draft-agent-worker", { error: message.slice(0, 500) }).catch(() => {});
     throw error;
   }
 }

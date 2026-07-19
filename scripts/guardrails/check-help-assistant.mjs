@@ -6,12 +6,14 @@ const runtime = fs.readFileSync("prototype/help-assistant.js", "utf8");
 const styles = fs.readFileSync("prototype/stitch-theme.css", "utf8");
 const html = fs.readFileSync("prototype/index.html", "utf8");
 
-for (const topic of ["overview", "registration", "profile", "radar", "matching", "bases", "candidature", "drafting", "changes", "async", "privacy", "audit"]) {
+for (const topic of ["overview", "registration", "profile", "radar", "matching", "bases", "candidature", "drafting", "progressive_knowledge", "changes", "async", "privacy", "audit"]) {
   assert(knowledge.includes(`id: "${topic}"`), `Falta el tema pedagógico ${topic}`);
 }
 assert(runtime.includes('role="dialog"') && runtime.includes('aria-modal="false"') && runtime.includes("aria-live=\"polite\""));
 assert(runtime.includes("No escribas credenciales") && knowledge.includes("no firma") && knowledge.includes("no presenta"));
+assert(knowledge.includes("Curador de conocimiento") || knowledge.includes("el curador propone conocimiento"), "La guía no explica el curador documental");
+assert(knowledge.includes("No entrena un modelo compartido") && knowledge.includes("no cruza datos entre tenants"), "La guía confunde conocimiento progresivo con entrenamiento compartido");
 assert(!runtime.includes("fetch(") && !runtime.includes("localStorage") && !runtime.includes("window.MOCK"), "La guía local no debe acceder a red o datos tenant");
 assert(styles.includes(".help-assistant-launcher") && styles.includes(".help-assistant-panel") && styles.includes("bottom: 84px"));
 assert(html.includes("help-assistant-knowledge.js") && html.includes("help-assistant.js"));
-console.log(JSON.stringify({ topics: 12, externalData: false, floating: true, accessible: true, status: "passed" }, null, 2));
+console.log(JSON.stringify({ topics: 13, externalData: false, floating: true, accessible: true, status: "passed" }, null, 2));

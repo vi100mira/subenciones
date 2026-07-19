@@ -60,11 +60,11 @@
       disabled: false,
       note: "Lee bases públicas y sus límites. La lista automática de requisitos y la documentación privada requieren revisión."
     },
-    "Gestor documental": {
+    "Preparación documental": {
       status: "Preparado, pendiente de activación",
       tone: "review",
       disabled: false,
-      note: "Organiza requisitos y borradores de candidatura. No genera texto con IA hasta que la entidad lo autorice."
+      note: "Incluye un curador que propone conocimiento reutilizable y un redactor que prepara borradores. Solo usa hechos aprobados; nunca aprueba, firma ni presenta."
     },
     "Avisos y recordatorios": {
       status: "En desarrollo",

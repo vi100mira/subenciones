@@ -8,6 +8,8 @@ const provisioningSql = fs.readFileSync(
 );
 const reconcileFixSql = fs.readFileSync("supabase/migrations/20260713211000_fix_reconcile_ambiguous_columns.sql", "utf8");
 const reconcileConflictFixSql = fs.readFileSync("supabase/migrations/20260713212000_fix_reconcile_conflict_target.sql", "utf8");
+const publicDraftSql = fs.readFileSync("supabase/migrations/20260716122500_public_document_drafts_without_ai_consent.sql", "utf8");
+const progressiveKnowledgeSql = fs.readFileSync("supabase/migrations/20260716193000_draft_agent_progressive_tenant_knowledge.sql", "utf8");
 const provisioningApi = fs.readFileSync("api/admin-tenant-provision.ts", "utf8");
 const researchEvidenceSql = fs.readFileSync(
   "supabase/migrations/20260713190000_entity_research_evidence.sql",
@@ -61,6 +63,12 @@ assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no p
 assert(reconcileFixSql.includes("consent.status = 'granted'"), "La reconciliación conserva columnas PL/pgSQL ambiguas");
 assert(reconcileFixSql.includes("config.profile_json"), "El perfil reconciliado no usa alias explícito");
 assert(reconcileConflictFixSql.includes("on conflict on constraint tenant_agent_configs_pkey"), "La reconciliación conserva agent_key ambiguo en ON CONFLICT");
+assert(publicDraftSql.includes("'grant_search', 'document_review', 'draft_agent', 'alert_agent'"), "El Gestor documental público sigue bloqueado por consentimiento");
+assert(publicDraftSql.includes("Operativo con bases públicas; datos internos no autorizados"), "La reconciliación no distingue borrador público de personalización interna");
+assert(publicDraftSql.includes("internal_facts_requires_consent"), "El contrato no limita el consentimiento a hechos internos");
+assert(publicDraftSql.includes("perform 1 from public.reconcile_tenant_agent_suite"), "La migración no reconcilia los tenants existentes");
+assert(progressiveKnowledgeSql.includes("tenant_knowledge_curator") && progressiveKnowledgeSql.includes("document_drafter"), "Preparación documental no declara sus dos capacidades internas");
+assert(progressiveKnowledgeSql.includes("approved_tenant_knowledge_only") && progressiveKnowledgeSql.includes("external_submission_allowed', false"), "La mejora documental carece de límites de aprendizaje o presentación");
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
@@ -89,7 +97,7 @@ assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa rev
 assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");
 assert(!governanceApi.toLowerCase().includes("novaterra"), "El gobierno depende del piloto");
 assert(profileReviewApi.includes('.eq("status", "pending")'), "La revisión puede sobrescribir decisiones previas");
-assert(profileReviewApi.includes("sugerencias por revisar antes de aprobar el perfil"), "El perfil puede aprobarse con sugerencias pendientes");
+assert(profileReviewApi.includes("sugerencias por revisar antes de aprobar") && profileReviewApi.includes('approveMaster ? "la plantilla maestra" : "el perfil"'), "El perfil o la plantilla maestra pueden aprobarse con sugerencias pendientes");
 assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no aprueba el perfil explícitamente");
 assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
 assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");

@@ -31,6 +31,10 @@ assert.equal(result.citationValidation.valid, true);
 assert.equal(result.output.humanReviewRequired, true);
 assert.equal(result.output.proposalConstraints.limits[0].value, 10);
 assert.equal(verifyBasesCitations({ ...output, sections: { ...sections, beneficiaries: [{ ...sections.beneficiaries[0], evidenceQuote: "Texto inventado que no existe en la pagina." }] } }, pages).valid, false);
+await assert.rejects(() => interpretPublicBases({ sourceUrl: "https://oficial.example/bases.pdf", documentSha256: "d".repeat(64), pages }, {
+  apiKey: "test-only", model: "gpt-5.6-luna", maxOutputTokens: 1000,
+  fetchFn: async () => ({ ok: true, json: async () => ({ id: "resp_invalid", output: [{ content: [{ type: "output_text", text: JSON.stringify({ ...output, sections: { ...sections, beneficiaries: [{ ...sections.beneficiaries[0], evidenceQuote: "Texto inventado que no existe en la pagina." }] } }) }] }], usage: { input_tokens: 500, output_tokens: 200, total_tokens: 700 } }) })
+}), (error) => error.responseId === "resp_invalid" && error.usage?.total_tokens === 700);
 const normalizedAi = aiContract(output, { sourceUrl: "https://oficial.example/bases.pdf", documentSha256: "c".repeat(64) });
 assert.equal(normalizedAi.sections.beneficiaries[0].coreEvidence, true);
 
@@ -41,4 +45,4 @@ assert(!migration.includes("tenant_id"), "Los artefactos publicos no deben dupli
 const selected = selectInterpretationPages([{ page: 1, text: "Indice" }, { page: 9, text: "Criterios de valoracion y documentacion obligatoria" }], {});
 assert.equal(selected[0].page, 9);
 
-console.log(JSON.stringify({ assertions: 14, publicOnly: true, citations: "verified", status: "passed" }, null, 2));
+console.log(JSON.stringify({ assertions: 15, publicOnly: true, citations: "verified", rejectedUsage: "accounted", status: "passed" }, null, 2));

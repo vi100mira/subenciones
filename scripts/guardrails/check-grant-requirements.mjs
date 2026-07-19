@@ -121,10 +121,10 @@ assert(approvedBases.includes("requirements_approved") && approvedBases.includes
 assert(legacyDocumentApi.includes("status(410)") && legacyDocumentApi.includes("Ruta retirada"), "La ruta de plantillas locales sigue aceptando paquetes no gobernados");
 assert(approvedDocumentApi.includes("Exportacion bloqueada") && approvedDocumentApi.includes('access: "private"'), "La exportacion aprobada no respeta el gate o privacidad tenant");
 assert(draftApi.includes("requirementsContractHash") && draftWorker.includes("approvedRequirements"), "El redactor no conserva ni revalida el contrato de bases aprobado");
-assert(documentaryRuntime.includes("Esperando revision de bases"), "La candidatura no comunica el bloqueo de bases");
+assert(documentaryRuntime.includes("Bases pendientes de revisión de plataforma") && documentaryRuntime.includes("La redacción se habilitará cuando plataforma valide"), "La candidatura no comunica el bloqueo de bases");
 assert(platformRuntime.includes("platform-bases-reviews") && platformRuntime.includes("Aprobar interpretacion"), "La revision de bases no tiene control operativo en plataforma");
 assert(platformRuntime.includes("clause.coreEvidence") && platformRuntime.includes("/4 esenciales"), "La revision no distingue clausulas nucleares de menciones contextuales");
-assert(documentaryRuntime.includes("Borrador base (solo publico)") && documentaryRuntime.includes("Borrador personalizado"), "La candidatura no distingue el borrador publico del personalizado consentido");
+assert(documentaryRuntime.includes("Generar borrador público") && documentaryRuntime.includes("Generar borrador personalizado"), "La candidatura no distingue el borrador publico del personalizado consentido");
 assert(!documentaryRuntime.includes("data-doc-agent-build") && !documentaryRuntime.includes("data-download-doc"), "La interfaz aun expone la antigua generacion local de .doc");
 assert(queue.includes("extractProposalConstraints") && draftWorker.includes("requirementsContract.proposalConstraints"), "Los limites formales interpretados no llegan al redactor");
 assert(documentaryRuntime.includes("documentClassLabels") && documentaryRuntime.includes("basesClarityPanel") && documentaryRuntime.includes("Qué hará la app"), "La candidatura no explica de forma amigable la clasificacion documental");

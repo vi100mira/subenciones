@@ -2,7 +2,7 @@
   const names = {
     grant_search: "Busqueda de convocatorias", entity_research: "Investigador de entidad",
     match_agent: "Asistente de encaje", document_review: "Revision documental",
-    draft_agent: "Gestor documental", alert_agent: "Avisos y recordatorios"
+    draft_agent: "Preparación documental", alert_agent: "Avisos y recordatorios"
   };
   function session() { const value = window.CredentialsAuth?.getSession?.(); return value?.role === "entity" && value?.tenantId ? value : null; }
   function cleanText(value) { return String(value || "").replaceAll("\u00c3\u00b3", "\u00f3").replaceAll("\u00c3\u00a1", "\u00e1").replaceAll("\u00c3\u00ad", "\u00ed").replaceAll("\u00c3\u00ba", "\u00fa").replaceAll("\u00c3\u00b1", "\u00f1").replaceAll("\u00c3\u00a9", "\u00e9"); }
@@ -20,6 +20,30 @@
   }
   function button(label, action, extra = "") { return `<button class="ghost-action" type="button" data-tenant-agent-action="${action}" ${extra}>${label}</button>`; }
   function matchReviewLabel(run) { return run?.review_completed_at ? "Ver decisiones" : run?.review_started_at ? "Continuar revisi\u00f3n" : "Revisar resultados"; }
+  function dateLabel(value) {
+    if (!value) return "Sin registro";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Sin registro" : new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function executionStatus(value) {
+    return ({ queued: "En cola", preparing_context: "En curso", running: "En curso", review_required: "Pendiente de revisi\u00f3n", completed: "Completada", failed: "Fallida", cancelled: "Cancelada" })[value] || value || "Sin registro";
+  }
+  function renderExecutionControl(card, agentKey, governance) {
+    card.querySelector(".agent-execution-control")?.remove();
+    const control = governance.executionControls?.find((item) => item.agentKey === agentKey);
+    if (!control) return;
+    const run = control.lastRun;
+    const when = run?.finished_at || run?.started_at || run?.created_at;
+    const last = run
+      ? `${dateLabel(when)} \u00b7 ${executionStatus(run.status)} \u00b7 por ${run.actorLabel || "Proceso de la entidad"}`
+      : "Sin ejecuci\u00f3n del tenant registrada";
+    const html = `<div class="agent-execution-control" aria-label="Control de ejecuci\u00f3n">
+      <span><b>Modo</b>${escapeHtml(control.modeLabel)}</span>
+      <span><b>\u00daltima</b>${escapeHtml(last)}</span>
+      <span><b>Pr\u00f3xima</b>${escapeHtml(control.nextLabel)}</span>
+    </div>`;
+    card.querySelector(".agent-readiness")?.insertAdjacentHTML("afterend", html);
+  }
   function researchStatus(card, run, suggestions, profileReviewState) {
     card.querySelector(".tenant-agent-run-status")?.remove();
     if (!run) return;
@@ -43,6 +67,7 @@
   }
   function updateCard(agent, governance, researchRuns, suggestions, matchRun) {
     const card = cardFor(agent.agent_key); if (!card) return;
+    renderExecutionControl(card, agent.agent_key, governance);
     const contractedAgents = session()?.plan?.agentKeys;
     if (Array.isArray(contractedAgents) && !contractedAgents.includes(agent.agent_key)) {
       card.classList.add("is-disabled"); card.classList.remove("is-active-prototype", "has-required-action");
@@ -53,14 +78,19 @@
       const excludedNote = card.querySelector(".agent-readiness"); if (excludedNote) excludedNote.textContent = "Este asistente no forma parte del plan actual de la entidad.";
       return;
     }
-    const tone = agent.status === "ready" ? "safe" : agent.status === "paused" ? "review" : "warning";
-    const label = agent.status === "ready" ? "Operativo" : agent.status === "paused" ? "Pausado" : "Bloqueado";
-    card.classList.toggle("is-disabled", !agent.enabled); card.classList.toggle("is-active-prototype", agent.enabled);
+    const aiConsent = governance.consents.find((item) => item.consent_type === "ai_processing");
+    const publicDraftMode = agent.agent_key === "draft_agent" && aiConsent?.status !== "granted" && agent.status !== "paused";
+    const operational = agent.enabled || publicDraftMode;
+    const tone = operational ? "safe" : agent.status === "paused" ? "review" : "warning";
+    const label = operational ? "Operativo" : agent.status === "paused" ? "Pausado" : "Bloqueado";
+    const displayReason = publicDraftMode ? "Curador inactivo sin fuente privada; el redactor mantiene borradores base con fuentes públicas." : agent.status_reason || label;
+    card.classList.toggle("is-disabled", !operational); card.classList.toggle("is-active-prototype", operational);
     const status = card.querySelector(".agent-status-dot, .badge");
-    if (status?.classList.contains("agent-status-dot")) { status.className = `agent-status-dot ${tone}`; status.title = `${label}: ${agent.status_reason || "Sin detalle"}`; const reader = status.querySelector(".sr-only"); if (reader) reader.textContent = label; }
-    else if (status) { status.className = `badge ${tone}`; status.textContent = label; status.title = agent.status_reason || label; }
-    const note = card.querySelector(".agent-readiness"); if (note) note.textContent = agent.status_reason || label;
+    if (status?.classList.contains("agent-status-dot")) { status.className = `agent-status-dot ${tone}`; status.title = `${label}: ${displayReason}`; const reader = status.querySelector(".sr-only"); if (reader) reader.textContent = label; }
+    else if (status) { status.className = `badge ${tone}`; status.textContent = label; status.title = displayReason; }
+    const note = card.querySelector(".agent-readiness"); if (note) note.textContent = displayReason;
     card.querySelector(".tenant-agent-actions")?.remove();
+    card.querySelector(".tenant-document-analysis-status")?.remove();
     const actions = document.createElement("div"); actions.className = "button-row tenant-agent-actions";
     if (agent.status === "paused") actions.innerHTML = button("Reanudar", "resume", `data-agent-key="${agent.agent_key}"`);
     if (agent.agent_key === "entity_research" && agent.status !== "paused") {
@@ -74,17 +104,19 @@
       if (agent.enabled && !running && ["approved", "validated", "aprobado"].includes(governance.profileReviewState)) actions.querySelector("button").textContent = "Buscar cambios en la web";
     }
     if (agent.agent_key === "draft_agent" && agent.status !== "paused") {
-      const consent = governance.consents.find((item) => item.consent_type === "ai_processing");
-      if (consent?.status !== "granted") actions.innerHTML = button("Autorizar IA para borradores", "grant-ai");
+      const analysis = window.PrivateAnalysisState?.view(governance);
+      actions.innerHTML = button(analysis?.actionLabel || "Abrir preparación documental", "open-documents");
+      if (aiConsent?.status !== "granted") actions.insertAdjacentHTML("beforeend", button("Autorizar datos internos (opcional)", "grant-ai"));
+      if (analysis) card.insertAdjacentHTML("beforeend", `<div class="plain-note tenant-document-analysis-status"><strong>${escapeHtml(analysis.title)}</strong><span>${escapeHtml(analysis.detail)}</span></div>`);
     }
     if (agent.agent_key === "match_agent" && agent.enabled && ["queued", "preparing_context"].includes(matchRun?.status)) actions.innerHTML = button(matchRun.status === "queued" ? "Encaje en cola" : "Calculando encaje", "run-match", "disabled");
     else if (agent.agent_key === "match_agent" && agent.enabled && matchRun?.status === "review_required") actions.innerHTML = button(matchReviewLabel(matchRun), "view-match-results");
     else if (agent.agent_key === "match_agent" && agent.enabled) actions.innerHTML = button(matchRun?.status === "failed" ? "Reintentar encaje" : "Calcular encaje", "run-match");
     else if (agent.agent_key === "match_agent" && suggestions.some((item) => item.status === "pending")) actions.innerHTML = button("Revisar perfil investigado", "review-profile");
-    const requiresAction = !agent.enabled && actions.childElementCount > 0;
+    const requiresAction = !operational && actions.childElementCount > 0;
     card.classList.toggle("has-required-action", requiresAction);
     if (requiresAction) card.removeAttribute("aria-disabled");
-    else card.setAttribute("aria-disabled", String(!agent.enabled));
+    else card.setAttribute("aria-disabled", String(!operational));
     if (actions.childElementCount) card.append(actions);
   }
   function updateSummary(agents, researchRuns, suggestions) {
@@ -214,10 +246,15 @@
   async function act(element) {
     const action = element.dataset.tenantAgentAction; if (!action) return; element.disabled = true;
     try {
+      if (action === "open-documents") {
+        window.PrivateKnowledge?.openPreparation?.();
+        if (!window.PrivateKnowledge?.openPreparation && typeof showToast === "function") showToast("La preparación documental no está disponible en este momento.");
+        element.disabled = false; return;
+      }
       if (action === "review-profile") { document.querySelector("#tenant-profile-review")?.scrollIntoView({ behavior: "smooth", block: "start" }); element.disabled = false; return; }
       if (action === "view-match-results") { await window.TenantMatchReview?.start(); document.querySelector('[data-screen="opportunities"]')?.click(); element.disabled = false; return; }
       if (action === "grant-web") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "grant_consent", consentType: "public_web_analysis", scope: { baseUrl: element.dataset.baseUrl, sameDomainOnly: true } }) });
-      if (action === "grant-ai") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "grant_consent", consentType: "ai_processing", scope: { provider: "openai", store: false, allowedDataClasses: ["public"] } }) });
+      if (action === "grant-ai") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "grant_consent", consentType: "ai_processing", scope: { provider: "openai", store: false, allowedDataClasses: ["internal_approved"] } }) });
       if (action === "approve-web") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "approve_public_web_source", sourceId: element.dataset.sourceId }) });
       if (action === "resume") await request("/api/tenant-agent-governance", { method: "PATCH", body: JSON.stringify({ action: "resume_agent", agentKey: element.dataset.agentKey }) });
       if (action === "run-research") await request("/api/entity-research-runs", { method: "POST", body: "{}" });
@@ -225,6 +262,7 @@
       if (["approve-suggestion", "reject-suggestion"].includes(action)) await request("/api/tenant-profile-review", { method: "PATCH", body: JSON.stringify({ reviews: [{ id: element.dataset.suggestionId, status: action === "approve-suggestion" ? "approved" : "rejected" }] }) });
       if (action === "approve-profile") await request("/api/tenant-profile-review", { method: "PATCH", body: JSON.stringify({ approveProfile: true }) });
       const successMessage = action === "run-research" ? "Investigación encolada. El estado se actualizará en esta tarjeta."
+        : action === "grant-ai" ? "Uso de datos internos autorizado y auditado para borradores personalizados."
         : action === "approve-profile" ? "Perfil aprobado. Ya puedes calcular el encaje."
           : action === "run-match" ? "Cálculo de encaje encolado. Podrás revisar el resultado cuando termine."
             : "Operación registrada y auditada.";

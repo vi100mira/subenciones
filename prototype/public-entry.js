@@ -8,7 +8,7 @@
   entry.innerHTML = `
     <div class="public-entry__grid">
       <section class="public-entry__intro">
-        <div class="public-entry__brand"><img src="./assets/insertia/icon-192.png" alt="" /><strong>INSERTIA</strong></div>
+        <div class="public-entry__brand"><div class="public-entry__insertia-lockup"><img src="./assets/insertia/insertia-mark.svg" alt="" /><span><strong>INSERTIA</strong><small>Una aplicación de <b>Novaterra Software</b></small></span></div><span class="public-entry__brand-divider" aria-hidden="true"></span><img class="public-entry__novaterra-logo" src="./assets/novaterra-foundation-logo-transparent.png" alt="Fundación Novaterra" /></div>
         <div class="public-entry__product-summary"><strong>De la convocatoria a la candidatura.</strong><span>Encuentra ayudas, entiende por qué encajan y prepara la documentación con fuentes verificables y revisión humana.</span></div>
         <p class="eyebrow">Compromiso administrativo</p>
         <h1>Garantia de integridad y privacidad institucional</h1>
@@ -17,9 +17,9 @@
           <span><i data-lucide="shield-check"></i><span><strong>Cumplimiento normativo</strong>Arquitectura alineada con RGPD y soberania del dato.</span></span>
           <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Cada uso de datos privados requiere un permiso explícito y queda registrado.</span></span>
         </div>
-        <figure><img src="./assets/stitch-ngo-grant-hero.png" alt="Ilustracion institucional de gestion segura de subvenciones" /></figure>
       </section>
       <section class="public-entry__access">
+        <figure class="public-entry__access-visual" aria-hidden="true"><img src="./assets/stitch-ngo-grant-hero.png" alt="" /></figure>
         <article class="public-entry__card public-entry__card--login">
           <div class="public-entry__tabs" role="tablist" aria-label="Acceso, registro y precios"><button class="is-active" type="button" role="tab" aria-selected="true" aria-controls="public-login-panel" data-entry-tab="login">Acceder</button><button type="button" role="tab" aria-selected="false" aria-controls="public-register-panel" data-entry-tab="register">Registrar entidad</button><button type="button" role="tab" aria-selected="false" aria-controls="public-plans-panel" data-entry-tab="plans">Planes y precios</button></div>
           <section id="public-login-panel" role="tabpanel">

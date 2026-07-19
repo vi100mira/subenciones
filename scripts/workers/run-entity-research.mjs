@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { crawlPublicWebsite } from "./entity-research-contract.mjs";
+import { recordAgentRunAudit } from "./agent-run-audit.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -120,6 +121,7 @@ async function main() {
   const supabase = client();
   const run = await claim(supabase);
   if (!run) return console.log(JSON.stringify({ mode: "idle", message: "No hay investigaciones de entidad en cola." }, null, 2));
+  await recordAgentRunAudit(supabase, run, "entity_research.started", "entity-research-worker");
   try {
     const context = await loadContext(supabase, run);
     const research = await crawlPublicWebsite(context.baseUrl);
@@ -165,6 +167,7 @@ async function main() {
     await supabase.from("tenant_agent_runs").update({
       status: "failed", error: message.slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).eq("id", run.id);
+    await recordAgentRunAudit(supabase, run, "entity_research.failed", "entity-research-worker", { error: message.slice(0, 500) }).catch(() => {});
     throw error;
   }
 }

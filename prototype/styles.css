@@ -351,7 +351,7 @@ button {
 }
 
 .badge.safe {
-  background: #dff6e8;
+  background: var(--novaterra-mint-soft, #e4f3e9);
   color: var(--green);
 }
 
@@ -434,7 +434,7 @@ button {
 }
 
 .source-node.active,
-.legend-dot.active { border-color: #b8e6c7; background: #dff6e8; color: var(--green); }
+.legend-dot.active { border-color: var(--novaterra-mint, #9cd7b2); background: var(--novaterra-mint-soft, #e4f3e9); color: var(--green); }
 
 .source-node.warning,
 .legend-dot.warning { border-color: #f5d99a; background: #fff3d6; color: var(--amber); }

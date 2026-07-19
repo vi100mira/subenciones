@@ -22,9 +22,28 @@ INSERTIA ayuda a entidades sociales a descubrir convocatorias, explicar su encaj
 5. Una persona preselecciona, descarta o abre una candidatura.
 6. Las bases se localizan, versionan y convierten en requisitos citados.
 7. Una persona aprueba las citas y el plan documental.
-8. El redactor prepara únicamente documentos redactables y separa formularios oficiales, evidencias y firmas.
-9. La salida permanece privada y requiere aprobación humana del hash antes de exportarse.
-10. La presentación externa queda fuera del sistema.
+8. Desde Asistentes, Preparación documental obliga a elegir una vía: proyectos privados autorizados o formulario guiado. Ambas producen propuestas que una persona debe revisar antes de incorporarlas a la plantilla maestra.
+   Para fuentes locales, la carpeta debe seleccionarse expresamente en el dispositivo antes de crear una solicitud de inventario. La ruta absoluta no se persiste ni se transmite a la API y la selección debe repetirse después de recargar.
+   Todas las fuentes privadas —local, Drive y SharePoint— deben registrar un preanálisis agregado con cero llamadas de IA antes de entrar en cola. Una fuente vacía, sin `PDF`/`DOCX`/`XLSX` o con contenido compatible prácticamente nulo queda bloqueada. Si contiene menos de tres documentos compatibles o menos de 100 KB, requiere una confirmación humana auditada; la cola vuelve a validar este estado en servidor.
+9. La tarjeta y el modal de Preparación documental muestran el estado, la fecha y el resultado agregado de la última ingesta privada. Una ejecución `queued` o `running` no puede duplicarse; una ejecución terminada puede revisarse o actualizarse mediante una nueva acción humana, conservando el historial anterior.
+10. En una fuente local, seleccionar y confirmar la carpeta solicita una única ejecución. Al terminar, la acción principal cambia a **Revisar propuestas**; **Actualizar análisis** es una acción distinta y voluntaria que vuelve a solicitar la carpeta. La interfaz muestra las llamadas de IA del inventario y su coste.
+11. El inventario puede preparar un índice textual local en cuarentena sin esperar a resolver las propuestas. Todo fragmento nace inactivo, aislado por tenant y fuente; la aprobación humana bloquea su uso por el redactor, no su extracción local. Crear embeddings semánticos requiere elegir un modelo local o un consentimiento externo separado.
+12. El redactor usa solo requisitos y hechos aprobados, prepara documentos redactables y separa formularios oficiales, evidencias y firmas.
+13. La salida permanece privada y requiere aprobación humana del hash antes de exportarse.
+14. La presentación externa queda fuera del sistema.
+
+## Control de ejecución de asistentes
+
+Cada tarjeta de Asistentes expone una banda operativa común con `Modo`, `Última` y `Próxima`. `Última` muestra fecha, estado y actor iniciador; si el tenant no ha ejecutado esa capacidad, debe decirlo expresamente. `Próxima` describe una programación realmente desplegada o la acción humana que la activará, nunca un cron ficticio.
+
+- Búsqueda de convocatorias: campaña de plataforma diaria y ejecución operativa controlada por plataforma.
+- Investigador de entidad: ejecución manual para buscar cambios en la web consentida.
+- Encaje: ejecución manual después de aprobar el perfil; el cron de quince minutos solo recupera colas ya autorizadas.
+- Revisión documental: se activa por expediente o cambio de bases.
+- Preparación documental: ejecución manual con fuentes y hechos autorizados; no se programa silenciosamente sobre datos privados.
+- Avisos: programables cuando exista un canal activo; mientras no exista, la interfaz debe indicarlo.
+
+Cada ejecución genera eventos tenant-scoped de encolado, inicio, resultado disponible para revisión o fallo. La identidad humana que solicita la cola se conserva separada del proceso alojado que la consume.
 
 ## Estados comprensibles
 
@@ -44,11 +63,12 @@ Los trabajos asíncronos usan: `En cola`, `Procesando`, `Pendiente de revisión`
 - Cada documento exigido se clasifica como borrador redactable, modelo oficial, evidencia de entidad o declaración humana.
 - Las referencias vagas o bases incompletas bloquean la redacción.
 - Los datos privados solo pueden usarse con permiso, minimización y trazabilidad tenant.
+- La aprobación de fuentes y la ejecución de ingestas se gestionan en Asistentes; Entidad solo informa del servicio y sus límites.
 - Ningún agente firma, envía o presenta.
 
 ## Asistente para usuarios noveles
 
-El asistente flotante explica conceptos, pantallas, estados y siguientes pasos usando conocimiento público del producto. No solicita expedientes, datos personales ni credenciales; no sustituye el análisis de encaje ni la revisión jurídica. En su primera versión funciona localmente con respuestas verificadas y muestra sus límites.
+El asistente flotante explica conceptos, pantallas, estados y siguientes pasos usando conocimiento público del producto. No solicita expedientes, datos personales ni credenciales; no sustituye el análisis de encaje ni la revisión jurídica. Explica también que el conocimiento progresivo pertenece al tenant, requiere aprobación y no es entrenamiento compartido. En su primera versión funciona localmente con respuestas verificadas y muestra sus límites.
 
 ## Criterios de aceptación
 

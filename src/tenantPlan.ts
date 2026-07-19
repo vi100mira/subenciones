@@ -37,7 +37,7 @@ export function resolveTenantPlan(motivations: unknown) {
     referenceMonthlyEur: spec.referenceMonthlyEur,
     billingStatus: billingMode === "sponsored" ? "Piloto patrocinado" : billingMode === "free" ? "Gratuito" : "Contratado",
     features: [...spec.features], agentKeys: [...spec.agentKeys],
-    note: "El acceso contratado no sustituye permisos, consentimientos ni revisión humana."
+    note: "El plan habilita sus funciones; solo el uso de datos internos o conectores privados exige autorización específica. Toda exportación conserva revisión humana."
   };
 }
 

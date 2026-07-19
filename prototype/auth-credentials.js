@@ -27,15 +27,25 @@
     if (!note) return session;
     note.querySelector(".auth-session")?.remove();
     const item = document.createElement("div");
+    const logo = document.createElement("img");
     const label = document.createElement("span");
     const role = document.createElement("strong");
     const button = document.createElement("button");
     item.className = "auth-session";
+    const tenantName = String(session.label || "").replace(/\s+demo$/i, "");
+    const tenantLogoUrl = session.tenantLogoUrl || (/novaterra/i.test(tenantName) ? "./assets/novaterra-foundation-logo-transparent.png" : "");
     role.textContent = session.role === "superadmin" ? "Administración" : "Entidad";
-    label.textContent = String(session.label || "").replace(/\s+demo$/i, "");
+    label.textContent = tenantName;
     button.type = "button";
     button.dataset.authLogout = "";
     button.textContent = "Salir";
+    if (session.role === "entity" && tenantLogoUrl) {
+      logo.className = "auth-session__tenant-logo";
+      logo.src = tenantLogoUrl;
+      logo.alt = `Logo de ${tenantName}`;
+      item.classList.add("has-tenant-logo");
+      item.append(logo);
+    }
     item.append(role, label, button);
     note.append(item);
     window.PlanAccess?.applyMenuPolicy?.();

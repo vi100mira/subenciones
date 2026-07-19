@@ -17,6 +17,7 @@ test-results/
 .vite/
 .turbo/
 .tmp/
+tmp/
 
 # Backend local runtime
 backend/var/

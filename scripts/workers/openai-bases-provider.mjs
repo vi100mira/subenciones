@@ -56,6 +56,8 @@ export function publicBasesInput(context) {
       "Extrae solo afirmaciones respaldadas literalmente por las paginas incluidas.",
       "No completes requisitos por conocimiento general ni por analogia con otras convocatorias.",
       "Cada evidenceQuote debe ser una cita literal de la sourcePage indicada.",
+      "Copia evidenceQuote exactamente como aparece, incluidos errores OCR; no corrijas, resumas ni recompongas el texto.",
+      "Si no puedes copiar una cita literal de al menos 20 caracteres, omite la clausula y registrala como incertidumbre.",
       "Extrae limites de extension y reglas de formato solo cuando aparezcan literalmente; si no constan, devuelve listas vacias.",
       "Separa ausencia de evidencia como incertidumbre; nunca la conviertas en un hecho.",
       "La salida queda siempre pendiente de revision humana."
@@ -113,9 +115,16 @@ export async function interpretPublicBases(context, options = {}) {
   if (!text) throw new Error("OpenAI no devolvio una interpretacion estructurada.");
   const output = JSON.parse(text);
   const citationValidation = verifyBasesCitations(output, input.pages);
-  if (!citationValidation.valid) throw new Error(`Citas invalidas: ${citationValidation.errors.join("; ")}`);
+  const usage = { ...payload.usage, estimated_eur: estimateCostEur(payload.usage || {}, options) };
+  if (!citationValidation.valid) {
+    const error = new Error(`Citas invalidas: ${citationValidation.errors.join("; ")}`);
+    error.usage = usage;
+    error.responseId = payload.id;
+    error.model = model;
+    throw error;
+  }
   return {
     output, model, responseId: payload.id, citationValidation,
-    usage: { ...payload.usage, estimated_eur: estimateCostEur(payload.usage || {}, options) }
+    usage
   };
 }

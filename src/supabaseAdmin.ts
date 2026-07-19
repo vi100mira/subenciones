@@ -59,7 +59,7 @@ export async function requireSourcePermission(
   authorization: string | string[] | undefined,
   permission: SourcePermission,
   requestedTenantId?: string | string[]
-): Promise<{ userId: string; tenantId: string; role: string }> {
+): Promise<{ userId: string; tenantId: string; role: string; email: string }> {
   const token = bearerToken(authorization);
   if (!token) throw new Error("No autorizado");
 
@@ -89,6 +89,7 @@ export async function requireSourcePermission(
   return {
     userId: userData.user.id,
     tenantId: String(membership.tenant_id),
-    role
+    role,
+    email: String(userData.user.email || role)
   };
 }

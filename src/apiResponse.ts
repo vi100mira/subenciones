@@ -10,6 +10,12 @@ export function fail(error: string): ApiError {
   return { ok: false, error };
 }
 
+export function errorMessage(error: unknown, fallback = "Error inesperado"): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") return error.message;
+  return fallback;
+}
+
 export async function readApiJson<T = unknown>(response: Response, endpoint: string): Promise<T> {
   const raw = await response.text();
   let payload: unknown = null;

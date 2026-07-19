@@ -116,7 +116,17 @@ async function main() {
     console.log(JSON.stringify({ mode: "interpreted", interpretationId: run.id, status: "review_required", contractStatus: contract.status, pages: pages.length, usage: generated.usage }, null, 2));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    await supabase.from("platform_bases_interpretations").update({ status: "failed", error: message.slice(0, 4000), updated_at: new Date().toISOString() }).eq("id", run.id);
+    const rejectedUsage = error?.usage ? {
+      ...error.usage,
+      response_id: error.responseId || null,
+      public_only: true,
+      rejected_by: "citation_validation"
+    } : {};
+    await supabase.from("platform_bases_interpretations").update({
+      status: "failed", error: message.slice(0, 4000), usage_json: rejectedUsage,
+      model: error?.model || process.env.AI_BASES_MODEL || process.env.AI_DRAFT_MODEL || "gpt-5.6-luna",
+      updated_at: new Date().toISOString()
+    }).eq("id", run.id);
     throw error;
   }
 }

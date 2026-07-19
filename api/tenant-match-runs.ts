@@ -114,7 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await supabase.from("audit_events").insert({
         tenant_id: actor.tenantId,
         actor_user_id: actor.userId,
-        actor_label: actor.role,
+        actor_label: actor.email,
         action: `match_agent.${reviewStatus}`,
         target_type: "recommendation",
         target_id: recommendationId,
@@ -151,7 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await supabase.from("audit_events").insert({
       tenant_id: actor.tenantId,
       actor_user_id: actor.userId,
-      actor_label: actor.role,
+      actor_label: actor.email,
       action: "match_agent.queued",
       target_type: "agent_run",
       target_id: run.id,

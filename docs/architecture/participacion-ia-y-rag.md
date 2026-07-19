@@ -2,7 +2,7 @@
 
 ## Respuesta corta
 
-El producto está diseñado como un RAG de subvenciones, pero hoy el RAG semántico todavía no está operativo. La búsqueda, descarga, extracción PDF, OCR, normalización, hashes y compuertas se ejecutan con código determinista. La única integración generativa construida es el redactor de evidencia pública; su worker está alojado, pero no llama a OpenAI porque falta la clave.
+El producto ya dispone de un primer RAG privado operativo sobre la plantilla maestra aprobada: para cada candidatura recupera los hechos internos más pertinentes mediante ranking determinista y entrega al redactor únicamente sus referencias. El archivo histórico puede preprocesarse sin esperar a aprobar sus propuestas: queda en un índice FTS local en cuarentena, aislado por tenant y fuente, y no es consultable por el redactor. No existen todavía embeddings semánticos del archivo histórico completo. La búsqueda, descarga, extracción PDF, normalización, hashes, criba, indexación local y recuperación inicial realizan cero llamadas de IA; la generación del borrador sí requiere proveedor, consentimiento y presupuesto.
 
 Esto no significa que la IA deba limitarse a redactar. La arquitectura objetivo la usa también para interpretar bases, sugerir hechos de entidad y explicar encaje, siempre después de una captura verificable y con revisión humana.
 
@@ -18,7 +18,10 @@ flowchart LR
   cola --> worker["Worker alojado"]
   worker -. "sin clave" .-> espera["awaiting_provider"]
   espera -. "0 llamadas" .-> openai["OpenAI"]
-  privada["Documentos de entidad"] -. "cola sin consumidor" .-> ragPrivado["RAG privado no operativo"]
+  privada["Documentos de entidad"] --> cribaPrivada["Criba local y propuestas"]
+  cribaPrivada --> revisionPrivada["Aprobación humana"]
+  revisionPrivada --> ragPrivado["Recuperación de hechos por candidatura"]
+  ragPrivado --> cola
 ```
 
 ## Arquitectura objetivo con IA intensiva y gobernada
@@ -54,7 +57,7 @@ flowchart TB
 | Interpretación de bases | Reglas y extracción de texto | Salida estructurada con requisitos, límites, criterios y citas | Pendiente |
 | Investigación de entidad | No existe worker | Analiza snapshots de web pública consentida y propone hechos | Pendiente |
 | RAG público | Corpus sin embeddings operativos | Índice vectorial compartido de fuentes públicas versionadas | Pendiente |
-| RAG privado | Cola sin consumidor y cero fragmentos privados | Índice separado por `tenant_id`, solo documentos aprobados | Pendiente |
+| RAG privado | Recuperación tenant-scoped de hechos aprobados y un índice FTS histórico local en cuarentena | Promover fragmentos revisados y añadir embeddings privados con modelo local o proveedor autorizado | Primer corte operativo |
 | Encaje | Reglas y conversación JavaScript local | Recuperación híbrida más explicación con evidencias | Prototipo |
 | Redacción | API, cola, contrato y worker; 0 llamadas | OpenAI sobre contexto mínimo aprobado | Preparado; falta clave |
 | Envíos externos | Ninguno | Adaptadores con aprobación explícita | Bloqueado por diseño |
@@ -73,8 +76,8 @@ El modelo no debe ser quien navegue, descargue y decida qué documento es oficia
 
 ## Orden de construcción recomendado
 
-1. Consumidor de `ingestion_runs` e índice privado aislado.
-2. Interpretador de bases con JSON estricto, citas y revisión humana.
-3. Investigador de entidad sobre snapshots consentidos.
-4. Recuperación híbrida pública/privada y encaje explicable.
-5. Activación del redactor con clave, prueba real y monitor de coste.
+1. Aprobar y versionar la plantilla maestra privada.
+2. Recuperar por candidatura solo los hechos pertinentes y auditar la selección.
+3. Añadir fragmentos históricos aprobados y embeddings privados con consentimiento y presupuesto separados.
+4. Completar la recuperación híbrida pública/privada y el encaje explicable.
+5. Activar el redactor con proveedor autorizado, prueba real y monitor de coste.

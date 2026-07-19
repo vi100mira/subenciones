@@ -38,22 +38,29 @@ window.INSERTIA_HELP_TOPICS = [
     id: "bases", title: "Revisión de las bases", screens: ["opportunities", "candidature", "agents"],
     keywords: ["bases", "requisitos", "anexo", "formulario", "documentacion", "sia"],
     summary: "La aplicación localiza y versiona bases, anexos y fichas oficiales antes de permitir la preparación documental.",
-    steps: ["Extrae beneficiarios y finalidad.", "Identifica documentos y presentación.", "Conserva URL, hash y páginas.", "Una persona revisa y aprueba las citas."],
-    caution: "Una referencia incompleta o un formulario que exige identificación mantiene el control humano."
+    steps: ["Extrae beneficiarios y finalidad.", "Identifica documentos y presentación.", "Conserva URL, hash y páginas.", "La entidad solicita la revisión cuando la necesita.", "Un analista de plataforma verifica y aprueba las citas compartidas."],
+    caution: "Una entidad no puede aprobar unas bases globales para las demás. Si la lectura sigue en cola o las citas no están verificadas, la redacción permanece bloqueada. La solicitud y su fecha se recuperan desde auditoría al recargar; tras 24 horas puede enviarse un recordatorio si sigue pendiente."
   },
   {
     id: "candidature", title: "Preselección y candidatura", screens: ["candidature", "opportunities"],
-    keywords: ["preseleccion", "candidatura", "descartar", "expediente", "elegir", "activar"],
-    summary: "Preseleccionar significa estudiar una oportunidad; abrir expediente significa empezar a organizarla. Ninguna de las dos acciones presenta la subvención.",
-    steps: ["Compara resultados.", "Preselecciona o descarta.", "Abre expediente si interesa.", "Revisa bases y plan documental."],
+    keywords: ["preseleccion", "candidatura", "descartar", "expediente", "elegir", "activar", "cofinanciacion", "beneficiario", "certificados", "tareas"],
+    summary: "Preseleccionar significa estudiar una oportunidad; abrir expediente crea un plan de tareas para dejar su documentación preparada. Ninguna de las dos acciones presenta la subvención.",
+    steps: ["Compara resultados.", "Preselecciona o descarta.", "Abre expediente si interesa.", "Consulta el punto de información de cada tarea para saber qué comprobar, qué evidencia falta y cuándo puede cerrarla una persona.", "Prepara borradores y anexos para revisión."],
     caution: "Las decisiones y descartes quedan en auditoría y pueden justificarse."
   },
   {
     id: "drafting", title: "Documentos y agente redactor", screens: ["candidature", "agents"],
     keywords: ["redactar", "borrador", "word", "docx", "pdf", "documento", "memoria"],
     summary: "El redactor prepara borradores trazables y separa lo que debe aportar o completar una persona.",
-    steps: ["Recibe requisitos aprobados.", "Redacta memoria y anexos permitidos.", "Separa modelos oficiales, evidencias y declaraciones.", "Genera una salida privada para revisión."],
+    steps: ["Pre-rellena sin IA los campos que ya constan en la convocatoria y marca con claridad los que carecen de evidencia.", "Recibe requisitos aprobados.", "Redacta memoria y anexos permitidos.", "El visor sustituye el contenido orientativo por la versión generada documento a documento.", "Separa modelos oficiales, evidencias y declaraciones.", "Genera una salida privada para revisión."],
     caution: "La exportación exige aprobar el hash; no hay firma ni envío automático."
+  },
+  {
+    id: "progressive_knowledge", title: "Conocimiento progresivo de la entidad", screens: ["entity", "agents", "candidature"],
+    keywords: ["aprende", "aprendizaje", "automejora", "mejora", "proyectos", "curador", "plantilla maestra", "conocimiento progresivo"],
+    summary: "Preparación documental tiene dos capacidades: el curador propone conocimiento reutilizable desde fuentes autorizadas y el redactor lo usa después de su aprobación humana.",
+    steps: ["Gestiona Preparación documental desde Asistentes; la tarjeta muestra el estado, la fecha, el resultado y las llamadas de IA de la última ejecución.", "Elige una vía: analizar proyectos autorizados o completar el formulario guiado.", "La carpeta local, Drive o SharePoint pasa primero una criba sin IA: una fuente vacía o sin formatos útiles se bloquea; una muy pequeña exige confirmación.", "Para una fuente local, selecciona primero la carpeta en el dispositivo; esa acción basta para solicitar el inventario y la ruta completa no se guarda.", "El análisis prepara en el equipo un índice de texto en cuarentena aunque existan propuestas pendientes; sus fragmentos no están activos para redactar.", "Cuando termina, pulsa Gestionar conocimiento. La pantalla separa documentos analizados, propuestas pendientes, hechos disponibles y archivo histórico no activo.", "Revisar propuestas permite aprobar o descartar cada dato. Guardar una aprobación lo deja disponible para nuevas versiones documentales del mismo tenant, pero nunca modifica silenciosamente un Word ya creado.", "Actualizar análisis sirve solo para volver a leer voluntariamente la fuente; no es necesario repetirlo para revisar lo ya encontrado.", "En la pestaña Borrador, Generar borrador personalizado crea la primera versión. Si existe un borrador y hay hechos aprobados disponibles, Regenerar con conocimiento aprobado crea otra versión y conserva la anterior para comparación y auditoría.", "También puedes iniciar la misma generación desde Ver documento cuando el visor indique que solo existe un esqueleto. La acción regenera el conjunto documental de la candidatura, incluido el documento abierto; no crea un flujo independiente.", "Si las bases o los límites siguen pendientes, la acción aparece bloqueada e indica exactamente qué revisión debe completarse primero.", "En cada candidatura, la recuperación privada compara la convocatoria con la plantilla maestra y recupera solo los hechos aprobados pertinentes; la pantalla indica cuántos examinó y utilizó.", "El redactor recibe únicamente esa selección mínima y mantiene las referencias de evidencia."],
+    caution: "Preparar no significa activar: la revisión humana bloquea el uso, no la extracción local. La recuperación actual realiza 0 llamadas de IA; la generación sí puede consumir IA. No entrena un modelo compartido y no cruza datos entre tenants. La vectorización semántica exige elegir un modelo local o autorizar por separado un proveedor externo."
   },
   {
     id: "changes", title: "Nuevas convocatorias y cambios", screens: ["dashboard", "opportunities", "audit"],
@@ -64,10 +71,10 @@ window.INSERTIA_HELP_TOPICS = [
   },
   {
     id: "async", title: "Estados de los trabajos", screens: ["agents", "operations", "dashboard"],
-    keywords: ["cola", "encolado", "procesando", "error", "completado", "estado", "parpadeo"],
-    summary: "Los agentes trabajan de forma asíncrona: una acción puede quedar en cola y terminar más tarde.",
-    steps: ["En cola: trabajo aceptado.", "Procesando: consumidor activo.", "Pendiente de revisión: necesita decisión.", "Bloqueado o Error: requiere acción.", "Completado: resultado disponible."],
-    caution: "Encolado no significa terminado; la pantalla conserva el último estado estable al refrescar."
+    keywords: ["cola", "encolado", "procesando", "error", "completado", "estado", "parpadeo", "ejecucion", "cron", "manual", "ultima", "proxima", "quien"],
+    summary: "Cada tarjeta de Asistentes indica si la capacidad es programada, manual o se activa por expediente, además de su última ejecución, estado, actor y siguiente momento previsto.",
+    steps: ["Modo indica qué dispara la capacidad; no implica que todos los agentes tengan un cron.", "Última muestra fecha, resultado y quién solicitó la ejecución.", "Próxima explica la programación real o la acción humana necesaria.", "La auditoría registra cola, inicio, resultado para revisión y fallo.", "El radar público puede ser periódico; encaje, revisión y preparación conservan sus puertas humanas."],
+    caution: "Encolado no significa terminado. La preparación con datos privados nunca se lanza por un cron silencioso ni firma, envía o presenta documentos."
   },
   {
     id: "privacy", title: "Privacidad y control de datos", screens: ["entity", "audit", "welcome"],

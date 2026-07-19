@@ -1,7 +1,11 @@
 (function () {
   const packageKey = "documentary-agent-package-v1";
   const candidateKey = "workspace-candidates-v1";
-  let workspacePackageVisible = true;
+  let workspacePackageVisible = false;
+  let workspaceTargetTab = "summary";
+  const basesReviewStates = new Map();
+  const basesReviewLoads = new Map();
+  const latestDraftRuns = new Map();
   const presets = {
     "labora-empleo-2026": {
       who: ["Entidad sin animo de lucro o social con actuacion en Comunitat Valenciana.", "Capacidad operativa para ejecutar itinerarios de insercion, formacion o acompanamiento.", "Situacion fiscal y Seguridad Social al corriente antes de presentar."],
@@ -218,7 +222,10 @@
       ? " La sede publica la relación documental. El modelo oficial debe obtenerlo una persona autorizada desde el portal antes de cerrar el expediente."
       : "";
     const detail = (missing.length ? `No consta de forma verificable: ${missing.join(", ")}. ${recoveryText}` : `${requirements.length} obligaciones de solicitud; ${ready} concretas, ${unclear} referencias por aclarar, ${unclassified} pendientes de clasificación técnica y ${excluded} menciones de contexto o justificación separadas.`) + portalNote;
-    return `<div class="plain-note"><strong>${title}</strong><span>${detail} ${approved ? "El agente conservará las citas y la aprobación final seguirá siendo humana." : "No se presentará como completo hasta aprobar sus citas."}</span></div>`;
+    const control = approved
+      ? "El agente conservará las citas y la aprobación final seguirá siendo humana."
+      : "La entidad puede solicitar la revisión, pero la validación corresponde a plataforma porque estas bases se comparten entre tenants.";
+    return `<div class="plain-note"><strong>${title}</strong><span>${detail} ${control}</span></div>`;
   }
 
   function projectStage(pack) {
@@ -230,17 +237,81 @@
         <span>Proyecto activo</span>
       </div>
       <div class="document-agent-actions">
-        ${basesApproved ? `<div><strong>Bases aprobadas; expediente pendiente</strong><span>El agente generará el documento principal y los anexos redactables, y separará modelos oficiales y evidencias de entidad.</span></div>` : `<div><strong>Bases pendientes de revisión</strong><span>Bloqueado hasta aprobar quién puede solicitar, actuaciones, documentos obligatorios y forma de presentación con sus citas.</span></div>`}
-        <div class="button-row">
-          ${pack.proposalConstraints?.draftingGate === "constraints_verified" && basesApproved ? `<button class="ghost-action" data-draft-agent-start="${pack.id}" data-approved-facts="false" type="button">Borrador base (solo publico)</button><button class="primary-action" data-draft-agent-start="${pack.id}" data-approved-facts="true" type="button">Borrador personalizado</button>` : ""}
-          ${!basesApproved ? `<button class="primary-action" type="button" disabled>Esperando revision de bases</button>` : ""}
-        </div>
-        <div class="plain-note" data-draft-agent-status="${pack.id}"><strong>Agente redactor</strong><span>El modo base usa solo evidencia publica. El personalizado requiere consentimiento IA y envia solo hechos del perfil previamente aprobados; nunca documentos privados completos.</span></div>
+        ${basesApproved ? `<div><strong>Bases aprobadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde la pestaña Borrador.</span></div>` : `<div><strong>Bases pendientes de revisión de plataforma</strong><span>La entidad puede solicitarla y consultar qué falta. La redacción se habilitará cuando plataforma valide las citas compartidas.</span></div>`}
       </div>`;
+  }
+
+  function draftActionButtons(pack) {
+    const basesApproved = pack.requirementsContract?.documentaryGate === "requirements_approved";
+    const limitsVerified = pack.proposalConstraints?.draftingGate === "constraints_verified";
+    if (!basesApproved) return `<div class="bases-review-actions"><div class="button-row"><button class="primary-action" data-bases-review-request="${escapeHtml(pack.id)}" type="button">Solicitar revisión de bases</button><button class="ghost-action" data-open-bases-status="${escapeHtml(pack.id)}" type="button">Ver qué falta</button></div><small data-bases-review-status="${escapeHtml(pack.id)}">La aprobación la realiza plataforma; tu solicitud quedará registrada en auditoría.</small></div>`;
+    if (!limitsVerified) return `<div class="button-row"><button class="primary-action" type="button" disabled>Primero: verificar los límites de redacción</button></div>`;
+    return `<div class="button-row"><button class="ghost-action" data-draft-agent-start="${pack.id}" data-approved-facts="false" type="button">Generar borrador público</button><button class="primary-action" data-draft-agent-start="${pack.id}" data-approved-facts="true" type="button">Generar borrador personalizado</button></div>`;
   }
 
   function decisionsPanel() {
     return `<div class="plain-note"><strong>Salida gobernada pendiente</strong><span>El redactor debe mapear todos los documentos exigidos, declarar faltantes y quedar aprobado antes de generar DOCX/PDF privados.</span></div>`;
+  }
+
+  async function requestBasesReview(button) {
+    const current = window.CredentialsAuth?.getSession?.();
+    if (!current?.accessToken || !current?.tenantId) throw new Error("La sesión de la entidad no está disponible.");
+    const canonicalKey = button.dataset.basesReviewRequest;
+    const response = await fetch("/api/bases-review-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) },
+      body: JSON.stringify({ canonicalKey })
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) throw new Error(payload?.error || `No se pudo solicitar la revisión (HTTP ${response.status}).`);
+    basesReviewStates.set(canonicalKey, payload.data);
+    applyBasesReviewState(canonicalKey, payload.data);
+    return payload.data;
+  }
+
+  function formatReviewDate(value) {
+    if (!value) return "";
+    return new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  }
+
+  function applyBasesReviewState(canonicalKey, state) {
+    const hasRequest = Boolean(state?.requestId);
+    const approved = state?.state === "approved";
+    document.querySelectorAll(`[data-bases-review-status="${CSS.escape(canonicalKey)}"]`).forEach((node) => {
+      const requested = hasRequest ? `Solicitada el ${formatReviewDate(state.requestedAt)}. ` : "";
+      node.textContent = `${requested}${state?.message || ""}`.trim();
+    });
+    document.querySelectorAll(`[data-bases-review-request="${CSS.escape(canonicalKey)}"]`).forEach((node) => {
+      node.disabled = approved || (hasRequest && !state.canRequestAgain);
+      node.textContent = approved ? "Bases aprobadas" : hasRequest ? state.canRequestAgain ? "Recordar revisión" : "Revisión solicitada" : "Solicitar revisión de bases";
+    });
+  }
+
+  async function loadBasesReviewState(canonicalKey) {
+    const cached = basesReviewStates.get(canonicalKey);
+    if (cached) {
+      applyBasesReviewState(canonicalKey, cached);
+      return cached;
+    }
+    if (basesReviewLoads.has(canonicalKey)) return basesReviewLoads.get(canonicalKey);
+    const current = window.CredentialsAuth?.getSession?.();
+    if (!current?.accessToken || !current?.tenantId) return null;
+    const loading = fetch(`/api/bases-review-request?canonicalKey=${encodeURIComponent(canonicalKey)}`, {
+      headers: { "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) }
+    }).then(async (response) => {
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) throw new Error(payload?.error || "No se pudo consultar la revisión de bases.");
+      basesReviewStates.set(canonicalKey, payload.data);
+      applyBasesReviewState(canonicalKey, payload.data);
+      return payload.data;
+    }).catch(() => null).finally(() => basesReviewLoads.delete(canonicalKey));
+    basesReviewLoads.set(canonicalKey, loading);
+    return loading;
+  }
+
+  function refreshVisibleBasesReviewStates() {
+    const keys = new Set([...document.querySelectorAll("[data-bases-review-request]")].map((node) => node.dataset.basesReviewRequest).filter(Boolean));
+    keys.forEach(loadBasesReviewState);
   }
 
   function constructedDocsSummary(pack) {
@@ -258,37 +329,55 @@
     </div>`;
   }
 
+  function constructedDocumentHtml(doc, pack, generatedDocument = null) {
+    const preparedSections = window.ConstructedDocumentPrefill?.sections(doc, pack, generatedDocument) || [];
+    const filledCount = preparedSections.filter((section) => section.state !== "pending").length;
+    const sections = preparedSections.map((section) => `
+      <section>
+        <h2>${escapeHtml(section.title)}</h2>
+        <div class="template-field is-${escapeHtml(section.state)}"><span>${escapeHtml(section.label)}</span>${section.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}${section.evidence.length ? `<small>Procedencia: ${section.evidence.map(escapeHtml).join(" · ")}</small>` : ""}</div>
+      </section>`).join("");
+    return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeHtml(doc.title)}</title><style>
+      *{box-sizing:border-box}body{margin:0;padding:28px;background:#edf2f0;color:#202438;font-family:Arial,sans-serif}article{width:min(780px,100%);min-height:980px;margin:auto;padding:58px 64px;background:#fff;box-shadow:0 8px 28px rgba(25,35,32,.12)}.stamp{display:inline-block;margin:0 0 24px;padding:7px 10px;border:1px solid #b87720;color:#7c5015;font-size:11px;font-weight:700;letter-spacing:.08em}h1{margin:0 0 12px;font-size:30px;line-height:1.2}header>p{margin:0;color:#5b6073;line-height:1.55}.document-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:28px 0;padding:18px;border:1px solid #cfd8d5;background:#f7faf9}.document-meta div:last-child{grid-column:1/-1}.document-meta strong,.document-meta span{display:block}.document-meta span{margin-top:5px;color:#5b6073;line-height:1.45}section{margin-top:28px}h2{margin:0 0 10px;padding-bottom:8px;border-bottom:2px solid #a8d8bd;font-size:19px}.template-field{min-height:110px;padding:14px;border:1px dashed #9da9a5;background:#fbfdfc}.template-field.is-prefilled,.template-field.is-generated{border-style:solid;border-color:#9bc9b0;background:#f3faf6}.template-field span{color:#3a7f63;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.template-field p{margin:10px 0;color:#4f5568;line-height:1.55}.template-field small{display:block;margin-top:12px;padding-top:9px;border-top:1px solid #dce7e2;color:#667268}.control{margin-top:34px;padding:16px;border-left:4px solid #b87720;background:#fff8ec}.control strong,.control span{display:block}.control span{margin-top:5px;color:#5b6073;line-height:1.5}footer{margin-top:42px;padding-top:14px;border-top:1px solid #dce3e1;color:#737889;font-size:11px}@media(max-width:600px){body{padding:10px}article{min-height:0;padding:30px 24px}.document-meta{grid-template-columns:1fr}.document-meta div:last-child{grid-column:auto}}
+    </style></head><body><article><p class="stamp">BORRADOR ORIENTATIVO · NO ES DOCUMENTO FINAL</p><header><h1>${escapeHtml(doc.title)}</h1><p>${escapeHtml(doc.requirement)}</p></header><div class="document-meta"><div><strong>Estado</strong><span>${generatedDocument ? "Versión generada pendiente de revisión" : escapeHtml(doc.status)}</span></div><div><strong>Preparación</strong><span>${filledCount} de ${preparedSections.length} apartados con contenido disponible</span></div><div><strong>Contenido que puede preparar la app</strong><span>${escapeHtml(doc.possible)}</span></div></div>${sections}<div class="control"><strong>Control pendiente antes de uso</strong><span>${escapeHtml(doc.pending)}</span></div><footer>Insertia · Documento de trabajo sujeto a validación humana · No presentar ni firmar automáticamente</footer></article></body></html>`;
+  }
+
+  function generatedDocumentFor(pack, doc) {
+    const run = latestDraftRuns.get(pack?.id);
+    return window.ConstructedDocumentPrefill?.matchGeneratedDocument(doc, run?.output_json) || null;
+  }
+
   function openConstructedDocument(index) {
     const pack = readWorkspacePackage();
     const doc = documentBuildPlan(pack || {})[Number(index)];
     if (!doc) return;
     document.querySelector("[data-constructed-doc-modal]")?.remove();
     document.body.insertAdjacentHTML("beforeend", `
-      <div class="modal-backdrop" data-constructed-doc-modal>
+      <div class="modal-backdrop" data-constructed-doc-modal data-canonical-key="${escapeHtml(pack?.id)}" data-document-index="${Number(index)}">
         <article class="modal constructed-doc-modal" role="dialog" aria-modal="true" aria-labelledby="constructed-doc-title">
           <div class="panel-heading">
             <div><p class="eyebrow">Plantilla preconstruida</p><h2 id="constructed-doc-title">${escapeHtml(doc.title)}</h2></div>
             <button class="icon-button" data-close-constructed-doc type="button" aria-label="Cerrar visor"><i data-lucide="x"></i></button>
           </div>
-          <div class="plain-note"><strong>No es el documento final</strong><span>Esta vista permite revisar la estructura prevista. Las bases, los datos internos y la firma siguen pendientes de validacion humana.</span></div>
-          <div class="constructed-doc-preview">
-            <section><strong>Documento exigido</strong><p>${escapeHtml(doc.requirement)}</p></section>
-            <section><strong>Contenido que puede preparar la app</strong><p>${escapeHtml(doc.possible)}</p></section>
-            <section><strong>Control pendiente</strong><p>${escapeHtml(doc.pending)}</p></section>
-            <section class="constructed-doc-sections"><strong>Secciones previstas</strong><ol>${doc.sections.map((section) => `<li><b>${escapeHtml(section)}</b><span>Contenido pendiente de completar y revisar.</span></li>`).join("")}</ol></section>
+          <div class="plain-note"><strong>No es el documento final</strong><span>Los campos que ya tienen información aparecen pre-rellenados. Los hechos privados aprobados se incorporarán solo al generar una versión personalizada; firma, importes y datos sin evidencia seguirán pendientes.</span></div>
+          <div class="plain-note private-template-prompt"><div><strong>¿Solo aparece el esqueleto?</strong><span>Genera una nueva versión de la candidatura para completar los documentos redactables, incluido este. Se usarán solo bases verificadas y hechos del tenant aprobados; la salida seguirá pendiente de revisión humana.</span></div><button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="folder-key"></i> Gestionar conocimiento</button></div>
+          <div class="constructed-doc-generation">
+            ${draftActionButtons(pack)}
+            <div data-draft-agent-status="${escapeHtml(pack?.id)}"></div>
           </div>
-          <div class="button-row"><button class="primary-action" data-download-constructed-doc="${Number(index)}" type="button"><i data-lucide="download"></i> Descargar plantilla</button><button class="ghost-action" data-close-constructed-doc type="button">Cerrar</button></div>
+          <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc)))}"></iframe>
+          <div class="button-row"><button class="ghost-action" data-download-constructed-doc="${Number(index)}" type="button"><i data-lucide="download"></i> Descargar esqueleto</button><button class="ghost-action" data-close-constructed-doc type="button">Cerrar</button></div>
         </article>
       </div>`);
     window.lucide?.createIcons();
+    window.dispatchEvent(new CustomEvent("draft-agent-hosts-rendered"));
   }
 
   function downloadConstructedDocument(index) {
     const pack = readWorkspacePackage();
     const doc = documentBuildPlan(pack || {})[Number(index)];
     if (!doc) return;
-    const sections = doc.sections.map((section) => `<h2>${escapeHtml(section)}</h2><p><em>Contenido pendiente de completar y revisar.</em></p>`).join("");
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(doc.title)}</title></head><body><h1>${escapeHtml(doc.title)}</h1><p><strong>PLANTILLA ORIENTATIVA - NO ES DOCUMENTO FINAL</strong></p><p>${escapeHtml(doc.requirement)}</p>${sections}<hr><p><strong>Control pendiente:</strong> ${escapeHtml(doc.pending)}</p></body></html>`;
+    const html = constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc));
     const url = URL.createObjectURL(new Blob([html], { type: "application/msword;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
@@ -296,6 +385,16 @@
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     if (typeof showToast === "function") showToast("Plantilla descargada. Sigue pendiente de revision humana.");
+  }
+
+  function updateOpenConstructedDocument(canonicalKey) {
+    const modal = document.querySelector(`[data-constructed-doc-modal][data-canonical-key="${CSS.escape(canonicalKey)}"]`);
+    if (!modal) return;
+    const pack = readWorkspacePackage();
+    const doc = documentBuildPlan(pack || {})[Number(modal.dataset.documentIndex)];
+    const frame = modal.querySelector(".constructed-doc-frame");
+    if (!doc || !frame) return;
+    frame.srcdoc = constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc));
   }
 
   function recommendationFor(item) {
@@ -367,6 +466,7 @@
   function switchWorkspaceTab(tabId) {
     const card = document.querySelector("#documentary-agent-package");
     if (!card) return false;
+    workspaceTargetTab = tabId;
     card.querySelectorAll("[data-requirements-tab]").forEach((item) => item.classList.toggle("is-active", item.dataset.requirementsTab === tabId));
     card.querySelectorAll("[data-requirements-panel]").forEach((item) => item.classList.toggle("is-active", item.dataset.requirementsPanel === tabId));
     card.scrollIntoView({ block: "start", behavior: "smooth" });
@@ -375,10 +475,15 @@
 
   function renderWorkspacePackage() {
     const screen = document.querySelector("#workspace");
-    const pack = readWorkspacePackage();
-    if (!screen || !pack || !screen.dataset.flowReady) return;
+    if (!screen || !screen.dataset.flowReady) return;
     screen.querySelector("#documentary-agent-package")?.remove();
     if (!workspacePackageVisible) {
+      screen.classList.remove("has-documentary-package");
+      return;
+    }
+    const pack = readWorkspacePackage();
+    if (!pack) {
+      workspacePackageVisible = false;
       screen.classList.remove("has-documentary-package");
       return;
     }
@@ -401,15 +506,15 @@
           <div><strong>Confianza</strong><span>${pack.confidence}</span></div>
         </div>
         <div class="requirements-tabs" role="tablist" aria-label="Candidatura activa">
-          ${tabButton("summary", "Resumen", true)}
-          ${tabButton("project", "Proyecto")}
-          ${tabButton("analysis", "Analisis")}
-          ${tabButton("dates", "Fechas")}
-          ${tabButton("requirements", "Requisitos")}
-          ${tabButton("documents", "Documentos")}
-          ${tabButton("steps", "Pasos")}
-          ${tabButton("checklist", "Checklist")}
-          ${tabButton("draft", "Borrador")}
+          ${tabButton("summary", "Resumen", workspaceTargetTab === "summary")}
+          ${tabButton("project", "Proyecto", workspaceTargetTab === "project")}
+          ${tabButton("analysis", "Analisis", workspaceTargetTab === "analysis")}
+          ${tabButton("dates", "Fechas", workspaceTargetTab === "dates")}
+          ${tabButton("requirements", "Requisitos", workspaceTargetTab === "requirements")}
+          ${tabButton("documents", "Documentos", workspaceTargetTab === "documents")}
+          ${tabButton("steps", "Pasos", workspaceTargetTab === "steps")}
+          ${tabButton("checklist", "Checklist", workspaceTargetTab === "checklist")}
+          ${tabButton("draft", "Borrador", workspaceTargetTab === "draft")}
         </div>
         <div class="requirements-tab-panels">
           ${panel("summary", `
@@ -418,8 +523,8 @@
               <div><strong>Control humano</strong><span>Revision obligatoria antes de exportar, enviar o presentar.</span></div>
               <div><strong>Siguiente paso</strong><span>Solicitar el redactor y revisar la memoria junto con el plan documental completo.</span></div>
             </div>
-          `, true)}
-          ${panel("project", decisionsPanel())}
+          `, workspaceTargetTab === "summary")}
+          ${panel("project", decisionsPanel(), workspaceTargetTab === "project")}
           ${panel("analysis", `
             <div class="requirements-brief">
               <div><strong>Lectura del radar</strong><span>${pack.source} - ${pack.territory}. ${scoreLabel(pack.score)} (${pack.score}/100 estimado, no elegibilidad).</span></div>
@@ -431,13 +536,13 @@
               <article><strong>Riesgos</strong>${list(pack.risks)}</article>
               <article><strong>Evidencia</strong>${list(pack.evidence)}</article>
             </div>
-          `)}
-          ${panel("dates", pack.deadlineTrace ? window.deadlineTrace.panelFromTrace(pack.deadlineTrace) : `<div class="plain-note"><strong>Sin traza de plazo</strong><span>El agente aun no ha podido consolidar una fecha o evidencia de plazo.</span></div>`)}
-          ${panel("requirements", `<div class="compact-list">${list(pack.who)}</div>`)}
-          ${panel("documents", `${basesClarityPanel(pack)}${constructedDocsSummary(pack)}`)}
-          ${panel("steps", `<div class="compact-list">${list(pack.steps)}</div>`)}
-          ${panel("checklist", `<div class="compact-tasks">${checklist()}</div>`)}
-          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>El borrador real se solicita desde Proyecto y solo puede quedar listo para revision tras evidencia, limites y renderizado PDF.</span></div><div data-draft-agent-status="${pack.id}"></div><div class="compact-draft">${outline()}</div>`)}
+          `, workspaceTargetTab === "analysis")}
+          ${panel("dates", pack.deadlineTrace ? window.deadlineTrace.panelFromTrace(pack.deadlineTrace) : `<div class="plain-note"><strong>Sin traza de plazo</strong><span>El agente aun no ha podido consolidar una fecha o evidencia de plazo.</span></div>`, workspaceTargetTab === "dates")}
+          ${panel("requirements", `<div class="compact-list">${list(pack.who)}</div>`, workspaceTargetTab === "requirements")}
+          ${panel("documents", `${basesClarityPanel(pack)}${constructedDocsSummary(pack)}`, workspaceTargetTab === "documents")}
+          ${panel("steps", `<div class="compact-list">${list(pack.steps)}</div>`, workspaceTargetTab === "steps")}
+          ${panel("checklist", `<div class="compact-tasks">${checklist()}</div>`, workspaceTargetTab === "checklist")}
+          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>Genera aquí una versión pública o personalizada. Cada ejecución crea una versión nueva y conserva la anterior para revisión y auditoría.</span></div>${draftActionButtons(pack)}<div data-draft-agent-status="${pack.id}"></div><div class="compact-draft">${outline()}</div>`, workspaceTargetTab === "draft")}
         </div>
       </article>
     `;
@@ -445,20 +550,35 @@
     if (anchor) anchor.innerHTML = packageMarkup;
     else flow.insertAdjacentHTML("afterbegin", packageMarkup);
     window.lucide?.createIcons();
+    window.dispatchEvent(new CustomEvent("draft-agent-hosts-rendered"));
   }
 
   function renderWorkspacePackageSoon() {
     [0, 80, 300].forEach((delay) => setTimeout(renderWorkspacePackage, delay));
   }
 
-  function openWorkspaceAnalysis(id) {
+  function showWorkspaceCandidateList({ scroll = false } = {}) {
+    workspacePackageVisible = false;
+    workspaceTargetTab = "summary";
+    const screen = document.querySelector("#workspace");
+    screen?.querySelector("#documentary-agent-package")?.remove();
+    screen?.classList.remove("has-documentary-package");
+    if (scroll) screen?.querySelector(".candidate-list-heading")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  function openWorkspaceAnalysis(id, initialTab = "analysis") {
     const item = allRows().find((entry) => entry.id === id) || currentOpportunity();
     if (!item) return false;
-    saveWorkspacePackage(item);
+    const targetTab = ["summary", "project", "analysis", "dates", "requirements", "documents", "steps", "checklist", "draft"].includes(initialTab) ? initialTab : "analysis";
     workspacePackageVisible = true;
+    workspaceTargetTab = targetTab;
+    document.querySelector("#workspace")?.classList.add("has-documentary-package");
+    if (!saveWorkspacePackage(item)) {
+      showWorkspaceCandidateList();
+      return false;
+    }
     window.showScreen?.("workspace");
     renderWorkspacePackageSoon();
-    [120, 360].forEach((delay) => setTimeout(() => switchWorkspaceTab("analysis"), delay));
     return true;
   }
 
@@ -501,12 +621,30 @@
       downloadConstructedDocument(downloadConstructedDoc.dataset.downloadConstructedDoc);
       return;
     }
+    const basesReviewRequest = event.target.closest("[data-bases-review-request]");
+    if (basesReviewRequest) {
+      const originalText = basesReviewRequest.textContent;
+      basesReviewRequest.disabled = true;
+      basesReviewRequest.textContent = "Consultando estado...";
+      try {
+        const result = await requestBasesReview(basesReviewRequest);
+        if (typeof showToast === "function") showToast(result.message);
+      } catch (error) {
+        basesReviewRequest.disabled = false;
+        basesReviewRequest.textContent = originalText;
+        if (typeof showToast === "function") showToast(error?.message || "No se pudo solicitar la revisión de bases.");
+      }
+      return;
+    }
+    const openBasesStatus = event.target.closest("[data-open-bases-status]");
+    if (openBasesStatus) {
+      document.querySelector("[data-constructed-doc-modal]")?.remove();
+      if (!switchWorkspaceTab("documents")) openWorkspaceAnalysis(openBasesStatus.dataset.openBasesStatus, "documents");
+      return;
+    }
     const backToCandidates = event.target.closest("[data-workspace-back]");
     if (backToCandidates) {
-      workspacePackageVisible = false;
-      document.querySelector("#documentary-agent-package")?.remove();
-      document.querySelector("#workspace")?.classList.remove("has-documentary-package");
-      document.querySelector("#workspace .candidate-list-heading")?.scrollIntoView({ block: "start", behavior: "smooth" });
+      showWorkspaceCandidateList({ scroll: true });
       return;
     }
     const preselect = event.target.closest("[data-requirement-preselect]");
@@ -541,11 +679,27 @@
     renderWorkspacePackageSoon();
   });
   window.addEventListener("workspace-candidates-changed", renderWorkspacePackageSoon);
+  window.addEventListener("draft-agent-hosts-rendered", refreshVisibleBasesReviewStates);
+  window.addEventListener("draft-agent-run-updated", (event) => {
+    const canonicalKey = event.detail?.canonicalKey;
+    if (!canonicalKey) return;
+    latestDraftRuns.set(canonicalKey, event.detail.run || null);
+    updateOpenConstructedDocument(canonicalKey);
+  });
+  window.addEventListener("role-session-applied", () => {
+    latestDraftRuns.clear();
+    basesReviewStates.clear();
+    basesReviewLoads.clear();
+    document.querySelector("[data-constructed-doc-modal]")?.remove();
+  });
   document.addEventListener("DOMContentLoaded", () => {
     setTimeout(enhanceDetail, 0);
     renderWorkspacePackageSoon();
+    setTimeout(refreshVisibleBasesReviewStates, 0);
   });
   document.addEventListener("click", (event) => {
+    const workspaceNavigation = event.target.closest?.('.nav-item[data-screen="workspace"]');
+    if (workspaceNavigation) showWorkspaceCandidateList();
     const trigger = event.target.closest?.("[data-workspace-open]");
     if (!trigger) return;
     event.preventDefault();

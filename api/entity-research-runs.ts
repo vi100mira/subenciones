@@ -88,7 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await supabase.from("audit_events").insert({
       tenant_id: actor.tenantId,
       actor_user_id: actor.userId,
-      actor_label: actor.role,
+      actor_label: actor.email,
       action: "entity_research.queued",
       target_type: "agent_run",
       target_id: run.id,

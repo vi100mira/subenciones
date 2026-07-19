@@ -12,7 +12,11 @@
 
 ## Fuentes privadas de entidad
 
-PDF, DOCX, correo o Drive/SharePoint solo entran con conexión autorizada, clasificación y `tenant_id`. La ingesta privada no comparte fragmentos ni embeddings con la plataforma o con otro tenant. El consumidor completo de `ingestion_runs` sigue siendo una capacidad pendiente y no debe anunciarse como operativo.
+PDF, DOCX, correo o Drive/SharePoint solo entran con conexión autorizada, clasificación y `tenant_id`. La ingesta privada no comparte fragmentos ni embeddings con la plataforma o con otro tenant.
+
+Para la fuente piloto `local_simulation`, un puente local operado por una persona autorizada consume `ingestion_runs`, valida tenant, fuente y consentimiento, ejecuta la criba y extracción deterministas en el equipo y persiste únicamente propuestas minimizadas, huellas y métricas agregadas. No copia rutas ni documentos originales a Supabase y realiza cero llamadas de IA. El selector de carpeta y su acción de confirmación son suficientes: una vez encolada, la ejecución no requiere pulsar de nuevo **Continuar**.
+
+Google Drive y SharePoint requieren adaptadores de producción separados con credenciales delegadas y alcance limitado a la carpeta autorizada; el puente local no sustituye esos conectores.
 
 ## Campos mínimos
 

@@ -117,7 +117,7 @@ The prototype now treats monetization as feature entitlement, not payment proces
 - Tenant menus are filtered by the active plan features returned in the authenticated session.
 - Novaterra uses `mission_full` / `Misión integral` as a sponsored pilot, with all tenant-facing areas contracted.
 - The tenant plan is part of `Entidad`; it is not a separate navigation destination.
-- Contracted access and operational readiness are different: an included assistant can still require consent, human approval, configuration, or channel connection.
+- Contracted access habilita las funciones incluidas con datos públicos. El uso de datos internos, conectores privados o canales externos puede requerir autorización o configuración adicional; la revisión humana sigue siendo obligatoria antes de exportar o compartir.
 - Platform superadmins retain a separate internal monitoring view; it is not a commercial plan screen.
 - Payment processing remains disabled.
 

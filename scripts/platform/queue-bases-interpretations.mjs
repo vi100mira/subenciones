@@ -70,7 +70,7 @@ async function persist(supabase, entry) {
   const payload = pagePayload(entry.document);
   const body = JSON.stringify(payload);
   const pathname = `platform/bases/${entry.document.sha256}/pages.json`;
-  await put(pathname, body, { access: "private", addRandomSuffix: false, contentType: "application/json", token: process.env.BLOB_READ_WRITE_TOKEN });
+  await put(pathname, body, { access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json", token: process.env.BLOB_READ_WRITE_TOKEN });
   const contract = extractGrantRequirements(entry.document.extracted_text, {
     sourceUrl: entry.document.source_url, documentSha256: entry.document.sha256, pageEvidence: payload.pages
   });

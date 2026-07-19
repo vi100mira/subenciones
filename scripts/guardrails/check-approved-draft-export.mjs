@@ -10,6 +10,7 @@ const reviewApi = await fs.readFile("api/draft-agent-runs.ts", "utf8");
 const exportApi = await fs.readFile("api/approved-draft-document.ts", "utf8");
 const downloadApi = await fs.readFile("api/private-draft-download.ts", "utf8");
 const ui = await fs.readFile("prototype/draft-agent-ui.js", "utf8");
+const documentaryUi = await fs.readFile("prototype/opportunity-requirements.js", "utf8");
 
 assert(migration.includes("tenant_draft_reviews") && migration.includes("output_hash"), "Falta persistir la decision humana sobre una salida inmutable");
 assert(reviewApi.includes('reviewStatus === "rejected"') && reviewApi.includes("Indica el motivo del rechazo"), "El revisor no puede aprobar/rechazar con motivo");
@@ -19,7 +20,11 @@ assert(exportApi.includes('draftingGate !== "constraints_verified"') && exportAp
 assert(exportApi.includes("output.documents") && exportApi.includes('role === "primary_proposal"'), "La exportacion no consume el expediente mult-documento");
 assert((exportApi.match(/access: "private"/g) || []).length === 3, "DOCX, PDF y expediente ZIP no quedan privados");
 assert(downloadApi.includes('"sources:write"') && downloadApi.includes('Cache-Control", "private, no-store') && downloadApi.includes('type === "package"'), "La descarga privada no protege el expediente completo");
-assert(ui.includes("Aprobar para exportar") && ui.includes("Rechazar y corregir") && ui.includes("Descargar expediente ZIP"), "La interfaz no muestra el control humano final y el expediente");
+assert(ui.includes("Aprobar para exportar") && ui.includes("Rechazar y corregir") && ui.includes("Ver expediente ZIP"), "La interfaz no muestra el control humano final y el expediente");
+assert(["docx", "pdf", "package"].every((type) => ui.includes(`[\"${type}\"`)) && ui.includes("data-draft-preview-modal") && ui.includes('if (!button.closest("[data-draft-preview-modal]")) return'), "DOCX, PDF o ZIP pueden descargarse sin pasar por el visor");
+assert(ui.includes("downloadButton.disabled = true") && ui.includes("downloadButton.disabled = false"), "El PDF permite descargar aunque su vista previa no haya cargado");
+assert(ui.includes("previewRuns.clear()") && ui.includes("latestRuns.clear()") && ui.includes("closeDraftPreview()"), "El visor de exportación conserva documentos privados al cambiar de tenant");
+assert(documentaryUi.includes("latestDraftRuns.clear()") && documentaryUi.includes('document.querySelector("[data-constructed-doc-modal]")?.remove()'), "El visor documental conserva borradores privados al cambiar de tenant");
 
 const source = await fs.readFile("src/candidatureDocx.ts", "utf8");
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
@@ -73,4 +78,4 @@ assert.equal(manifest.artifacts.length, 2, "El manifiesto no enumera todos los b
 assert(packageZip.file("00-indice-y-control.docx") && packageZip.file(manifest.artifacts[0].fileName) && packageZip.file(manifest.artifacts[1].fileName), "El ZIP no contiene indice y documentos separados");
 assert.equal(manifest.submissionAllowed, false, "El expediente habilita una presentacion automatica");
 
-console.log(JSON.stringify({ assertions: 17, docxPath, bytes: buffer.byteLength, packageBytes: packageResult.buffer.byteLength, packageArtifacts: manifest.artifacts.length, lifecycle: ["generated", "human_approved", "private_export"], documentPlan: "included", multiDocumentOutput: "packaged", submissionAllowed: false }, null, 2));
+console.log(JSON.stringify({ assertions: 18, docxPath, bytes: buffer.byteLength, packageBytes: packageResult.buffer.byteLength, packageArtifacts: manifest.artifacts.length, lifecycle: ["generated", "human_approved", "private_export"], documentPlan: "included", multiDocumentOutput: "packaged", submissionAllowed: false }, null, 2));

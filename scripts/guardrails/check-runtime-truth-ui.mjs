@@ -21,8 +21,9 @@ assert(files["agents-readiness"].includes("Control transversal · no es un agent
 assert(files["agents-readiness"].includes("No calcula encaje"), "El control de datos no explica su función");
 assert(files["tenant-agent-runtime"].includes("/api/tenant-agent-governance"), "Asistentes no carga estado real del tenant");
 assert(files["tenant-agent-runtime"].includes("Autorizar web pública"), "Falta activar consentimiento web desde Asistentes");
-assert(files["tenant-agent-runtime"].includes("Autorizar IA para borradores"), "Falta consentimiento IA desde Asistentes");
-assert(files["tenant-agent-runtime"].includes('store: false, allowedDataClasses: ["public"]'), "El consentimiento IA no limita almacenamiento y datos");
+assert(files["tenant-agent-runtime"].includes("Autorizar datos internos (opcional)"), "Falta la autorización opcional de datos internos");
+assert(files["tenant-agent-runtime"].includes('store: false, allowedDataClasses: ["internal_approved"]'), "La autorización interna no limita almacenamiento y clases de datos");
+assert(files["tenant-agent-runtime"].includes("Abrir preparación documental"), "Preparación documental no ofrece acceso directo");
 assert(files["tenant-agent-runtime"].includes("Investigar ahora"), "Falta ejecutar el Investigador desde Asistentes");
 assert(files["tenant-agent-runtime"].includes("Aprobar perfil revisado"), "Falta revisión humana del perfil");
 assert(files["tenant-agent-runtime"].includes("Revisa las ${pending.length} pendientes"), "La UI permite aprobar el perfil sin terminar la revisión");

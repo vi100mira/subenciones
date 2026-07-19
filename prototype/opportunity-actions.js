@@ -8,12 +8,36 @@ function modalScoreLabel(score) {
   return score >= 75 ? "Prioridad alta" : score >= 55 ? "Prioridad media" : "Prioridad baja";
 }
 
+function escapeModalText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+function sourceTextBody(item) {
+  const complete = String(item.extractedText || "No hay texto extraido disponible.").replace(/\s+/g, " ").trim();
+  const excerpt = complete.slice(0, 2400);
+  const sections = excerpt.replace(/\s+(?=(?:Art(?:í|i)culo|Base|Primero|Segundo|Tercero|Cuarto|Quinto)\b)/gi, "\n");
+  const fragments = sections.split(/\n|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ0-9])/).map((text) => text.trim()).filter(Boolean);
+  const paragraphs = [];
+  fragments.forEach((fragment) => {
+    const previous = paragraphs.at(-1);
+    const startsSection = /^(?:Art(?:í|i)culo|Base|Primero|Segundo|Tercero|Cuarto|Quinto)\b/i.test(fragment);
+    if (!previous || startsSection || `${previous} ${fragment}`.length > 520) paragraphs.push(fragment);
+    else paragraphs[paragraphs.length - 1] = `${previous} ${fragment}`;
+  });
+  const metadata = [item.source, item.territory].filter(Boolean).map((value) => `<span>${escapeModalText(value)}</span>`).join("");
+  return `<div class="source-text-document">
+    <header class="source-text-summary"><p class="eyebrow">Documento de origen</p><h3>${escapeModalText(item.title)}</h3>${metadata ? `<div class="source-text-meta">${metadata}</div>` : ""}</header>
+    <div class="source-text-copy">${paragraphs.map((paragraph) => `<p>${escapeModalText(paragraph)}</p>`).join("")}</div>
+    ${complete.length > excerpt.length ? '<p class="source-text-truncation">Vista parcial: se muestran los primeros 2.400 caracteres del texto extraído.</p>' : ""}
+  </div>`;
+}
+
 function openOpportunityModal(id, mode) {
   const item = currentOpportunities().find((entry) => entry.id === id);
   if (!item) return;
   const isText = mode === "text";
   const textTitle = item.sourceTextLabel || "Texto original usado";
-  const body = isText ? `<p>${(item.extractedText || "No hay texto extraido disponible.").slice(0, 2400)}</p>` : `
+  const body = isText ? sourceTextBody(item) : `
     <p>${item.source} - ${item.territory}. ${modalScoreLabel(item.score)} (${item.score}/100 estimado, no elegibilidad).</p>
     ${window.deadlineTrace ? window.deadlineTrace.panelFromTrace(window.deadlineTrace.build(item)) : ""}
     ${item.programFeatures?.length ? `<h3>Caracteristicas del programa</h3><ul>${item.programFeatures.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
@@ -22,9 +46,9 @@ function openOpportunityModal(id, mode) {
     <h3>Evidencia</h3><ul>${item.evidence.map((x) => `<li>${x}</li>`).join("")}</ul>`;
   document.body.insertAdjacentHTML("beforeend", `
     <div class="modal-backdrop" data-close-modal>
-      <article class="modal" role="dialog" aria-modal="true">
-        <div class="panel-heading"><h2>${isText ? textTitle : "Analisis legible"}</h2><button class="icon-button" data-close-modal>×</button></div>
-        <strong>${item.title}</strong>${body}
+      <article class="modal ${isText ? "source-text-modal" : ""}" role="dialog" aria-modal="true" aria-labelledby="opportunity-modal-title">
+        <div class="panel-heading"><h2 id="opportunity-modal-title">${isText ? escapeModalText(textTitle) : "Analisis legible"}</h2><button class="icon-button" data-close-modal type="button" aria-label="Cerrar">&times;</button></div>
+        ${isText ? "" : `<strong>${item.title}</strong>`}${body}
       </article>
     </div>`);
 }
@@ -49,7 +73,7 @@ document.addEventListener("click", (event) => {
   if (!target) return;
   if (target.dataset.opportunity) openOpportunityModal(target.dataset.opportunity, "analysis");
   if (target.dataset.textOpportunity) openOpportunityModal(target.dataset.textOpportunity, "text");
-  if (target.dataset.closeModal !== undefined) document.querySelector(".modal-backdrop")?.remove();
+  if (target.dataset.closeModal !== undefined && (!target.classList.contains("modal-backdrop") || event.target === target)) document.querySelector(".modal-backdrop")?.remove();
   if (target.dataset.filter) {
     document.querySelectorAll("[data-filter]").forEach((button) => button.classList.toggle("is-selected", button === target));
     applyOpportunityFilter(target.dataset.filter);

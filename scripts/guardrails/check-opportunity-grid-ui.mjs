@@ -20,6 +20,8 @@ const matchAccounting = fs.readFileSync("prototype/match-accounting.js", "utf8")
 const recommendationReconciliation = fs.readFileSync("prototype/recommendation-reconciliation.js", "utf8");
 const tenantMatchReview = fs.readFileSync("prototype/tenant-match-review.js", "utf8");
 const tenantMatchReviewApi = fs.readFileSync("api/tenant-match-review.ts", "utf8");
+const opportunityActions = fs.readFileSync("prototype/opportunity-actions.js", "utf8");
+const modalStyles = fs.readFileSync("prototype/app-modals-responsive.css", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -49,7 +51,12 @@ assert(tenantRecommendations.includes("function publishLoadState") && tenantReco
 assert(styles.includes(".metric > summary > strong"), "El tamano del contador se aplica tambien al contenido desplegado");
 assert(requirements.includes("data-workspace-back") && requirements.includes("Volver a candidaturas"), "El expediente documental no ofrece una salida clara");
 assert(requirements.includes("data-constructed-doc-view") && requirements.includes("data-download-constructed-doc"), "Las plantillas preconstruidas no disponen de visor y descarga");
-assert(requirements.includes("No es el documento final") && stitch.includes(".constructed-doc-preview"), "El visor no diferencia la plantilla del documento final");
+assert(requirements.includes("No es el documento final") && requirements.includes("constructedDocumentHtml(doc, pack") && stitch.includes(".constructed-doc-frame"), "El visor no muestra el mismo documento que se descarga");
+assert(requirements.includes("constructed-doc-generation") && requirements.includes("draftActionButtons(pack)") && requirements.includes("incluido este"), "El visor de esqueleto no conecta con la generación versionada de la candidatura");
+assert(index.includes("constructed-document-prefill.js") && requirements.includes("ConstructedDocumentPrefill") && requirements.includes("draft-agent-run-updated"), "El visor documental no pre-rellena campos ni recibe las versiones generadas");
+assert(requirements.includes("data-bases-review-request") && requirements.includes("data-open-bases-status") && !requirements.includes("Primero: revisar y aprobar las bases"), "El bloqueo de bases sigue siendo un callejón sin salida para el tenant");
+assert(requirements.indexOf("data-constructed-doc-view") < requirements.indexOf("data-download-constructed-doc"), "Una plantilla preconstruida puede descargarse antes de abrir su visor");
+assert(["Solicitud oficial", "Memoria tecnica", "Presupuesto", "Representacion", "Declaraciones y certificados", "Equipo tecnico", "Solvencia entidad", "Indicadores"].every((type) => requirements.includes(`label: "${type}"`)) && requirements.includes("firstMatching(requirement, cases, fallbackPlan)"), "Alguna tipologia documental o su plantilla generica carece de visor");
 assert(requirements.includes("data-requirement-preselect") && !requirements.includes("Abrir expediente documental") && !requirements.includes("Abrir candidatura</button>"), "El analisis de oportunidad permite saltarse la preseleccion");
 assert(matchAccounting.includes("pendingClassification") && tenantRecommendations.includes("entityUnmappedMatchCount"), "El encaje no reconcilia resultados visibles y no sincronizados");
 assert(app.includes("Ultimo calculo de encaje") && app.includes("fuera del criterio de vigencia actual") && app.includes("requieren conciliacion tecnica"), "El Panel no explica la suma completa del encaje");
@@ -62,6 +69,9 @@ assert(tenantMatchReview.includes('data-match-decision="dismissed"') && tenantMa
 assert(ui.includes("Fuera de vigencia") && ui.includes("conservan para trazabilidad") && ui.includes("function notCurrentRows"), "Las oportunidades no vigentes siguen ocultas o sin explicacion");
 assert(index.includes("recommendation-reconciliation.js") && tenantRecommendations.includes("entityAutoReconciledByUrlCount") && tenantRecommendations.includes("RADAR_SYNC_PENDING"), "La conciliacion automatica por fuente oficial no esta conectada al runtime");
 assert(index.includes("Estos contadores no se suman entre si"), "El mapa de fuentes no advierte que sus coberturas se solapan");
+assert(opportunityActions.includes("sourceTextBody") && opportunityActions.includes("source-text-truncation"), "El texto original sigue renderizado como un bloque continuo o se recorta sin aviso");
+assert(opportunityActions.includes("escapeModalText(paragraph)") && modalStyles.includes("max-width: 74ch") && modalStyles.includes("line-height: 1.78"), "El visor de texto no conserva una columna legible y segura");
+assert(opportunityActions.includes('event.target === target'), "Interactuar con el texto puede cerrar accidentalmente el modal");
 
 globalThis.MatchAccounting = undefined;
 await import(`../../prototype/match-accounting.js?guard=${Date.now()}`);
