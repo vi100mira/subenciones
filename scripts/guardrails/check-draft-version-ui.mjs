@@ -71,9 +71,9 @@ try {
   const detail = page.locator(".modal-backdrop[data-close-candidate-detail]");
   await detail.locator('[data-candidate-task="draft"]').click();
 
-  const draftPanel = page.locator('[data-requirements-panel="draft"].is-active');
+  const draftPanel = page.locator('[data-candidature-panel-modal]');
   await draftPanel.locator('[data-draft-agent-start][data-approved-facts="true"]').waitFor({ state: "visible" });
-  await page.waitForFunction(() => document.querySelector('[data-requirements-panel="draft"].is-active')?.textContent?.includes("Regenerar con conocimiento aprobado (11)"));
+  await page.waitForFunction(() => document.querySelector('[data-candidature-panel-modal]')?.textContent?.includes("Regenerar con conocimiento aprobado (11)"));
   await page.waitForTimeout(600);
   const text = await draftPanel.innerText();
   for (const expected of ["Regenerar con conocimiento aprobado (11)", "11 hechos aprobados", "posterior a este borrador", "conserva la anterior"]) {
@@ -84,15 +84,21 @@ try {
 
   fs.mkdirSync(".tmp", { recursive: true });
   await page.screenshot({ path: ".tmp/versioned-draft-regeneration.png", fullPage: true });
-  await page.locator('[data-requirements-tab="documents"]').click();
-  const templateButtons = page.locator('[data-requirements-panel="documents"].is-active [data-constructed-doc-view]');
+  await draftPanel.locator("[data-close-candidature-panel]").click();
+  await page.locator('[data-candidature-action="documents"]').click();
+  const templateButtons = page.locator('[data-candidature-panel-modal] [data-constructed-doc-view]');
   const templateCount = await templateButtons.count();
   if (!templateCount) throw new Error("No hay un documento preconstruido para probar el visor");
   await templateButtons.first().click();
   const skeletonModal = page.locator("[data-constructed-doc-modal]");
-  await page.waitForFunction(() => document.querySelector('[data-constructed-doc-modal]')?.textContent?.includes("Regenerar con conocimiento aprobado (11)"));
+  await skeletonModal.waitFor({ state: "visible" });
+  if ((await page.locator(".modal-backdrop").count()) !== 1 || (await page.locator("[data-candidature-panel-modal]").count()) !== 0) throw new Error("Ver plantilla mantiene dos modales superpuestos");
+  if (!(await skeletonModal.locator(".constructed-doc-sidebar").isVisible()) || !(await skeletonModal.locator(".constructed-doc-frame").isVisible())) throw new Error("El visor no separa documento y controles");
+  await page.waitForFunction(() => document.querySelector('[data-constructed-doc-modal]')?.textContent?.includes("Regenerar con conocimiento aprobado (11)")).catch(async () => {
+    throw new Error(`El visor no recupera el estado versionado: ${(await skeletonModal.innerText()).slice(0, 700)}`);
+  });
   const skeletonText = await skeletonModal.innerText();
-  for (const expected of ["¿Solo aparece el esqueleto?", "incluido este", "Gestionar conocimiento", "Regenerar con conocimiento aprobado (11)"]) {
+  for (const expected of ["Borrador de trabajo", "¿Solo aparece el esqueleto?", "Gestionar conocimiento", "Regenerar con conocimiento aprobado (11)"]) {
     if (!skeletonText.includes(expected)) throw new Error(`El visor de esqueleto no ofrece: ${expected}`);
   }
   const documentFrame = skeletonModal.frameLocator(".constructed-doc-frame");
@@ -105,8 +111,13 @@ try {
   await page.evaluate(({ id, title, section }) => window.dispatchEvent(new CustomEvent("draft-agent-run-updated", { detail: { canonicalKey: id, run: { output_json: { documents: [{ title, documentType: title, role: "supporting_draft", sections: [{ title: section, paragraphs: ["Contenido generado de prueba con evidencia aprobada."], evidenceRefs: ["evidencia:prueba"] }] }] } } } })), { id: canonicalKey, title: generatedTitle, section: generatedSectionTitle });
   await documentFrame.getByText("Contenido generado de prueba con evidencia aprobada.", { exact: true }).waitFor({ state: "visible" });
   if (!(await documentFrame.getByText("Borrador generado · revisión humana pendiente", { exact: true }).isVisible())) throw new Error("El visor no sustituye el apartado por el borrador generado");
-  await page.screenshot({ path: ".tmp/skeleton-document-regeneration.png" });
-  await skeletonModal.locator("[data-close-constructed-doc]").first().click();
+  await page.screenshot({ path: ".tmp/constructed-document-single-modal.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) throw new Error("El visor de plantilla provoca desbordamiento móvil");
+  await page.screenshot({ path: ".tmp/constructed-document-single-modal-mobile.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await skeletonModal.locator(".constructed-doc-footer [data-return-constructed-doc]").click();
+  if (!(await page.locator('[data-candidature-panel-modal]').isVisible())) throw new Error("Volver desde la plantilla no recupera Documentos");
   await page.evaluate((id) => {
     const catalogs = [window.RADAR_PLATFORM_OPPORTUNITIES, window.RADAR?.opportunities, window.MUNICIPAL_RADAR?.opportunities, window.MOCK?.opportunities, window.PRIVATE_OPEN_OPPORTUNITIES];
     for (const catalog of catalogs) {
@@ -118,7 +129,7 @@ try {
     }
     window.openWorkspaceAnalysis(id, "draft");
   }, canonicalKey);
-  const reviewRequest = page.locator(`[data-requirements-panel="draft"].is-active [data-bases-review-request="${canonicalKey}"]`);
+  const reviewRequest = page.locator(`[data-candidature-panel-modal] [data-bases-review-request="${canonicalKey}"]`);
   await reviewRequest.waitFor({ state: "visible" });
   if (!(await reviewRequest.isEnabled())) throw new Error("Solicitar revisión de bases sigue deshabilitado");
   await page.screenshot({ path: ".tmp/bases-review-request-enabled.png" });
@@ -133,14 +144,14 @@ try {
     }
     window.openWorkspaceAnalysis(id, "draft");
   }, canonicalKey);
-  const persistedRequest = page.locator(`[data-requirements-panel="draft"].is-active [data-bases-review-request="${canonicalKey}"]`);
+  const persistedRequest = page.locator(`[data-candidature-panel-modal] [data-bases-review-request="${canonicalKey}"]`);
   await page.waitForFunction((id) => document.querySelector(`[data-bases-review-request="${CSS.escape(id)}"]`)?.textContent === "Revisión solicitada", canonicalKey);
   if (await persistedRequest.isEnabled()) throw new Error("La solicitud de revisión no se conserva al recargar");
-  const persistedStatus = await page.locator(`[data-requirements-panel="draft"].is-active [data-bases-review-status="${canonicalKey}"]`).innerText();
+  const persistedStatus = await page.locator(`[data-candidature-panel-modal] [data-bases-review-status="${canonicalKey}"]`).innerText();
   if (!persistedStatus.includes("Solicitada el") || !persistedStatus.includes("ya está en cola")) throw new Error("La fecha o el estado persistido no aparecen tras recargar");
-  const statusLink = page.locator(`[data-requirements-panel="draft"].is-active [data-open-bases-status="${canonicalKey}"]`);
+  const statusLink = page.locator(`[data-candidature-panel-modal] [data-open-bases-status="${canonicalKey}"]`);
   await statusLink.click();
-  if (!(await page.locator('[data-requirements-panel="documents"].is-active').isVisible())) throw new Error("Ver qué falta no abre la pestaña Documentos");
+  if (!(await page.locator('[data-candidature-panel-modal]').isVisible()) || !(await page.locator('[data-candidature-panel-modal]').innerText()).includes("Documentos")) throw new Error("Ver qué falta no abre el modal Documentos");
   console.log(JSON.stringify({ ok: true, approvedFacts: 11, action: "Regenerar con conocimiento aprobado", skeletonEntryPoint: true, documentPrefill: true, generatedDocumentOverlay: true, previousVersionPreserved: true, basesReviewRequest: "persisted_after_reload", basesStatusTarget: "documents" }, null, 2));
 } finally {
   await browser.close();

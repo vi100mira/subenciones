@@ -3,6 +3,7 @@
   const candidateKey = "workspace-candidates-v1";
   let workspacePackageVisible = false;
   let workspaceTargetTab = "summary";
+  let workspacePanelTarget = null;
   const basesReviewStates = new Map();
   const basesReviewLoads = new Map();
   const latestDraftRuns = new Map();
@@ -237,7 +238,7 @@
         <span>Proyecto activo</span>
       </div>
       <div class="document-agent-actions">
-        ${basesApproved ? `<div><strong>Bases aprobadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde la pestaña Borrador.</span></div>` : `<div><strong>Bases pendientes de revisión de plataforma</strong><span>La entidad puede solicitarla y consultar qué falta. La redacción se habilitará cuando plataforma valide las citas compartidas.</span></div>`}
+        ${basesApproved ? `<div><strong>Bases aprobadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde el nodo Borrador Word.</span></div>` : `<div><strong>Bases pendientes de revisión de plataforma</strong><span>La entidad puede solicitarla y consultar qué falta. La redacción se habilitará cuando plataforma valide las citas compartidas.</span></div>`}
       </div>`;
   }
 
@@ -351,22 +352,26 @@
     const pack = readWorkspacePackage();
     const doc = documentBuildPlan(pack || {})[Number(index)];
     if (!doc) return;
+    document.querySelector("[data-candidature-panel-modal]")?.remove();
     document.querySelector("[data-constructed-doc-modal]")?.remove();
     document.body.insertAdjacentHTML("beforeend", `
       <div class="modal-backdrop" data-constructed-doc-modal data-canonical-key="${escapeHtml(pack?.id)}" data-document-index="${Number(index)}">
         <article class="modal constructed-doc-modal" role="dialog" aria-modal="true" aria-labelledby="constructed-doc-title">
-          <div class="panel-heading">
+          <div class="panel-heading constructed-doc-heading">
+            <button class="ghost-action" data-return-constructed-doc type="button"><i data-lucide="arrow-left"></i> Documentos</button>
             <div><p class="eyebrow">Plantilla preconstruida</p><h2 id="constructed-doc-title">${escapeHtml(doc.title)}</h2></div>
             <button class="icon-button" data-close-constructed-doc type="button" aria-label="Cerrar visor"><i data-lucide="x"></i></button>
           </div>
-          <div class="plain-note"><strong>No es el documento final</strong><span>Los campos que ya tienen información aparecen pre-rellenados. Los hechos privados aprobados se incorporarán solo al generar una versión personalizada; firma, importes y datos sin evidencia seguirán pendientes.</span></div>
-          <div class="plain-note private-template-prompt"><div><strong>¿Solo aparece el esqueleto?</strong><span>Genera una nueva versión de la candidatura para completar los documentos redactables, incluido este. Se usarán solo bases verificadas y hechos del tenant aprobados; la salida seguirá pendiente de revisión humana.</span></div><button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="folder-key"></i> Gestionar conocimiento</button></div>
-          <div class="constructed-doc-generation">
-            ${draftActionButtons(pack)}
-            <div data-draft-agent-status="${escapeHtml(pack?.id)}"></div>
+          <div class="constructed-doc-workspace">
+            <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc)))}"></iframe>
+            <aside class="constructed-doc-sidebar" aria-label="Controles de la plantilla">
+              <div class="plain-note"><strong>Borrador de trabajo, no documento final</strong><span>Los campos disponibles aparecen pre-rellenados; firma, importes y datos sin evidencia siguen pendientes.</span></div>
+              <details class="constructed-doc-help"><summary>¿Solo aparece el esqueleto?</summary><p>Genera una nueva versión para completar los documentos redactables, incluido este, usando solo bases verificadas y hechos aprobados.</p></details>
+              <button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="folder-key"></i> Gestionar conocimiento</button>
+              <div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${escapeHtml(pack?.id)}"></div></div>
+            </aside>
           </div>
-          <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc)))}"></iframe>
-          <div class="button-row"><button class="ghost-action" data-download-constructed-doc="${Number(index)}" type="button"><i data-lucide="download"></i> Descargar esqueleto</button><button class="ghost-action" data-close-constructed-doc type="button">Cerrar</button></div>
+          <div class="constructed-doc-footer"><span>Revisión humana obligatoria antes de usar, exportar o presentar.</span><div class="button-row"><button class="ghost-action" data-download-constructed-doc="${Number(index)}" type="button"><i data-lucide="download"></i> Descargar esqueleto</button><button class="primary-action" data-return-constructed-doc type="button"><i data-lucide="arrow-left"></i> Volver a Documentos</button></div></div>
         </article>
       </div>`);
     window.lucide?.createIcons();
@@ -455,21 +460,54 @@
     }
   }
 
-  function tabButton(id, label, active = false) {
-    return `<button class="${active ? "is-active" : ""}" data-requirements-tab="${id}" type="button">${label}</button>`;
+  function mapNode(id, label, detail, icon, kind, active = false) {
+    const interaction = `data-candidature-${kind === "information" ? "info" : "action"}="${id}" aria-haspopup="dialog"`;
+    return `<button class="candidature-map-node ${kind} ${active ? "is-active" : ""}" ${interaction} type="button">
+      <i data-lucide="${icon}"></i><span><strong>${label}</strong><small>${detail}</small></span>
+    </button>`;
+  }
+
+  function candidatureMap() {
+    const information = [
+      ["summary", "Resumen", "Qué debe quedar preparado", "layout-list"],
+      ["analysis", "Análisis", "Encaje, riesgos y evidencias", "scan-search"],
+      ["dates", "Fechas", "Plazo, fuente y confianza", "calendar-clock"],
+      ["requirements", "Requisitos", "Quién puede optar", "badge-check"],
+      ["steps", "Pasos", "Secuencia de presentación", "list-ordered"],
+      ["project", "Control", "Límites y aprobación final", "shield-check"]
+    ];
+    const actions = [
+      ["documents", "Documentos", "Revisar plantillas y anexos", "files"],
+      ["checklist", "Checklist", "Resolver comprobaciones", "list-checks"],
+      ["draft", "Borrador Word", "Generar y versionar la memoria", "file-pen-line"]
+    ];
+    const nodes = (items, kind) => items.map(([id, label, detail, icon]) => mapNode(id, label, detail, icon, kind, workspaceTargetTab === id)).join("");
+    return `<section class="candidature-map" aria-label="Mapa interactivo de la candidatura">
+      <div class="candidature-map-intro"><div><p class="eyebrow">Mapa de candidatura</p><h3>Entiende la convocatoria y continúa por la acción necesaria</h3></div><p>Selecciona un nodo. Los verdes explican; los azules abren el área donde debes trabajar.</p></div>
+      <div class="candidature-map-lanes" aria-label="Áreas del expediente">
+        <div class="candidature-map-lane information"><div class="candidature-map-lane-title"><i data-lucide="search-check"></i><span><strong>1. Entender</strong><small>Información para decidir y comprobar</small></span></div><div class="candidature-map-nodes">${nodes(information, "information")}</div></div>
+        <div class="candidature-map-bridge" aria-hidden="true"><i data-lucide="arrow-right"></i><span>Pasar a preparar</span></div>
+        <div class="candidature-map-lane action"><div class="candidature-map-lane-title"><i data-lucide="square-pen"></i><span><strong>2. Preparar</strong><small>Acciones sobre el expediente</small></span></div><div class="candidature-map-nodes">${nodes(actions, "action")}</div></div>
+      </div>
+    </section>`;
   }
 
   function panel(id, html, active = false) {
     return `<div class="requirements-tab-panel ${active ? "is-active" : ""}" data-requirements-panel="${id}">${html}</div>`;
   }
 
-  function switchWorkspaceTab(tabId) {
+  function openWorkspacePanel(tabId, kind = "information") {
     const card = document.querySelector("#documentary-agent-package");
-    if (!card) return false;
-    workspaceTargetTab = tabId;
-    card.querySelectorAll("[data-requirements-tab]").forEach((item) => item.classList.toggle("is-active", item.dataset.requirementsTab === tabId));
-    card.querySelectorAll("[data-requirements-panel]").forEach((item) => item.classList.toggle("is-active", item.dataset.requirementsPanel === tabId));
-    card.scrollIntoView({ block: "start", behavior: "smooth" });
+    const trigger = card?.querySelector(`[data-candidature-${kind === "information" ? "info" : "action"}="${CSS.escape(tabId)}"]`);
+    const source = card?.querySelector(`[data-requirements-panel="${CSS.escape(tabId)}"]`);
+    if (!trigger || !source) return false;
+    document.querySelector("[data-candidature-panel-modal]")?.remove();
+    const information = kind === "information";
+    const title = trigger.querySelector("strong")?.textContent || (information ? "Información" : "Preparar");
+    const purpose = trigger.querySelector("small")?.textContent || (information ? "Información verificable de la convocatoria." : "Acciones revisables sobre el expediente.");
+    const eyebrow = information ? "Entender la convocatoria" : "Preparar la candidatura";
+    document.body.insertAdjacentHTML("beforeend", `<div class="modal-backdrop" data-candidature-panel-modal data-close-candidature-panel><article class="modal candidature-panel-modal ${information ? "information" : "action"}" role="dialog" aria-modal="true" aria-labelledby="candidature-panel-title"><div class="panel-heading"><div><p class="eyebrow">${eyebrow}</p><h2 id="candidature-panel-title">${title}</h2></div><button class="icon-button" data-close-candidature-panel type="button" aria-label="Cerrar ${information ? "información" : "formulario"}"><i data-lucide="x"></i></button></div><p class="candidature-panel-purpose">${purpose}</p><div class="candidature-panel-content">${source.innerHTML}</div></article></div>`);
+    window.lucide?.createIcons();
     return true;
   }
 
@@ -497,7 +535,7 @@
             <p class="eyebrow">Expediente seleccionado</p>
             <h2>${pack.title}</h2>
           </div>
-          <div class="requirements-heading-actions"><button class="ghost-action" data-workspace-back type="button"><i data-lucide="arrow-left"></i> Volver a candidaturas</button>${badge("Preseleccionada", "review")}</div>
+          <div class="requirements-heading-actions"><button class="ghost-action" data-workspace-back type="button"><i data-lucide="arrow-left"></i> Volver al plan</button>${badge("Preseleccionada", "review")}</div>
         </div>
         ${projectStage(pack)}
         <div class="requirements-summary">
@@ -505,17 +543,7 @@
           <div><strong>Plazo operativo</strong>${pack.deadlineTrace ? window.deadlineTrace.summary(pack.deadlineTrace) : `<span>${pack.deadline} - ${pack.deadlineConfidence}</span>`}</div>
           <div><strong>Confianza</strong><span>${pack.confidence}</span></div>
         </div>
-        <div class="requirements-tabs" role="tablist" aria-label="Candidatura activa">
-          ${tabButton("summary", "Resumen", workspaceTargetTab === "summary")}
-          ${tabButton("project", "Proyecto", workspaceTargetTab === "project")}
-          ${tabButton("analysis", "Analisis", workspaceTargetTab === "analysis")}
-          ${tabButton("dates", "Fechas", workspaceTargetTab === "dates")}
-          ${tabButton("requirements", "Requisitos", workspaceTargetTab === "requirements")}
-          ${tabButton("documents", "Documentos", workspaceTargetTab === "documents")}
-          ${tabButton("steps", "Pasos", workspaceTargetTab === "steps")}
-          ${tabButton("checklist", "Checklist", workspaceTargetTab === "checklist")}
-          ${tabButton("draft", "Borrador", workspaceTargetTab === "draft")}
-        </div>
+        ${candidatureMap()}
         <div class="requirements-tab-panels">
           ${panel("summary", `
             <div class="requirements-brief">
@@ -551,27 +579,37 @@
     else flow.insertAdjacentHTML("afterbegin", packageMarkup);
     window.lucide?.createIcons();
     window.dispatchEvent(new CustomEvent("draft-agent-hosts-rendered"));
+    if (workspacePanelTarget) {
+      openWorkspacePanel(workspacePanelTarget.id, workspacePanelTarget.kind);
+      workspacePanelTarget = null;
+    }
   }
 
   function renderWorkspacePackageSoon() {
     [0, 80, 300].forEach((delay) => setTimeout(renderWorkspacePackage, delay));
   }
 
-  function showWorkspaceCandidateList({ scroll = false } = {}) {
+  function showWorkspaceCandidateList({ scroll = false, reopenActive = false } = {}) {
+    const activeId = readWorkspacePackage()?.id;
     workspacePackageVisible = false;
     workspaceTargetTab = "summary";
+    workspacePanelTarget = null;
+    document.querySelector("[data-candidature-panel-modal]")?.remove();
     const screen = document.querySelector("#workspace");
     screen?.querySelector("#documentary-agent-package")?.remove();
     screen?.classList.remove("has-documentary-package");
     if (scroll) screen?.querySelector(".candidate-list-heading")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (reopenActive && activeId) window.openActiveCandidateModal?.(activeId);
   }
 
   function openWorkspaceAnalysis(id, initialTab = "analysis") {
     const item = allRows().find((entry) => entry.id === id) || currentOpportunity();
     if (!item) return false;
-    const targetTab = ["summary", "project", "analysis", "dates", "requirements", "documents", "steps", "checklist", "draft"].includes(initialTab) ? initialTab : "analysis";
+    const informationIds = ["summary", "project", "analysis", "dates", "requirements", "steps"];
+    const targetTab = [...informationIds, "documents", "checklist", "draft"].includes(initialTab) ? initialTab : "analysis";
     workspacePackageVisible = true;
-    workspaceTargetTab = targetTab;
+    workspacePanelTarget = { id: targetTab, kind: informationIds.includes(targetTab) ? "information" : "action" };
+    workspaceTargetTab = "";
     document.querySelector("#workspace")?.classList.add("has-documentary-package");
     if (!saveWorkspacePackage(item)) {
       showWorkspaceCandidateList();
@@ -601,9 +639,30 @@
 
   document.addEventListener("click", async (event) => {
     if (!(event.target instanceof Element)) return;
+    const closePanel = event.target.closest("[data-close-candidature-panel]");
+    if (closePanel && (!closePanel.classList.contains("modal-backdrop") || event.target === closePanel)) {
+      document.querySelector("[data-candidature-panel-modal]")?.remove();
+      return;
+    }
+    const information = event.target.closest("[data-candidature-info]");
+    if (information) {
+      openWorkspacePanel(information.dataset.candidatureInfo, "information");
+      return;
+    }
+    const action = event.target.closest("[data-candidature-action]");
+    if (action) {
+      openWorkspacePanel(action.dataset.candidatureAction, "action");
+      return;
+    }
     const closeConstructedDoc = event.target.closest("[data-close-constructed-doc]");
     if (closeConstructedDoc) {
       document.querySelector("[data-constructed-doc-modal]")?.remove();
+      return;
+    }
+    const returnConstructedDoc = event.target.closest("[data-return-constructed-doc]");
+    if (returnConstructedDoc) {
+      document.querySelector("[data-constructed-doc-modal]")?.remove();
+      openWorkspacePanel("documents", "action");
       return;
     }
     const constructedBackdrop = event.target.closest("[data-constructed-doc-modal]");
@@ -639,12 +698,12 @@
     const openBasesStatus = event.target.closest("[data-open-bases-status]");
     if (openBasesStatus) {
       document.querySelector("[data-constructed-doc-modal]")?.remove();
-      if (!switchWorkspaceTab("documents")) openWorkspaceAnalysis(openBasesStatus.dataset.openBasesStatus, "documents");
+      if (!openWorkspacePanel("documents", "action")) openWorkspaceAnalysis(openBasesStatus.dataset.openBasesStatus, "documents");
       return;
     }
     const backToCandidates = event.target.closest("[data-workspace-back]");
     if (backToCandidates) {
-      showWorkspaceCandidateList({ scroll: true });
+      showWorkspaceCandidateList({ scroll: true, reopenActive: true });
       return;
     }
     const preselect = event.target.closest("[data-requirement-preselect]");
@@ -662,11 +721,6 @@
         preselect.textContent = originalText;
         if (typeof showToast === "function") showToast(error?.message || "No se pudo guardar la preseleccion.");
       }
-      return;
-    }
-    const tab = event.target.closest("[data-requirements-tab]");
-    if (tab) {
-      switchWorkspaceTab(tab.dataset.requirementsTab);
       return;
     }
     if (event.target.closest("[data-opportunity], [data-text-opportunity]")) setTimeout(enhanceDetail, 0);
@@ -699,7 +753,7 @@
   });
   document.addEventListener("click", (event) => {
     const workspaceNavigation = event.target.closest?.('.nav-item[data-screen="workspace"]');
-    if (workspaceNavigation) showWorkspaceCandidateList();
+    if (workspaceNavigation) showWorkspaceCandidateList({ reopenActive: workspacePackageVisible });
     const trigger = event.target.closest?.("[data-workspace-open]");
     if (!trigger) return;
     event.preventDefault();

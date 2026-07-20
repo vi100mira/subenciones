@@ -91,11 +91,12 @@ assert(workspaceRuntime.includes("data-candidate-task-info") && workspaceRuntime
 assert(["purpose", "checks", "evidence", "doneWhen"].every((field) => mockRuntime.includes(`${field}:`)), "Las tareas no explican finalidad, comprobación, evidencia y cierre");
 assert(workspaceRuntime.includes("Insertia no confirma por sí sola la elegibilidad"), "El detalle de tareas oculta el control humano");
 assert(workspaceRuntime.includes("openWorkspaceAnalysis?.(task.dataset.candidateId, task.dataset.candidateTask)") && requirementsRuntime.includes('initialTab = "analysis"'), "Las acciones del detalle no abren la pestaña correspondiente del expediente");
-assert(requirementsRuntime.includes('let workspaceTargetTab = "summary"') && requirementsRuntime.includes("workspaceTargetTab = targetTab"), "La pestaña destino no sobrevive al renderizado del expediente");
-assert(requirementsRuntime.includes('workspaceTargetTab === "analysis"') && requirementsRuntime.includes('workspaceTargetTab === "documents"') && requirementsRuntime.includes('workspaceTargetTab === "draft"'), "Las pestañas no nacen activas según la tarea elegida");
+assert(requirementsRuntime.includes("workspacePanelTarget") && requirementsRuntime.includes("openWorkspacePanel"), "Los nodos no conservan sus modales contextuales");
+assert(requirementsRuntime.includes('data-candidature-${kind === "information" ? "info" : "action"}') && requirementsRuntime.includes('kind === "information"'), "Información y acciones vuelven a compartir una interacción ambigua");
 assert(!requirementsRuntime.includes("[120, 360].forEach"), "La navegación de pestañas sigue dependiendo de temporizadores");
 assert(requirementsRuntime.includes("let workspacePackageVisible = false") && requirementsRuntime.includes("showWorkspaceCandidateList"), "El expediente se restaura sin una accion explicita");
-assert(requirementsRuntime.includes('.nav-item[data-screen="workspace"]') && requirementsRuntime.includes("if (workspaceNavigation) showWorkspaceCandidateList()"), "La navegacion a Candidatura no vuelve de forma estable a la lista");
+assert(requirementsRuntime.includes('.nav-item[data-screen="workspace"]') && requirementsRuntime.includes("reopenActive: workspacePackageVisible"), "La navegación a Candidatura no recupera el plan activo");
+assert(requirementsRuntime.includes("candidatureMap") && requirementsRuntime.includes('nodes(information, "information")') && requirementsRuntime.includes('nodes(actions, "action")'), "El expediente no separa nodos informativos y de acción");
 assert(workspaceRuntime.includes("candidate-list-panel") && workspaceRuntime.includes("Ver tareas"), "La lista no diferencia las tareas del expediente de trabajo");
 assert(workspaceStyles.includes("#workspace.has-documentary-package .candidate-list-panel"), "Lista y expediente pueden mostrarse a la vez");
 assert(recommendationRuntime.includes("tenant-match-load-state") && recommendationRuntime.includes("TENANT_MATCH_LOAD_ERROR"), "El fallo de carga del encaje queda oculto");

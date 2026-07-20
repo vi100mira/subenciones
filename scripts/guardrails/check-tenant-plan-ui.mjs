@@ -271,19 +271,69 @@ try {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await taskInfo.locator("button.ghost-action[data-close-candidate-task-info]").click();
   if (!(await candidateDetail.isVisible())) throw new Error("Cerrar la información cierra también la candidatura");
-  const candidateListAction = `#workspace .candidate-list [data-candidate-detail="${candidateId}"]`;
+  let mapChecked = false;
   for (const [taskTab, rowText] of [["analysis", ""], ["draft", ""], ["documents", ""], ["checklist", "Comprobar cofinanciación exigida"]]) {
     const action = rowText
       ? candidateDetail.locator(".candidate-detail-task").filter({ hasText: rowText }).locator(`[data-candidate-task="${taskTab}"]`)
       : candidateDetail.locator(`[data-candidate-task="${taskTab}"]`);
     await action.click();
-    if (!(await page.locator(`[data-requirements-tab="${taskTab}"].is-active`).isVisible())
-      || !(await page.locator(`[data-requirements-panel="${taskTab}"].is-active`).isVisible())) {
-      throw new Error(`La tarea no abre directamente la pestaña ${taskTab}`);
+    const panelModal = page.locator("[data-candidature-panel-modal]");
+    await panelModal.waitFor({ state: "visible" });
+    const expectedContent = { analysis: "lectura del radar", draft: "esquema orientativo", documents: "bases", checklist: "checklist" }[taskTab];
+    const panelText = await panelModal.innerText();
+    const normalizedPanelText = panelText.toLowerCase();
+    if (!normalizedPanelText.includes(expectedContent) || !normalizedPanelText.includes(taskTab === "analysis" ? "entender la convocatoria" : "preparar la candidatura")) {
+      throw new Error(`La tarea no abre directamente su modal ${taskTab}: ${panelText.slice(0, 240)}`);
+    }
+    await panelModal.locator("[data-close-candidature-panel]").click();
+    if (!mapChecked) {
+      const map = page.locator(".candidature-map");
+      if ((await map.locator(".candidature-map-node.information").count()) !== 6
+        || (await map.locator(".candidature-map-node.action").count()) !== 3) {
+        throw new Error("El mapa no separa información y acciones de la candidatura");
+      }
+      const mapText = await map.innerText();
+      for (const expected of ["1. Entender", "2. Preparar", "Encaje, riesgos y evidencias", "Generar y versionar la memoria"]) {
+        if (!mapText.includes(expected)) throw new Error(`Mapa de candidatura incompleto: ${expected}`);
+      }
+      const datesNode = map.locator('[data-candidature-info="dates"]');
+      const draftNode = map.locator('[data-candidature-action="draft"]');
+      if ((await datesNode.count()) !== 1 || (await draftNode.count()) !== 1) throw new Error("Los nodos interactivos no son únicos");
+      await datesNode.click();
+      if (!(await panelModal.isVisible()) || !(await panelModal.innerText()).includes("Fechas")) throw new Error("El nodo Fechas no abre su modal informativo");
+      await page.screenshot({ path: ".tmp/candidature-information-modal.png" });
+      await page.setViewportSize({ width: 390, height: 844 });
+      const informationMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      if (informationMobileOverflow) throw new Error("El modal Entender provoca desbordamiento móvil");
+      await page.screenshot({ path: ".tmp/candidature-information-modal-mobile.png", fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 1050 });
+      await panelModal.locator("[data-close-candidature-panel]").click();
+      await draftNode.click();
+      if (!(await panelModal.isVisible()) || !(await panelModal.innerText()).includes("Esquema orientativo")) throw new Error("El nodo Borrador Word no abre su formulario modal");
+      await page.screenshot({ path: ".tmp/candidature-action-modal.png" });
+      await page.setViewportSize({ width: 390, height: 844 });
+      const actionMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      if (actionMobileOverflow) throw new Error("El modal Preparar provoca desbordamiento móvil");
+      await page.screenshot({ path: ".tmp/candidature-action-modal-mobile.png", fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 1050 });
+      await panelModal.locator("[data-close-candidature-panel]").click();
+      if ((await page.locator(".requirements-tab-panel.is-active").count()) !== 0) throw new Error("El mapa mantiene formularios desplegados bajo sus nodos");
+      await page.screenshot({ path: ".tmp/candidature-interactive-map.png", fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
+      const mapMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      if (mapMobileOverflow) throw new Error("El mapa de candidatura provoca desbordamiento móvil");
+      await page.screenshot({ path: ".tmp/candidature-interactive-map-mobile.png", fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 1050 });
+      mapChecked = true;
     }
     await page.locator("[data-workspace-back]").click();
-    await page.locator(candidateListAction).click();
+    if (!(await candidateDetail.isVisible())) throw new Error("Volver desde el expediente no recupera el plan de la candidatura activa");
   }
+  await candidateDetail.locator('[data-candidate-task="draft"]').click();
+  await page.locator("[data-candidature-panel-modal] [data-close-candidature-panel]").click();
+  await page.locator('.nav-item[data-screen="opportunities"]').click();
+  await page.locator('.nav-item[data-screen="workspace"]').click();
+  if (!(await candidateDetail.isVisible())) throw new Error("Volver a Candidatura desde el menú no recupera el plan activo");
   await candidateDetail.locator("button[data-close-candidate-detail]").click();
 
   const socialContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
