@@ -29,9 +29,13 @@ Respaldar y publicar como versión estable la nueva navegación contextual de Ca
 
 ## Publicación
 
-- Respaldo Git, etiqueta estable y despliegue de producción: pendientes de completar en este cierre.
+- Commit estable: `34c82b091ca4b47cbf42f68fe438fd81b04d580d`.
+- Etiqueta: `v0.2.6-stable.20260720`.
+- Respaldo recuperable: `C:\tmp\subvenciones-backups\insertia-0.2.6-stable-20260720.bundle` (SHA-256 `AA077A83967C2407D9D4F204171B974D16E9C41DF5972202E23E7DA348ABEE8F`).
+- GitHub: rama respaldada y PR borrador `https://github.com/vi100mira/subenciones/pull/6`.
+- Vercel producción: `https://subvenciones-rag.vercel.app`, despliegue `dpl_Gs83oTVPqsQSQrGgwTuCqmA5QwLj`, estado `READY`.
+- Smoke test de producción: landing 200, `build-info.js` expone versión `0.2.6` y revisión `34c82b0`, API pública 200 y API tenant 401 sin sesión.
 
 ## Riesgo residual
 
 La rama estable conserva migraciones históricas del producto, pero esta versión no las ejecuta. Cualquier migración remota futura seguirá requiriendo revisión separada de RLS, aislamiento por tenant y reversión.
-
