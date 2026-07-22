@@ -211,6 +211,22 @@ async function currentVersion(supabase, opportunityId) {
   return data;
 }
 
+async function versionByContent(supabase, opportunityId, contentHash) {
+  const { data, error } = await supabase
+    .from("platform_opportunity_versions")
+    .select("id, version_number")
+    .eq("opportunity_id", opportunityId)
+    .eq("content_hash", contentHash)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+function versionPatch(next) {
+  const { opportunity_id, version_number, version_status, ...patch } = next;
+  return patch;
+}
+
 async function writeVersion(supabase, opportunityId, item) {
   const current = await currentVersion(supabase, opportunityId);
   const next = versionRow(opportunityId, item, current ? current.version_number + 1 : 1);
@@ -219,27 +235,41 @@ async function writeVersion(supabase, opportunityId, item) {
     if (error) throw error;
     return "inserted";
   }
-  if (current.content_hash === next.content_hash && current.deadline_hash === next.deadline_hash && current.criteria_hash === next.criteria_hash) {
-    const { error } = await supabase
-      .from("platform_opportunity_versions")
-      .update({
-        deadline_read_at: next.deadline_read_at,
-        deadline_next_review_at: next.deadline_next_review_at,
-        deadline_evidence_date: next.deadline_evidence_date,
-        deadline_uncertainty_reason: next.deadline_uncertainty_reason,
-        tenant_alarm_policy: next.tenant_alarm_policy,
-        detected_at: next.detected_at,
-        metadata_json: next.metadata_json
-      })
-      .eq("id", current.id);
+  if (current.content_hash === next.content_hash) {
+    // La restricción única (opportunity_id, content_hash) admite una sola fila por contenido:
+    // los cambios de plazo o criterios se registran sobre la fila vigente.
+    const unchanged = current.deadline_hash === next.deadline_hash && current.criteria_hash === next.criteria_hash;
+    const patch = unchanged
+      ? {
+          deadline_read_at: next.deadline_read_at,
+          deadline_next_review_at: next.deadline_next_review_at,
+          deadline_evidence_date: next.deadline_evidence_date,
+          deadline_uncertainty_reason: next.deadline_uncertainty_reason,
+          tenant_alarm_policy: next.tenant_alarm_policy,
+          detected_at: next.detected_at,
+          metadata_json: next.metadata_json
+        }
+      : versionPatch(next);
+    const { error } = await supabase.from("platform_opportunity_versions").update(patch).eq("id", current.id);
     if (error) throw error;
-    return "refreshed";
+    return unchanged ? "refreshed" : "updated";
   }
+  const previous = await versionByContent(supabase, opportunityId, next.content_hash);
   const { error: supersedeError } = await supabase
     .from("platform_opportunity_versions")
     .update({ version_status: "superseded" })
     .eq("id", current.id);
   if (supersedeError) throw supersedeError;
+  if (previous) {
+    // El contenido vuelve a coincidir con una versión anterior: se reactiva esa fila
+    // en lugar de insertar un duplicado que violaría la restricción única.
+    const { error } = await supabase
+      .from("platform_opportunity_versions")
+      .update({ ...versionPatch(next), version_status: "current", version_number: next.version_number })
+      .eq("id", previous.id);
+    if (error) throw error;
+    return "versioned";
+  }
   const { error } = await supabase.from("platform_opportunity_versions").insert(next);
   if (error) throw error;
   return "versioned";
@@ -248,7 +278,7 @@ async function writeVersion(supabase, opportunityId, item) {
 async function main() {
   const dataset = JSON.parse(await fs.readFile(input, "utf8"));
   const opportunities = dataset.opportunities.filter((item) => item.actionable === true && item.deadlineStatus === "open" && item.basesStatus === "extracted");
-  const summary = { apply, input, scanned: dataset.opportunities.length, eligibleLive: opportunities.length, rejectedByLiveEvidenceGate: dataset.opportunities.length - opportunities.length, inserted: 0, refreshed: 0, versioned: 0 };
+  const summary = { apply, input, scanned: dataset.opportunities.length, eligibleLive: opportunities.length, rejectedByLiveEvidenceGate: dataset.opportunities.length - opportunities.length, inserted: 0, refreshed: 0, updated: 0, versioned: 0 };
   if (!apply) {
     console.log(JSON.stringify({ mode: "dry-run", ...summary }, null, 2));
     return;
