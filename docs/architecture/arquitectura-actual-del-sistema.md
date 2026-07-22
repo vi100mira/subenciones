@@ -116,13 +116,13 @@ La primera prueba del worker alojado se completó correctamente el 13 de julio d
 | Capacidad | Construcción actual | Automatización | Veredicto |
 | --- | --- | --- | --- |
 | Búsqueda de convocatorias | Radares municipal, social general y 15 financiadores privados | Cron + cola + workers para los tres ciclos | Operativo con cobertura acotada |
-| Normalización y revisión de bases | Hashes, extracción, OCR, evidencia y límites de redacción | Automática dentro de cada campaña | Operativo para los tres radares |
+| Normalización y revisión de bases | Hashes, extracción, OCR, evidencia, aceptación experta por tenant y límites de redacción | Técnica automática; decisión experta auditada en cada tenant | Implementado; requiere migración en cada entorno |
 | Monitor de cambios | Versiones y eventos deterministas para catálogo privado | Automático al final de cada campaña privada | Operativo; cambios críticos esperan revisión |
 | Investigador de entidad | API, cola, rastreo HTTPS del mismo dominio, snapshots y sugerencias con evidencia | Worker alojado bajo demanda; exige consentimiento y fuente aprobada | Operativo con revisión humana |
 | Asistente de encaje | API, cola y recomendaciones tenant con razones, riesgos, hechos usados y evidencia versionada | Worker alojado bajo demanda; exige perfil aprobado | Operativo cuando el tenant completa esa puerta |
 | Control de datos | RLS, permisos por rol, consentimientos con alcance, clases permitidas, auditoría y revisión humana | Control transversal aplicado por APIs, base de datos y workers; no es un agente autónomo | Operativo para las puertas implementadas |
 | Revisión documental | Contrato de bases aprobado, lista exigida y plan del agente por `requirementRef` | Toda omisión bloquea antes de revisión | Implementada localmente; requiere migraciones pendientes |
-| Borrador de memoria | Cola, worker, contexto mínimo, restricciones, plan documental y validación PDF | Asíncrono; termina en revisión humana | Implementado; activación alojada pendiente de configuración |
+| Borrador de memoria | Cola, worker, contexto mínimo, restricciones, edición versionada, plan documental y validación PDF | Asíncrono; versiones humanas inmutables y aprobación por hash | Implementado; activación alojada pendiente de configuración y migraciones |
 | Avisos y recordatorios | Tablas, watch, generador y API de lectura | Generación periódica; sin envío por canal | Parcial |
 | Orquestador de tenants | Autenticación, roles, permisos y aislamiento en APIs/RLS | No coordina agentes ni planes de ejecución | Infraestructura parcial |
 

@@ -8,7 +8,7 @@ INSERTIA ayuda a entidades sociales a descubrir convocatorias, explicar su encaj
 
 | Rol | Responsabilidad principal |
 | --- | --- |
-| Superadministración | Fuentes públicas, campañas, salud, costes y revisión de bases |
+| Superadministración | Fuentes públicas, campañas, salud, costes e incidencias técnicas de bases |
 | Administración de entidad | Perfil, membresías, consentimientos, datos aprobados y revisiones |
 | Gestor de subvenciones | Búsqueda, preselección, candidatura, documentación y borradores |
 | Revisor | Validar encaje, bases, documentos y salida final |
@@ -21,7 +21,7 @@ INSERTIA ayuda a entidades sociales a descubrir convocatorias, explicar su encaj
 4. El encaje usa el perfil aprobado de una entidad y devuelve razones, riesgos, faltantes y evidencia.
 5. Una persona preselecciona, descarta o abre una candidatura.
 6. Las bases se localizan, versionan y convierten en requisitos citados.
-7. Una persona aprueba las citas y el plan documental.
+7. El validador técnico comprueba citas y procedencia; una persona del tenant acepta la interpretación para su candidatura o señala una discrepancia auditada.
 8. Desde Asistentes, Preparación documental obliga a elegir una vía: proyectos privados autorizados o formulario guiado. Ambas producen propuestas que una persona debe revisar antes de incorporarlas a la plantilla maestra.
    Para fuentes locales, la carpeta debe seleccionarse expresamente en el dispositivo antes de crear una solicitud de inventario. La ruta absoluta no se persiste ni se transmite a la API y la selección debe repetirse después de recargar.
    Todas las fuentes privadas —local, Drive y SharePoint— deben registrar un preanálisis agregado con cero llamadas de IA antes de entrar en cola. Una fuente vacía, sin `PDF`/`DOCX`/`XLSX` o con contenido compatible prácticamente nulo queda bloqueada. Si contiene menos de tres documentos compatibles o menos de 100 KB, requiere una confirmación humana auditada; la cola vuelve a validar este estado en servidor.
@@ -29,7 +29,7 @@ INSERTIA ayuda a entidades sociales a descubrir convocatorias, explicar su encaj
 10. En una fuente local, seleccionar y confirmar la carpeta solicita una única ejecución. Al terminar, la acción principal cambia a **Revisar propuestas**; **Actualizar análisis** es una acción distinta y voluntaria que vuelve a solicitar la carpeta. La interfaz muestra las llamadas de IA del inventario y su coste.
 11. El inventario puede preparar un índice textual local en cuarentena sin esperar a resolver las propuestas. Todo fragmento nace inactivo, aislado por tenant y fuente; la aprobación humana bloquea su uso por el redactor, no su extracción local. Crear embeddings semánticos requiere elegir un modelo local o un consentimiento externo separado.
 12. El redactor usa solo requisitos y hechos aprobados, prepara documentos redactables y separa formularios oficiales, evidencias y firmas.
-13. La salida permanece privada y requiere aprobación humana del hash antes de exportarse.
+13. La salida permanece privada. Los párrafos redactables pueden editarse en versiones inmutables; cada versión conserva evidencia y requiere aprobación humana de su hash antes de exportarse.
 14. La presentación externa queda fuera del sistema.
 
 ## Control de ejecución de asistentes
@@ -65,6 +65,7 @@ Los trabajos asíncronos usan: `En cola`, `Procesando`, `Pendiente de revisión`
 - Los datos privados solo pueden usarse con permiso, minimización y trazabilidad tenant.
 - La aprobación de fuentes y la ejecución de ingestas se gestionan en Asistentes; Entidad solo informa del servicio y sus límites.
 - Ningún agente firma, envía o presenta.
+- Editar un borrador nunca altera bases, requisitos, referencias de evidencia ni versiones anteriores.
 
 ## Asistente para usuarios noveles
 

@@ -103,7 +103,7 @@ const documentaryRuntime = fs.readFileSync("prototype/opportunity-requirements.j
 const queue = fs.readFileSync("scripts/platform/queue-bases-interpretations.mjs", "utf8");
 const radarWorker = fs.readFileSync("scripts/workers/run-municipal-radar.mjs", "utf8");
 const reviewApi = fs.readFileSync("api/admin-bases-interpretations.ts", "utf8");
-const approvedBases = fs.readFileSync("src/platformBases.ts", "utf8");
+const approvedBases = ["src/platformBases.ts", "src/basesContract.mjs"].map((file) => fs.readFileSync(file, "utf8")).join("\n");
 const legacyDocumentApi = fs.readFileSync("api/candidature-document-package.ts", "utf8");
 const approvedDocumentApi = fs.readFileSync("api/approved-draft-document.ts", "utf8");
 const legacyDocumentReviewApi = fs.readFileSync("api/document-review-runs.ts", "utf8");
@@ -121,7 +121,7 @@ assert(approvedBases.includes("requirements_approved") && approvedBases.includes
 assert(legacyDocumentApi.includes("status(410)") && legacyDocumentApi.includes("Ruta retirada"), "La ruta de plantillas locales sigue aceptando paquetes no gobernados");
 assert(approvedDocumentApi.includes("Exportacion bloqueada") && approvedDocumentApi.includes('access: "private"'), "La exportacion aprobada no respeta el gate o privacidad tenant");
 assert(draftApi.includes("requirementsContractHash") && draftWorker.includes("approvedRequirements"), "El redactor no conserva ni revalida el contrato de bases aprobado");
-assert(documentaryRuntime.includes("Bases pendientes de revisión de plataforma") && documentaryRuntime.includes("La redacción se habilitará cuando plataforma valide"), "La candidatura no comunica el bloqueo de bases");
+assert(documentaryRuntime.includes("Bases pendientes de validación experta") && documentaryRuntime.includes("Validación experta de tu equipo"), "La candidatura no comunica la puerta experta del tenant");
 assert(platformRuntime.includes("platform-bases-reviews") && platformRuntime.includes("Aprobar interpretacion"), "La revision de bases no tiene control operativo en plataforma");
 assert(platformRuntime.includes("clause.coreEvidence") && platformRuntime.includes("/4 esenciales"), "La revision no distingue clausulas nucleares de menciones contextuales");
 assert(documentaryRuntime.includes("Generar borrador público") && documentaryRuntime.includes("Generar borrador personalizado"), "La candidatura no distingue el borrador publico del personalizado consentido");

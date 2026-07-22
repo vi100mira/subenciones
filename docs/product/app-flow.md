@@ -36,11 +36,12 @@ Si no existe consentimiento de web pública, el tenant puede completar el perfil
 1. Una preselección puede abrir expediente sin aprobar todavía la candidatura.
 2. La plataforma localiza bases, anexos y formularios; conserva URL, hash y páginas.
 3. Extrae beneficiarios, finalidad, documentación y presentación.
-4. Una persona revisa las citas y aprueba o rechaza la interpretación.
+4. El sistema verifica técnicamente las citas; una persona de la entidad revisa las cláusulas y las acepta solo para su candidatura o señala una discrepancia.
 5. El plan documental separa borradores, modelos oficiales, evidencias y declaraciones.
 6. El redactor trabaja de forma asíncrona con contexto mínimo permitido.
-7. La revisión humana aprueba el hash completo antes de exportar.
-8. La aplicación no firma ni presenta en portales externos.
+7. La persona abre el documento generado, edita únicamente sus párrafos redactables y guarda nuevas versiones sin sobrescribir las anteriores.
+8. La revisión humana aprueba el hash de una versión concreta antes de exportar.
+9. La aplicación no firma ni presenta en portales externos.
 
 ## Cambios
 
@@ -55,7 +56,8 @@ Los adaptadores futuros de correo, Teams o WhatsApp autentican usuario y tenant,
 - Aprobar perfil y hechos internos.
 - Decidir preselección o descarte.
 - Confirmar elegibilidad incierta.
-- Aprobar interpretación de bases y citas.
+- Validar la interpretación de bases para el tenant o señalar una discrepancia.
+- Editar y versionar el contenido redactable sin alterar evidencia oficial.
 - Completar modelos oficiales y evidencias.
 - Revisar y aprobar la salida documental.
 - Autorizar cualquier exportación o comunicación externa.

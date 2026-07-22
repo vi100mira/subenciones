@@ -1,6 +1,6 @@
 # Índice documental canónico de INSERTIA
 
-Actualizado el 16 de julio de 2026. Este índice evita usar un documento histórico como descripción del sistema vigente.
+Actualizado el 22 de julio de 2026. Este índice evita usar un documento histórico como descripción del sistema vigente.
 
 ## Lectura recomendada
 
@@ -14,6 +14,7 @@ Actualizado el 16 de julio de 2026. Este índice evita usar un documento histór
 | Arquitectura desplegada y estado real | `docs/architecture/arquitectura-actual-del-sistema.md` |
 | Entidades, relaciones y aislamiento | `docs/architecture/data-model-reference.md` |
 | RAG público/privado | `docs/architecture/rag-privacy-and-indexing.md` |
+| Quién valida las bases y cómo | `docs/architecture/validacion-experta-de-bases-por-tenant.md` |
 | Agentes, permisos y puertas humanas | `docs/product/agentic-architecture.md` |
 | Evolución propuesta del rellenado documental | `docs/product/document-construction-v2.md` |
 | Autenticación y secretos | `docs/architecture/credentials-and-tenant-auth.md` y `docs/security/credentials-and-logging.md` |

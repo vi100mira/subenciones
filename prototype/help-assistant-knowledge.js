@@ -38,8 +38,8 @@ window.INSERTIA_HELP_TOPICS = [
     id: "bases", title: "Revisión de las bases", screens: ["opportunities", "candidature", "agents"],
     keywords: ["bases", "requisitos", "anexo", "formulario", "documentacion", "sia"],
     summary: "La aplicación localiza y versiona bases, anexos y fichas oficiales antes de permitir la preparación documental.",
-    steps: ["Extrae beneficiarios y finalidad.", "Identifica documentos y presentación.", "Conserva URL, hash y páginas.", "La entidad solicita la revisión cuando la necesita.", "Un analista de plataforma verifica y aprueba las citas compartidas."],
-    caution: "Una entidad no puede aprobar unas bases globales para las demás. Si la lectura sigue en cola o las citas no están verificadas, la redacción permanece bloqueada. La solicitud y su fecha se recuperan desde auditoría al recargar; tras 24 horas puede enviarse un recordatorio si sigue pendiente."
+    steps: ["Extrae beneficiarios, actuaciones, documentos y presentación.", "Verifica técnicamente las citas y conserva URL, hash y páginas.", "En Candidatura, abre Revisar y validar bases.", "La entidad acepta las cláusulas solo para su candidatura o señala una discrepancia motivada.", "La decisión se revalida al generar y exportar."],
+    caution: "Una entidad no publica bases globales para las demás. Una discrepancia bloquea únicamente su redacción y queda auditada. Si las citas aún no están verificadas, la decisión experta permanece bloqueada."
   },
   {
     id: "candidature", title: "Preselección y candidatura", screens: ["candidature", "opportunities"],
@@ -52,8 +52,8 @@ window.INSERTIA_HELP_TOPICS = [
     id: "drafting", title: "Documentos y agente redactor", screens: ["candidature", "agents"],
     keywords: ["redactar", "borrador", "word", "docx", "pdf", "documento", "memoria"],
     summary: "El redactor prepara borradores trazables y separa lo que debe aportar o completar una persona.",
-    steps: ["Pre-rellena sin IA los campos que ya constan en la convocatoria y marca con claridad los que carecen de evidencia.", "Recibe requisitos aprobados.", "Redacta memoria y anexos permitidos.", "El visor sustituye el contenido orientativo por la versión generada documento a documento.", "Separa modelos oficiales, evidencias y declaraciones.", "Genera una salida privada para revisión."],
-    caution: "La exportación exige aprobar el hash; no hay firma ni envío automático."
+    steps: ["Pre-rellena sin IA los campos que ya constan en la convocatoria y marca los que carecen de evidencia.", "Recibe requisitos validados por la entidad.", "Redacta memoria y anexos permitidos.", "En Ver documento, Editar borrador permite corregir solo los párrafos redactables.", "Guardar crea una versión nueva y conserva el historial; estructura y evidencias no se sobrescriben.", "Una persona aprueba el hash de la versión elegida antes de exportar."],
+    caution: "Firma, requisitos y evidencias permanecen bloqueados. La exportación es privada y nunca firma, envía ni presenta automáticamente."
   },
   {
     id: "progressive_knowledge", title: "Conocimiento progresivo de la entidad", screens: ["entity", "agents", "candidature"],

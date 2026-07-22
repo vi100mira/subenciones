@@ -5,6 +5,7 @@ import WebSocket from "ws";
 import { contractForConstraints, validateDraftOutput } from "./draft-agent-contract.mjs";
 import { generatePublicDraft, maximumRunCostEur } from "./openai-draft-provider.mjs";
 import { recordAgentRunAudit } from "./agent-run-audit.mjs";
+import { basesAcceptanceContractHash, combineApprovedBasesRows } from "../../src/basesContract.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -34,30 +35,33 @@ function providerReady() {
   return process.env.AI_DRAFT_PROVIDER === "openai" && Boolean(process.env.OPENAI_API_KEY);
 }
 
-async function approvedRequirements(supabase, versionId) {
+function missingAcceptanceSchema(error) {
+  return ["42P01", "PGRST205"].includes(String(error?.code || ""))
+    || /tenant_bases_acceptances.*(?:not exist|schema cache)/i.test(String(error?.message || ""));
+}
+
+async function approvedRequirements(supabase, versionId, tenantId) {
   const { data, error } = await supabase.from("platform_bases_interpretations")
-    .select("id, citations_verified, contract_json").eq("opportunity_version_id", versionId)
-    .eq("status", "approved");
+    .select("id, status, citations_verified, contract_json").eq("opportunity_version_id", versionId)
+    .in("status", ["approved", "review_required"]);
   if (error) throw error;
-  const rows = (data || []).filter((row) => row.citations_verified);
-  const sections = {};
-  const limits = [];
-  const formatRules = [];
-  for (const row of rows) {
-    for (const [key, clauses] of Object.entries(row.contract_json?.sections || {})) {
-      sections[key] = [...(sections[key] || []), ...(clauses || [])];
-    }
-    limits.push(...(row.contract_json?.proposalConstraints?.limits || []));
-    formatRules.push(...(row.contract_json?.proposalConstraints?.formatRules || []));
+  const rows = data || [];
+  const acceptanceResult = await supabase.from("tenant_bases_acceptances")
+    .select("status, interpretation_ids, contract_hash").eq("tenant_id", tenantId)
+    .eq("opportunity_version_id", versionId).maybeSingle();
+  if (acceptanceResult.error && !missingAcceptanceSchema(acceptanceResult.error)) throw acceptanceResult.error;
+  const acceptance = acceptanceResult.error ? null : acceptanceResult.data;
+  if (acceptance?.status === "discrepancy_reported") throw new Error("La entidad señaló una discrepancia vigente en las bases.");
+  const acceptedIds = acceptance?.status === "accepted"
+    && basesAcceptanceContractHash(rows, acceptance.interpretation_ids) === acceptance.contract_hash
+    ? acceptance.interpretation_ids : [];
+  const combined = combineApprovedBasesRows(rows, acceptedIds);
+  const requirements = combined.requirementsContract;
+  if (requirements.documentaryGate !== "requirements_approved") {
+    throw new Error(`Las bases validadas dejaron de estar completas: ${requirements.missingCoreSections.join(", ") || "sin interpretación vigente"}.`);
   }
-  const missing = ["beneficiaries", "eligibleActivities", "requiredDocuments", "submission"]
-    .filter((key) => !sections[key]?.length);
-  if (!rows.length || missing.length) throw new Error(`Las bases aprobadas dejaron de estar completas: ${missing.join(", ") || "sin interpretacion aprobada"}.`);
-  return { schemaVersion: 1, status: "approved", documentaryGate: "requirements_approved", sections,
-    proposalConstraints: { status: limits.length ? "verified" : "not_found_requires_review",
-      draftingGate: limits.length ? "constraints_verified" : "blocked_pending_constraint_review",
-      requiresRenderedValidation: limits.some((item) => ["pages", "folios", "sides"].includes(item.unit)),
-      limits, formatRules }, interpretationIds: rows.map((row) => row.id) };
+  return { ...requirements, proposalConstraints: combined.proposalConstraints,
+    interpretationIds: combined.approvedInterpretationIds };
 }
 
 async function claim(supabase, ready) {
@@ -107,7 +111,7 @@ async function contextManifest(supabase, run) {
     .eq("id", run.opportunity_version_id).eq("version_status", "current").maybeSingle();
   if (versionError) throw versionError;
   if (!version || version.deadline_status !== "open") throw new Error("La versión oficial o el plazo dejaron de estar vigentes.");
-  const requirementsContract = await approvedRequirements(supabase, version.id);
+  const requirementsContract = await approvedRequirements(supabase, version.id, run.tenant_id);
   const constraints = requirementsContract.proposalConstraints.draftingGate === "constraints_verified"
     ? requirementsContract.proposalConstraints : version.evidence_json?.proposal_constraints;
   if (constraints?.draftingGate !== "constraints_verified") throw new Error("Los límites de redacción dejaron de estar verificados.");

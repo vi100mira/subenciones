@@ -7,6 +7,7 @@ import { buildApprovedDraftDocx, type DraftDocumentPlanItem, type DraftSection, 
 import { buildApprovedDraftPackage } from "../src/candidaturePackage.js";
 import { loadApprovedBases } from "../src/platformBases.js";
 import { renderProposalPdf, validateRenderedPages } from "../src/proposalPdf.js";
+import { draftContentHash } from "../src/draftDocumentVersion.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -43,11 +44,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!run) return res.status(404).json(fail("Borrador no encontrado"));
     if (run.status !== "review_required" || !validOutput(run.output_json)) return res.status(409).json(fail("Borrador incompleto o no preparado para revision"));
     const { data: review, error: reviewError } = await supabase.from("tenant_draft_reviews")
-      .select("id, status, output_hash, reviewed_at, docx_blob_path, docx_sha256, pdf_blob_path, pdf_sha256, validation_json")
+      .select("id, status, output_hash, reviewed_at, draft_version_id, docx_blob_path, docx_sha256, pdf_blob_path, pdf_sha256, validation_json")
       .eq("tenant_id", actor.tenantId).eq("agent_run_id", run.id).maybeSingle();
     if (reviewError) throw reviewError;
     if (!review || review.status !== "approved") return res.status(409).json(fail("Exportacion bloqueada: falta aprobacion humana del borrador"));
-    const outputHash = digest(run.output_json);
+    let draftContent = run.output_json;
+    if (review.draft_version_id) {
+      const version = await supabase.from("tenant_draft_versions").select("content_json, content_hash")
+        .eq("id", review.draft_version_id).eq("tenant_id", actor.tenantId).eq("agent_run_id", run.id).maybeSingle();
+      if (version.error) throw version.error;
+      if (!version.data || version.data.content_hash !== draftContentHash(version.data.content_json)) {
+        return res.status(409).json(fail("Exportacion bloqueada: la version documental aprobada no es integra"));
+      }
+      draftContent = version.data.content_json;
+    }
+    if (!validOutput(draftContent)) return res.status(409).json(fail("Exportacion bloqueada: la version aprobada esta incompleta"));
+    // Las revisiones antiguas conservan su hash histórico; las versiones nuevas
+    // usan JSON canónico porque jsonb no garantiza el orden de las claves.
+    const outputHash = review.draft_version_id ? draftContentHash(draftContent) : digest(draftContent);
     if (review.output_hash !== outputHash) return res.status(409).json(fail("Exportacion bloqueada: el contenido cambio despues de la revision"));
     if (review.docx_blob_path && review.pdf_blob_path) return res.status(200).json(ok({
       reviewId: review.id, documents: { docx: { pathname: review.docx_blob_path, sha256: review.docx_sha256 }, pdf: { pathname: review.pdf_blob_path, sha256: review.pdf_sha256 }, package: review.validation_json?.package || null }, cached: true
@@ -62,29 +76,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (versionResult.error) throw versionResult.error;
     if (tenantResult.error) throw tenantResult.error;
     if (versionResult.data.version_status !== "current") return res.status(409).json(fail("Exportacion bloqueada: las bases cambiaron despues de redactar"));
-    const bases = await loadApprovedBases(supabase, run.opportunity_version_id);
+    const bases = await loadApprovedBases(supabase, run.opportunity_version_id, actor.tenantId);
     if (bases.requirementsContract.documentaryGate !== "requirements_approved") return res.status(409).json(fail("Exportacion bloqueada: las bases aprobadas dejaron de estar completas"));
     const constraints = bases.proposalConstraints;
     if (constraints.draftingGate !== "constraints_verified") return res.status(409).json(fail("Exportacion bloqueada: faltan limites formales verificados"));
 
-    const documents = run.output_json.documents as GeneratedDraftDocument[];
+    const documents = draftContent.documents as GeneratedDraftDocument[];
     const primary = documents.find((document) => document.role === "primary_proposal") || documents[0];
     const sections = documents.flatMap((document) => [
       { title: document.title, paragraphs: [`Tipo: ${document.documentType}. Requisitos: ${document.requirementRefs.join(", ")}.`], evidenceRefs: document.evidenceRefs },
       ...document.sections
     ]) as DraftSection[];
     const docx = await buildApprovedDraftDocx({
-      title: run.output_json.title, opportunityTitle: opportunityResult.data.title,
+      title: draftContent.title, opportunityTitle: opportunityResult.data.title,
       funderName: opportunityResult.data.funder_name, tenantName: tenantResult.data.name,
-      sections, documentPlan: run.output_json.documentPlan as DraftDocumentPlanItem[],
-      evidenceRefs: run.output_json.evidenceRefs, uncertainties: run.output_json.uncertainties,
+      sections, documentPlan: draftContent.documentPlan as DraftDocumentPlanItem[],
+      evidenceRefs: draftContent.evidenceRefs, uncertainties: draftContent.uncertainties,
       reviewedAt: review.reviewed_at, reviewerLabel: actor.role
     });
     const packageResult = await buildApprovedDraftPackage({
-      title: run.output_json.title, opportunityTitle: opportunityResult.data.title,
+      title: draftContent.title, opportunityTitle: opportunityResult.data.title,
       funderName: opportunityResult.data.funder_name, tenantName: tenantResult.data.name,
-      documents, documentPlan: run.output_json.documentPlan as DraftDocumentPlanItem[],
-      evidenceRefs: run.output_json.evidenceRefs, uncertainties: run.output_json.uncertainties,
+      documents, documentPlan: draftContent.documentPlan as DraftDocumentPlanItem[],
+      evidenceRefs: draftContent.evidenceRefs, uncertainties: draftContent.uncertainties,
       reviewedAt: review.reviewed_at, reviewerLabel: actor.role
     });
     const pdf = await renderProposalPdf(primary.title, primary.sections.map((section) => ({ title: section.title, lines: section.paragraphs })), constraints.formatRules || []);

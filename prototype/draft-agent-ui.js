@@ -134,6 +134,10 @@
             button.dataset.draftReviewAction = status; button.dataset.draftRunId = run.id; button.dataset.canonicalKey = canonicalKey; button.textContent = text; actions.append(button);
           }
           controls.append(note, actions);
+        } else if (review.status === "pending" && review.validation_json?.draftVersionId) {
+          const note = document.createElement("small");
+          note.textContent = "Existe una versión humana en edición. Ábrela desde Ver documento para guardarla, compararla y aprobarla.";
+          controls.append(note);
         } else if (review.status === "approved") {
           const actions = document.createElement("div"); actions.className = "button-row";
           if (!review.docx_blob_path) {

@@ -109,6 +109,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!run) return res.status(404).json(fail("Borrador no encontrado"));
       if (run.status !== "review_required") return res.status(409).json(fail("El borrador aun no esta listo para revision humana"));
       if (!hasReviewableOutput(run.output_json)) return res.status(409).json(fail("Borrador incompleto: no contiene documentos y plan documental revisables"));
+      const editedVersion = await supabase.from("tenant_draft_versions").select("id")
+        .eq("tenant_id", actor.tenantId).eq("agent_run_id", run.id).limit(1).maybeSingle();
+      if (editedVersion.error && !["42P01", "PGRST205"].includes(String(editedVersion.error.code || ""))) throw editedVersion.error;
+      if (editedVersion.data) return res.status(409).json(fail("Este borrador tiene versiones humanas: revísalo y apruébalo desde el editor documental"));
       const outputHash = digest(run.output_json);
       const now = new Date().toISOString();
       const { data: review, error } = await supabase.from("tenant_draft_reviews").upsert({
@@ -146,7 +150,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!version) return res.status(409).json(fail("La oportunidad no tiene versión oficial vigente"));
     if (version.deadline_status !== "open") return res.status(409).json(fail("El plazo vigente no está confirmado como abierto"));
 
-    const approvedBases = await loadApprovedBases(supabase, version.id);
+    const approvedBases = await loadApprovedBases(supabase, version.id, actor.tenantId);
     if (approvedBases.requirementsContract.documentaryGate !== "requirements_approved") {
       return res.status(409).json(fail("Redaccion bloqueada: faltan bases aprobadas sobre beneficiarios, actuaciones, documentos o presentacion"));
     }

@@ -230,7 +230,8 @@
   }
 
   function projectStage(pack) {
-    const basesApproved = pack.requirementsContract?.documentaryGate === "requirements_approved";
+    const basesApproved = pack.requirementsContract?.documentaryGate === "requirements_approved"
+      || basesReviewStates.get(pack?.id)?.draftingAllowed;
     return `
       <div class="project-stage" aria-label="Estado de candidatura">
         <span class="is-done">Preseleccionada</span>
@@ -238,14 +239,17 @@
         <span>Proyecto activo</span>
       </div>
       <div class="document-agent-actions">
-        ${basesApproved ? `<div><strong>Bases aprobadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde el nodo Borrador Word.</span></div>` : `<div><strong>Bases pendientes de revisión de plataforma</strong><span>La entidad puede solicitarla y consultar qué falta. La redacción se habilitará cuando plataforma valide las citas compartidas.</span></div>`}
+        ${basesApproved ? `<div><strong>Bases validadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde el nodo Borrador Word.</span></div>` : `<div><strong>Bases pendientes de validación experta</strong><span>Tu equipo revisa las cláusulas con sus citas y decide solo para esta entidad.</span></div>`}
       </div>`;
   }
 
   function draftActionButtons(pack) {
-    const basesApproved = pack.requirementsContract?.documentaryGate === "requirements_approved";
-    const limitsVerified = pack.proposalConstraints?.draftingGate === "constraints_verified";
-    if (!basesApproved) return `<div class="bases-review-actions"><div class="button-row"><button class="primary-action" data-bases-review-request="${escapeHtml(pack.id)}" type="button">Solicitar revisión de bases</button><button class="ghost-action" data-open-bases-status="${escapeHtml(pack.id)}" type="button">Ver qué falta</button></div><small data-bases-review-status="${escapeHtml(pack.id)}">La aprobación la realiza plataforma; tu solicitud quedará registrada en auditoría.</small></div>`;
+    const reviewState = basesReviewStates.get(pack?.id);
+    const basesApproved = pack.requirementsContract?.documentaryGate === "requirements_approved" || reviewState?.draftingAllowed;
+    const limitsVerified = pack.proposalConstraints?.draftingGate === "constraints_verified" || reviewState?.constraintsVerified;
+    if (!basesApproved && !reviewState) return `<div class="bases-review-actions"><button class="primary-action" data-bases-review-load="${escapeHtml(pack.id)}" type="button" disabled>Consultando bases...</button></div>`;
+    if (!basesApproved && (reviewState?.canAccept || reviewState?.state === "discrepancy_reported")) return `<div class="bases-review-actions"><div class="button-row"><button class="primary-action" data-bases-entity-review="${escapeHtml(pack.id)}" type="button">Revisar y validar bases</button><button class="ghost-action" data-open-bases-status="${escapeHtml(pack.id)}" type="button">Ver qué falta</button></div><small data-bases-review-status="${escapeHtml(pack.id)}">${escapeHtml(reviewState.message)}</small></div>`;
+    if (!basesApproved) return `<div class="bases-review-actions"><div class="button-row"><button class="primary-action" data-bases-review-request="${escapeHtml(pack.id)}" type="button">Solicitar lectura o revisión</button><button class="ghost-action" data-open-bases-status="${escapeHtml(pack.id)}" type="button">Ver qué falta</button></div><small data-bases-review-status="${escapeHtml(pack.id)}">${escapeHtml(reviewState?.message || "Todavía no hay citas verificadas que tu equipo pueda validar.")}</small></div>`;
     if (!limitsVerified) return `<div class="button-row"><button class="primary-action" type="button" disabled>Primero: verificar los límites de redacción</button></div>`;
     return `<div class="button-row"><button class="ghost-action" data-draft-agent-start="${pack.id}" data-approved-facts="false" type="button">Generar borrador público</button><button class="primary-action" data-draft-agent-start="${pack.id}" data-approved-facts="true" type="button">Generar borrador personalizado</button></div>`;
   }
@@ -257,15 +261,16 @@
   function solicitudPhases(pack) {
     const reviewData = basesReviewStates.get(pack?.id) || null;
     const run = latestDraftRuns.get(pack?.id) || null;
-    const basesApproved = pack?.requirementsContract?.documentaryGate === "requirements_approved";
-    const limitsVerified = pack?.proposalConstraints?.draftingGate === "constraints_verified";
+    const basesApproved = pack?.requirementsContract?.documentaryGate === "requirements_approved" || reviewData?.draftingAllowed;
+    const limitsVerified = pack?.proposalConstraints?.draftingGate === "constraints_verified" || reviewData?.constraintsVerified;
     const state = basesApproved ? "approved" : reviewData?.state || "unknown";
     const requested = Boolean(reviewData?.requestId);
     const review = run?.human_review;
-    const reading = ["citations_pending", "ready_for_platform_review", "approved"].includes(state) ? "done"
+    const reading = ["citations_pending", "ready_for_entity_review", "accepted_by_entity", "discrepancy_reported", "approved"].includes(state) ? "done"
       : state === "processing" ? "current" : state === "failed" ? "blocked" : "pending";
-    const validation = state === "approved" ? "done"
-      : ["citations_pending", "ready_for_platform_review"].includes(state) ? "current" : "pending";
+    const validation = ["approved", "accepted_by_entity"].includes(state) ? "done"
+      : state === "discrepancy_reported" ? "blocked"
+      : state === "ready_for_entity_review" ? "current" : "pending";
     const limits = limitsVerified ? "done" : basesApproved ? "current" : "pending";
     const generating = ["queued", "preparing_context", "generating", "awaiting_provider"].includes(run?.status);
     const draft = review?.status === "approved" ? "done"
@@ -277,11 +282,11 @@
           : reading === "current" ? "En cola. Se procesará sin acción por tu parte."
           : reading === "blocked" ? "La última lectura falló; plataforma debe intervenir."
           : "La plataforma debe localizar e interpretar las bases oficiales." },
-      { title: "Validación de plataforma", actor: "Analista de plataforma", status: validation,
-        detail: validation === "done" ? "Cláusulas y citas aprobadas."
-          : state === "ready_for_platform_review" ? "Citas preparadas; falta la aprobación del analista."
-          : state === "citations_pending" ? "Debe verificar las citas contra las bases oficiales."
-          : "Se activará al terminar la lectura." },
+      { title: "Validación experta de tu equipo", actor: "Responsable de la entidad", status: validation,
+        detail: validation === "done" ? "Cláusulas aceptadas para esta candidatura."
+          : validation === "blocked" ? "Hay una discrepancia registrada; revísala o espera su resolución."
+          : state === "ready_for_entity_review" ? "Revisa las cláusulas y sus citas antes de continuar."
+          : "Se activará cuando las citas estén verificadas." },
       { title: "Límites de redacción", actor: "Automática tras la validación", status: limits,
         detail: limits === "done" ? "Máximos de páginas y formato confirmados."
           : limits === "current" ? "Bases aprobadas; faltan confirmar los máximos formales."
@@ -299,9 +304,11 @@
       : generating ? "Ninguno: espera a que el redactor termine."
       : draft === "blocked" ? "Lee el motivo del fallo y solicita una nueva versión."
       : basesApproved && limitsVerified ? "Pulsa «Generar borrador personalizado»."
-      : basesApproved ? "Ninguno: plataforma debe verificar los límites de redacción."
+      : basesApproved ? "Revisa el aviso de límites; deben estar verificados antes de redactar."
       : state === "failed" ? "Ninguno: plataforma debe resolver el fallo de lectura."
-      : ["processing", "citations_pending", "ready_for_platform_review"].includes(state) ? "Ninguno: el proceso sigue en plataforma; puedes volver más tarde."
+      : state === "ready_for_entity_review" ? "Pulsa «Revisar y validar bases»."
+      : state === "discrepancy_reported" ? "Abre la revisión para consultar o actualizar la discrepancia."
+      : ["processing", "citations_pending"].includes(state) ? "Espera a que termine la verificación técnica de las citas."
       : requested ? "Ninguno: tu solicitud está registrada; plataforma debe interpretar las bases."
       : "Pulsa «Solicitar revisión de bases» para registrar tu petición.";
     const stateLabels = { done: "Hecho", current: "En este punto", pending: "Pendiente", blocked: "Con incidencia" };
@@ -335,6 +342,58 @@
     return payload.data;
   }
 
+  async function submitBasesDecision(canonicalKey, action, note = "") {
+    const current = window.CredentialsAuth?.getSession?.();
+    if (!current?.accessToken || !current?.tenantId) throw new Error("La sesión de la entidad no está disponible.");
+    const response = await fetch("/api/bases-review-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) },
+      body: JSON.stringify({ canonicalKey, action, note })
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) throw new Error(payload?.error || `No se pudo guardar la decisión (HTTP ${response.status}).`);
+    basesReviewStates.set(canonicalKey, payload.data);
+    applyBasesReviewState(canonicalKey, payload.data);
+    return payload.data;
+  }
+
+  function closeBasesEntityReview() {
+    document.querySelector("[data-bases-entity-modal]")?.remove();
+    document.querySelectorAll("[data-hidden-for-bases-review]").forEach((node) => {
+      node.hidden = false;
+      node.style.removeProperty("display");
+      node.removeAttribute("data-hidden-for-bases-review");
+    });
+  }
+
+  async function openBasesEntityReview(canonicalKey) {
+    const state = await loadBasesReviewState(canonicalKey);
+    if (!state) throw new Error("No se pudo recuperar la lectura de las bases.");
+    document.querySelectorAll("[data-constructed-doc-modal], [data-candidature-panel-modal]").forEach((node) => {
+      node.hidden = true;
+      node.style.display = "none";
+      node.setAttribute("data-hidden-for-bases-review", "true");
+    });
+    const clauses = (state.reviewItems || []).flatMap((item) => item.sections || []);
+    const evidence = clauses.length ? clauses.map((clause) => `
+      <article class="plain-note"><strong>${escapeHtml(coreSectionLabels[clause.section] || clause.section)}</strong>
+        <span>${escapeHtml(clause.text || "Cláusula sin texto legible")}</span>
+        ${clause.evidenceExcerpt ? `<small>Cita: “${escapeHtml(clause.evidenceExcerpt)}”</small>` : ""}
+        ${clause.sourceUrl ? `<a href="${escapeHtml(clause.sourceUrl)}" target="_blank" rel="noreferrer">Abrir bases oficiales${clause.sourcePage ? ` · página ${escapeHtml(clause.sourcePage)}` : ""}</a>` : ""}
+      </article>`).join("") : `<div class="plain-note"><strong>Sin cláusulas revisables</strong><span>La verificación técnica todavía no ha preparado evidencia suficiente.</span></div>`;
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-backdrop" data-bases-entity-modal data-canonical-key="${escapeHtml(canonicalKey)}">
+        <article class="modal candidature-panel-modal action" role="dialog" aria-modal="true" aria-labelledby="bases-entity-title">
+          <div class="panel-heading"><div><p class="eyebrow">Decisión experta del tenant</p><h2 id="bases-entity-title">Validar bases para esta candidatura</h2></div><button class="icon-button" data-close-bases-entity type="button" aria-label="Cerrar"><i data-lucide="x"></i></button></div>
+          <div class="plain-note"><strong>Qué estás firmando</strong><span>Confirmas que estas cláusulas reflejan las bases para tu entidad. La decisión no afecta a otros tenants y queda auditada.</span></div>
+          <div class="bases-entity-evidence">${evidence}</div>
+          <label><span>Discrepancia detectada</span><textarea data-bases-discrepancy-note rows="3" maxlength="3000" placeholder="Explica qué cláusula o interpretación debe revisarse..."></textarea></label>
+          <div class="button-row"><button class="primary-action" data-confirm-bases-accept type="button" ${state.canAccept ? "" : "disabled"}>Validar para esta candidatura</button><button class="ghost-action" data-confirm-bases-discrepancy type="button" ${state.canReportDiscrepancy ? "" : "disabled"}>Señalar discrepancia</button></div>
+        </article>
+      </div>`);
+    window.lucide?.createIcons();
+  }
+
   function formatReviewDate(value) {
     if (!value) return "";
     return new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -342,7 +401,7 @@
 
   function applyBasesReviewState(canonicalKey, state) {
     const hasRequest = Boolean(state?.requestId);
-    const approved = state?.state === "approved";
+    const approved = ["approved", "accepted_by_entity"].includes(state?.state);
     document.querySelectorAll(`[data-bases-review-status="${CSS.escape(canonicalKey)}"]`).forEach((node) => {
       const requested = hasRequest ? `Solicitada el ${formatReviewDate(state.requestedAt)}. ` : "";
       node.textContent = `${requested}${state?.message || ""}`.trim();
@@ -350,6 +409,10 @@
     document.querySelectorAll(`[data-bases-review-request="${CSS.escape(canonicalKey)}"]`).forEach((node) => {
       node.disabled = approved || (hasRequest && !state.canRequestAgain);
       node.textContent = approved ? "Bases aprobadas" : hasRequest ? state.canRequestAgain ? "Recordar revisión" : "Revisión solicitada" : "Solicitar revisión de bases";
+    });
+    const pack = readWorkspacePackage();
+    if (pack?.id === canonicalKey) document.querySelectorAll(".constructed-doc-generation").forEach((node) => {
+      node.innerHTML = `${draftActionButtons(pack)}<div data-draft-agent-status="${escapeHtml(canonicalKey)}"></div>`;
     });
     updateSolicitudPhases(canonicalKey);
   }
@@ -377,7 +440,9 @@
   }
 
   function refreshVisibleBasesReviewStates() {
-    const keys = new Set([...document.querySelectorAll("[data-bases-review-request]")].map((node) => node.dataset.basesReviewRequest).filter(Boolean));
+    const selectors = "[data-bases-review-request], [data-bases-review-load], [data-bases-entity-review], [data-solicitud-phases]";
+    const keys = new Set([...document.querySelectorAll(selectors)].map((node) => node.dataset.basesReviewRequest
+      || node.dataset.basesReviewLoad || node.dataset.basesEntityReview || node.dataset.solicitudPhases).filter(Boolean));
     keys.forEach(loadBasesReviewState);
   }
 
@@ -418,6 +483,8 @@
     const pack = readWorkspacePackage();
     const doc = documentBuildPlan(pack || {})[Number(index)];
     if (!doc) return;
+    const run = latestDraftRuns.get(pack?.id) || null;
+    const generatedDocument = generatedDocumentFor(pack, doc);
     document.querySelector("[data-candidature-panel-modal]")?.remove();
     document.querySelector("[data-constructed-doc-modal]")?.remove();
     document.body.insertAdjacentHTML("beforeend", `
@@ -429,12 +496,13 @@
             <button class="icon-button" data-close-constructed-doc type="button" aria-label="Cerrar visor"><i data-lucide="x"></i></button>
           </div>
           <div class="constructed-doc-workspace">
-            <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc)))}"></iframe>
+            <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocument))}"></iframe>
             <aside class="constructed-doc-sidebar" aria-label="Controles de la plantilla">
               <div class="solicitud-phases" data-solicitud-phases="${escapeHtml(pack?.id)}">${solicitudPhases(pack)}</div>
-              <div class="plain-note"><strong>Borrador de trabajo, no documento final</strong><span>Los campos disponibles aparecen pre-rellenados; firma, importes y datos sin evidencia siguen pendientes.</span></div>
+              <div class="plain-note"><strong>Borrador de trabajo · No es el documento final</strong><span>Los campos disponibles aparecen pre-rellenados; firma, importes y datos sin evidencia siguen pendientes.</span></div>
               <details class="constructed-doc-help"><summary>¿Solo aparece el esqueleto?</summary><p>Genera una nueva versión para completar los documentos redactables, incluido este, usando solo bases verificadas y hechos aprobados.</p></details>
               <button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="folder-key"></i> Gestionar conocimiento</button>
+              ${generatedDocument && run?.id ? `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(pack?.id)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> Editar borrador</button>` : ""}
               <div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${escapeHtml(pack?.id)}"></div></div>
             </aside>
           </div>
@@ -466,7 +534,15 @@
     const doc = documentBuildPlan(pack || {})[Number(modal.dataset.documentIndex)];
     const frame = modal.querySelector(".constructed-doc-frame");
     if (!doc || !frame) return;
-    frame.srcdoc = constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc));
+    const run = latestDraftRuns.get(canonicalKey);
+    const generatedDocument = generatedDocumentFor(pack, doc);
+    frame.srcdoc = constructedDocumentHtml(doc, pack, generatedDocument);
+    const editorButton = modal.querySelector("[data-document-version-edit]");
+    if (generatedDocument && run?.id && !editorButton) {
+      modal.querySelector("[data-private-knowledge-open]")?.insertAdjacentHTML("afterend",
+        `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(canonicalKey)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> Editar borrador</button>`);
+      window.lucide?.createIcons();
+    }
   }
 
   function recommendationFor(item) {
@@ -602,7 +678,7 @@
             <p class="eyebrow">Expediente seleccionado</p>
             <h2>${pack.title}</h2>
           </div>
-          <div class="requirements-heading-actions"><button class="ghost-action" data-workspace-back type="button"><i data-lucide="arrow-left"></i> Volver al plan</button>${badge("Preseleccionada", "review")}</div>
+          <div class="requirements-heading-actions"><button class="ghost-action" data-workspace-back type="button"><i data-lucide="arrow-left"></i> Volver a candidaturas</button>${badge("Preseleccionada", "review")}</div>
         </div>
         ${projectStage(pack)}
         <div class="requirements-summary">
@@ -637,7 +713,7 @@
           ${panel("documents", `${basesClarityPanel(pack)}${constructedDocsSummary(pack)}`, workspaceTargetTab === "documents")}
           ${panel("steps", `<div class="compact-list">${list(pack.steps)}</div>`, workspaceTargetTab === "steps")}
           ${panel("checklist", `<div class="compact-tasks">${checklist()}</div>`, workspaceTargetTab === "checklist")}
-          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>Genera aquí una versión pública o personalizada. Cada ejecución crea una versión nueva y conserva la anterior para revisión y auditoría.</span></div>${draftActionButtons(pack)}<div data-draft-agent-status="${pack.id}"></div><div class="compact-draft">${outline()}</div>`, workspaceTargetTab === "draft")}
+          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>Genera aquí una versión pública o personalizada. Cada ejecución crea una versión nueva y conserva la anterior para revisión y auditoría.</span></div><div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${pack.id}"></div></div><div class="compact-draft">${outline()}</div>`, workspaceTargetTab === "draft")}
         </div>
       </article>
     `;
@@ -706,6 +782,34 @@
 
   document.addEventListener("click", async (event) => {
     if (!(event.target instanceof Element)) return;
+    const closeBasesReview = event.target.closest("[data-close-bases-entity]");
+    const basesBackdrop = event.target.closest("[data-bases-entity-modal]");
+    if (closeBasesReview || (basesBackdrop && event.target === basesBackdrop)) {
+      closeBasesEntityReview();
+      return;
+    }
+    const basesEntityReview = event.target.closest("[data-bases-entity-review]");
+    if (basesEntityReview) {
+      try { await openBasesEntityReview(basesEntityReview.dataset.basesEntityReview); }
+      catch (error) { if (typeof showToast === "function") showToast(error?.message || "No se pudo abrir la validación de bases."); }
+      return;
+    }
+    const basesDecision = event.target.closest("[data-confirm-bases-accept], [data-confirm-bases-discrepancy]");
+    if (basesDecision) {
+      const modal = basesDecision.closest("[data-bases-entity-modal]");
+      const action = basesDecision.hasAttribute("data-confirm-bases-accept") ? "accept" : "report_discrepancy";
+      const note = modal?.querySelector("[data-bases-discrepancy-note]")?.value || "";
+      basesDecision.disabled = true;
+      try {
+        const result = await submitBasesDecision(modal?.dataset.canonicalKey, action, note);
+        closeBasesEntityReview();
+        if (typeof showToast === "function") showToast(result.message);
+      } catch (error) {
+        basesDecision.disabled = false;
+        if (typeof showToast === "function") showToast(error?.message || "No se pudo guardar la decisión.");
+      }
+      return;
+    }
     const closePanel = event.target.closest("[data-close-candidature-panel]");
     if (closePanel && (!closePanel.classList.contains("modal-backdrop") || event.target === closePanel)) {
       document.querySelector("[data-candidature-panel-modal]")?.remove();
@@ -805,6 +909,15 @@
     const canonicalKey = event.detail?.canonicalKey;
     if (!canonicalKey) return;
     latestDraftRuns.set(canonicalKey, event.detail.run || null);
+    updateOpenConstructedDocument(canonicalKey);
+    updateSolicitudPhases(canonicalKey);
+  });
+  window.addEventListener("draft-document-version-updated", (event) => {
+    const canonicalKey = event.detail?.canonicalKey;
+    const run = latestDraftRuns.get(canonicalKey);
+    if (!canonicalKey || !run || run.id !== event.detail?.runId) return;
+    latestDraftRuns.set(canonicalKey, { ...run, output_json: event.detail.content || run.output_json,
+      human_review: Object.prototype.hasOwnProperty.call(event.detail, "review") ? event.detail.review : run.human_review });
     updateOpenConstructedDocument(canonicalKey);
     updateSolicitudPhases(canonicalKey);
   });

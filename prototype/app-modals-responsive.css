@@ -25,6 +25,15 @@
 .document-viewer-heading .button-row { width: auto; }
 .document-viewer-frame { width: 100%; height: min(64vh, 720px); border: 1px solid var(--line); border-radius: 7px; background: #f4f6f5; }
 .document-viewer-fallback { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+[data-bases-entity-modal] .modal, [data-document-version-modal] .modal { width: min(1100px, 96vw); max-height: 90vh; padding: 24px; }
+[data-bases-entity-modal] label, [data-document-version-modal] label { display: grid; gap: 7px; margin-top: 14px; color: var(--ink); font-weight: 700; }
+[data-bases-entity-modal] textarea, [data-document-version-modal] textarea { width: 100%; min-height: 84px; resize: vertical; padding: 11px 12px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--ink); font: inherit; font-weight: 400; line-height: 1.5; }
+.bases-entity-evidence, [data-document-version-fields] { display: grid; gap: 10px; margin-top: 14px; }
+.bases-entity-evidence { max-height: 42vh; overflow: auto; overscroll-behavior: contain; }
+.bases-entity-evidence .plain-note { margin: 0; }
+[data-document-version-modal] details { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+[data-document-version-modal] details summary { color: var(--ink); font-weight: 700; cursor: pointer; }
+[data-document-version-modal] details .button-row { margin-top: 10px; }
 
 @media (max-width: 760px) {
   .document-viewer-layout { grid-template-columns: 1fr; }

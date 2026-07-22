@@ -19,8 +19,10 @@ El catálogo público se comparte entre entidades. Perfil, documentos, fragmento
 | Resultado de encaje | Privado | Tenant + versión de convocatoria + perfil aprobado |
 | Candidatura | Privado | Decisión humana y etapa del expediente |
 | Interpretación de bases | Plataforma revisada | Requisitos citados para una versión oficial |
+| Aceptación de bases | Privado del tenant | Decisión experta, hash y discrepancia para una versión oficial |
 | Ejecución de agente | Privado o plataforma | Cola, permiso, entrada versionada y resultado |
 | Borrador y revisión | Privado | Salida, hash, aprobación e invalidación |
+| Versión documental humana | Privado del tenant | Edición inmutable, procedencia, estado y hash aprobable |
 | Evento de auditoría | Según objeto | Actor, tenant, acción, objeto, versión y fecha |
 
 ## Invariantes
