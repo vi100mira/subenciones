@@ -254,6 +254,71 @@
     return `<div class="plain-note"><strong>Salida gobernada pendiente</strong><span>El redactor debe mapear todos los documentos exigidos, declarar faltantes y quedar aprobado antes de generar DOCX/PDF privados.</span></div>`;
   }
 
+  function solicitudPhases(pack) {
+    const reviewData = basesReviewStates.get(pack?.id) || null;
+    const run = latestDraftRuns.get(pack?.id) || null;
+    const basesApproved = pack?.requirementsContract?.documentaryGate === "requirements_approved";
+    const limitsVerified = pack?.proposalConstraints?.draftingGate === "constraints_verified";
+    const state = basesApproved ? "approved" : reviewData?.state || "unknown";
+    const requested = Boolean(reviewData?.requestId);
+    const review = run?.human_review;
+    const reading = ["citations_pending", "ready_for_platform_review", "approved"].includes(state) ? "done"
+      : state === "processing" ? "current" : state === "failed" ? "blocked" : "pending";
+    const validation = state === "approved" ? "done"
+      : ["citations_pending", "ready_for_platform_review"].includes(state) ? "current" : "pending";
+    const limits = limitsVerified ? "done" : basesApproved ? "current" : "pending";
+    const generating = ["queued", "preparing_context", "generating", "awaiting_provider"].includes(run?.status);
+    const draft = review?.status === "approved" ? "done"
+      : run?.status === "review_required" || generating ? "current"
+      : run?.status === "failed" ? "blocked" : "pending";
+    const phases = [
+      { title: "Lectura de bases con IA", actor: "Automática", status: reading,
+        detail: reading === "done" ? "Las bases están leídas con citas literales."
+          : reading === "current" ? "En cola. Se procesará sin acción por tu parte."
+          : reading === "blocked" ? "La última lectura falló; plataforma debe intervenir."
+          : "La plataforma debe localizar e interpretar las bases oficiales." },
+      { title: "Validación de plataforma", actor: "Analista de plataforma", status: validation,
+        detail: validation === "done" ? "Cláusulas y citas aprobadas."
+          : state === "ready_for_platform_review" ? "Citas preparadas; falta la aprobación del analista."
+          : state === "citations_pending" ? "Debe verificar las citas contra las bases oficiales."
+          : "Se activará al terminar la lectura." },
+      { title: "Límites de redacción", actor: "Automática tras la validación", status: limits,
+        detail: limits === "done" ? "Máximos de páginas y formato confirmados."
+          : limits === "current" ? "Bases aprobadas; faltan confirmar los máximos formales."
+          : "Se activará con las bases aprobadas." },
+      { title: "Borrador con IA y tu revisión", actor: "Tú la inicias y la apruebas", status: draft,
+        detail: draft === "done" ? "Borrador aprobado; puedes exportarlo."
+          : run?.status === "review_required" ? "El borrador espera tu revisión."
+          : generating ? "El redactor está trabajando; esta vista se actualizará sola."
+          : draft === "blocked" ? "La generación falló; consulta el detalle inferior."
+          : basesApproved && limitsVerified ? "Puedes solicitarlo con los botones inferiores."
+          : "Se habilitará al completar los pasos anteriores." }
+    ];
+    const next = draft === "done" ? "Exporta el DOCX/PDF desde el nodo Borrador Word."
+      : run?.status === "review_required" ? "Abre el borrador y apruébalo o recházalo."
+      : generating ? "Ninguno: espera a que el redactor termine."
+      : draft === "blocked" ? "Lee el motivo del fallo y solicita una nueva versión."
+      : basesApproved && limitsVerified ? "Pulsa «Generar borrador personalizado»."
+      : basesApproved ? "Ninguno: plataforma debe verificar los límites de redacción."
+      : state === "failed" ? "Ninguno: plataforma debe resolver el fallo de lectura."
+      : ["processing", "citations_pending", "ready_for_platform_review"].includes(state) ? "Ninguno: el proceso sigue en plataforma; puedes volver más tarde."
+      : requested ? "Ninguno: tu solicitud está registrada; plataforma debe interpretar las bases."
+      : "Pulsa «Solicitar revisión de bases» para registrar tu petición.";
+    const stateLabels = { done: "Hecho", current: "En este punto", pending: "Pendiente", blocked: "Con incidencia" };
+    return `<strong>¿En qué punto está esta solicitud?</strong>
+      <ol>${phases.map((phase) => `<li class="is-${phase.status}"><span class="phase-title">${phase.title}<em>${stateLabels[phase.status]}</em></span><span class="phase-actor">${phase.actor}</span><span class="phase-detail">${phase.detail}</span></li>`).join("")}</ol>
+      <span class="phase-next"><b>Tu siguiente paso:</b> ${next}</span>`;
+  }
+
+  function updateSolicitudPhases(canonicalKey) {
+    if (!canonicalKey) return;
+    const pack = readWorkspacePackage();
+    if (!pack || pack.id !== canonicalKey) return;
+    document.querySelectorAll(`[data-solicitud-phases="${CSS.escape(canonicalKey)}"]`).forEach((node) => {
+      node.innerHTML = solicitudPhases(pack);
+    });
+  }
+
   async function requestBasesReview(button) {
     const current = window.CredentialsAuth?.getSession?.();
     if (!current?.accessToken || !current?.tenantId) throw new Error("La sesión de la entidad no está disponible.");
@@ -286,6 +351,7 @@
       node.disabled = approved || (hasRequest && !state.canRequestAgain);
       node.textContent = approved ? "Bases aprobadas" : hasRequest ? state.canRequestAgain ? "Recordar revisión" : "Revisión solicitada" : "Solicitar revisión de bases";
     });
+    updateSolicitudPhases(canonicalKey);
   }
 
   async function loadBasesReviewState(canonicalKey) {
@@ -365,6 +431,7 @@
           <div class="constructed-doc-workspace">
             <iframe class="constructed-doc-frame" title="Vista previa de ${escapeHtml(doc.title)}" sandbox srcdoc="${escapeHtml(constructedDocumentHtml(doc, pack, generatedDocumentFor(pack, doc)))}"></iframe>
             <aside class="constructed-doc-sidebar" aria-label="Controles de la plantilla">
+              <div class="solicitud-phases" data-solicitud-phases="${escapeHtml(pack?.id)}">${solicitudPhases(pack)}</div>
               <div class="plain-note"><strong>Borrador de trabajo, no documento final</strong><span>Los campos disponibles aparecen pre-rellenados; firma, importes y datos sin evidencia siguen pendientes.</span></div>
               <details class="constructed-doc-help"><summary>¿Solo aparece el esqueleto?</summary><p>Genera una nueva versión para completar los documentos redactables, incluido este, usando solo bases verificadas y hechos aprobados.</p></details>
               <button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="folder-key"></i> Gestionar conocimiento</button>
@@ -739,6 +806,7 @@
     if (!canonicalKey) return;
     latestDraftRuns.set(canonicalKey, event.detail.run || null);
     updateOpenConstructedDocument(canonicalKey);
+    updateSolicitudPhases(canonicalKey);
   });
   window.addEventListener("role-session-applied", () => {
     latestDraftRuns.clear();

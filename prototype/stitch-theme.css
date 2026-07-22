@@ -1004,6 +1004,25 @@ body.sidebar-collapsed .sidebar-note {
 }
 .constructed-doc-sidebar { min-width: 0; padding: 14px; overflow: auto; background: #fff; }
 .constructed-doc-sidebar > * { width: 100%; margin: 0 0 12px; }
+.solicitud-phases { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfdfc; }
+.solicitud-phases > strong { display: block; font-size: 13px; }
+.solicitud-phases ol { margin: 10px 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.solicitud-phases li { position: relative; padding: 8px 10px 8px 26px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.solicitud-phases li::before { content: ""; position: absolute; left: 10px; top: 12px; width: 9px; height: 9px; border-radius: 999px; background: #c6cdc9; }
+.solicitud-phases li.is-done { border-color: rgba(105, 185, 134, 0.45); background: var(--novaterra-mint-soft); }
+.solicitud-phases li.is-done::before { background: var(--green); }
+.solicitud-phases li.is-current { border-color: #d8b35d; background: #fff8e6; }
+.solicitud-phases li.is-current::before { background: #d8a429; }
+.solicitud-phases li.is-blocked { border-color: #d99a8f; background: #fdf1ef; }
+.solicitud-phases li.is-blocked::before { background: #c05b4d; }
+.solicitud-phases .phase-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-weight: 800; font-size: 12.5px; }
+.solicitud-phases .phase-title em { flex: 0 0 auto; font-style: normal; font-weight: 700; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.solicitud-phases li.is-current .phase-title em { color: #7a4b00; }
+.solicitud-phases li.is-done .phase-title em { color: var(--green); }
+.solicitud-phases li.is-blocked .phase-title em { color: #c05b4d; }
+.solicitud-phases .phase-actor { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); }
+.solicitud-phases .phase-detail { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; color: #4f5568; }
+.solicitud-phases .phase-next { display: block; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; }
 .constructed-doc-help { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfdfc; }
 .constructed-doc-help summary { cursor: pointer; font-weight: 800; }
 .constructed-doc-help p { margin: 8px 0 0; font-size: 13px; }
@@ -3425,6 +3444,8 @@ body.sidebar-collapsed .sidebar-note {
   .constructed-doc-frame { grid-row: 2; border-right: 0; border-top: 1px solid var(--line); }
   .constructed-doc-sidebar { grid-row: 1; max-height: 34dvh; }
   .constructed-doc-sidebar > .plain-note span { display: none; }
+  .solicitud-phases .phase-actor, .solicitud-phases .phase-detail { display: none; }
+  .solicitud-phases li { padding: 6px 8px 6px 24px; }
   .constructed-doc-footer { align-items: stretch; flex-direction: column; padding: 10px 12px; }
   .constructed-doc-footer .button-row, .constructed-doc-footer button { width: 100%; }
   .draft-preview-page { padding: 20px 18px; }
