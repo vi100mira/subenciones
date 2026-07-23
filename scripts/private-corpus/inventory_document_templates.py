@@ -29,7 +29,7 @@ SENSITIVE = re.compile(
     r"\b(?:persona becada|persona beneficiaria|menor(?:es)?|salud|discapacidad|migrante|violencia)\b",
     re.IGNORECASE,
 )
-SUPPORTED = {".docx", ".pdf", ".xlsx"}
+SUPPORTED = {".docx", ".pdf", ".xlsx", ".jpg", ".jpeg", ".png"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -101,6 +101,15 @@ def read_xlsx(path: Path) -> tuple[str, dict]:
         "empty_cell_ratio": round(empty / max(1, cells), 3),
     }
 
+def read_image(path: Path) -> tuple[str, dict]:
+    return path.name, {
+        "format": "image",
+        "form_fields": 0,
+        "cells": 0,
+        "empty_cell_ratio": 0,
+        "content_read": False,
+    }
+
 
 def document_kind(path: Path, text: str) -> str:
     haystack = f"{path.name}\n{text[:20_000]}".lower()
@@ -147,6 +156,8 @@ def classify(path: Path, text: str, structure: dict) -> dict:
         candidate = bool(structure.get("empty_form_fields") or (name_hint and placeholders >= 1))
     elif structure["format"] == "xlsx":
         candidate = bool(name_hint or placeholders >= 2)
+    elif structure["format"] == "image":
+        candidate = False
     else:
         candidate = bool(placeholders >= 2 or name_hint or (empty_form and len(text) < 8_000))
         if len(text) > 30_000 and placeholders < 5 and structure["empty_cell_ratio"] < 0.1:
@@ -213,7 +224,8 @@ def main() -> None:
     if output.is_relative_to(corpus):
         raise ValueError("El inventario no puede escribirse dentro del corpus fuente.")
 
-    readers = {".docx": read_docx, ".pdf": read_pdf, ".xlsx": read_xlsx}
+    readers = {".docx": read_docx, ".pdf": read_pdf, ".xlsx": read_xlsx,
+               ".jpg": read_image, ".jpeg": read_image, ".png": read_image}
     documents: list[dict] = []
     errors: list[dict] = []
     for path in sorted(corpus.rglob("*")):
@@ -223,9 +235,13 @@ def main() -> None:
         relative = str(path.relative_to(corpus))
         try:
             text, structure = readers[suffix](path)
+            source_hash = sha256(path)
+            document_id = hashlib.sha256(
+                f"{source_hash}:{relative}".encode("utf-8")
+            ).hexdigest()[:16]
             documents.append({
-                "document_id": sha256(path)[:16],
-                "source_sha256": sha256(path),
+                "document_id": document_id,
+                "source_sha256": source_hash,
                 "relative_path": relative,
                 "extension": suffix,
                 **classify(path, text, structure),

@@ -1,7 +1,10 @@
 (function () {
   const sessionKey = "subvenciones.auth.session.v1";
+  const returnScreenKey = "subvenciones.auth.return-screen.v1";
+  const noticeKey = "subvenciones.auth.notice.v1";
   const protectedScreens = new Set(["platform", "operations"]);
   let lastError = "";
+  let redirecting = false;
 
   function saveSession(session) {
     const cleanSession = { ...session, issuedAt: new Date().toISOString() };
@@ -11,7 +14,29 @@
   }
 
   function getSession() {
-    try { return JSON.parse(sessionStorage.getItem(sessionKey) || "null"); } catch { return null; }
+    try {
+      const session = JSON.parse(sessionStorage.getItem(sessionKey) || "null");
+      if (isExpired(session)) { expireSession(session); return null; }
+      return session;
+    } catch { return null; }
+  }
+  function isExpired(session) {
+    const expiresAt = Number(session?.expiresAt || 0);
+    return expiresAt > 0 && Date.now() >= (expiresAt * 1000) - 30_000;
+  }
+  function activeScreen() {
+    return document.querySelector(".screen.is-visible")?.id || "dashboard";
+  }
+  function expireSession(session = null) {
+    if (redirecting) return;
+    redirecting = true;
+    const screen = activeScreen();
+    if (screen && screen !== "welcome") sessionStorage.setItem(returnScreenKey, screen);
+    sessionStorage.setItem(noticeKey, "Tu sesión ha caducado. Vuelve a acceder; no se ha registrado ni enviado ningún documento.");
+    sessionStorage.removeItem(sessionKey);
+    sessionStorage.removeItem("prototype-role");
+    document.body.dataset.role = "";
+    window.dispatchEvent(new CustomEvent("auth-session-expired", { detail: { screen, hadSession: Boolean(session) } }));
   }
 
   function canAccess(screen, session = getSession()) {
@@ -53,6 +78,7 @@
   }
 
   function authHeaders(session = getSession()) {
+    if (isExpired(session)) { expireSession(session); return {}; }
     return session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
   }
 
@@ -64,6 +90,9 @@
   window.CredentialsAuth = {
     getSession,
     getLastError: () => lastError,
+    consumeNotice: () => { const value = sessionStorage.getItem(noticeKey) || ""; sessionStorage.removeItem(noticeKey); return value; },
+    consumeReturnScreen: () => { const value = sessionStorage.getItem(returnScreenKey) || ""; sessionStorage.removeItem(returnScreenKey); return value; },
+    handleUnauthorized: () => expireSession(getSession()),
     canAccess,
     applySession,
     authHeaders,
@@ -80,6 +109,7 @@
           lastError = payload?.error || "No se pudo validar la sesion en servidor.";
           return null;
         }
+        redirecting = false;
         return applySession(saveSession(payload.data));
       } catch {
         lastError = "Servidor de autenticacion no disponible.";
@@ -89,6 +119,8 @@
     logout() {
       sessionStorage.removeItem(sessionKey);
       sessionStorage.removeItem("prototype-role");
+      sessionStorage.removeItem(returnScreenKey);
+      sessionStorage.removeItem(noticeKey);
       document.body.dataset.role = "";
       location.href = "#view-welcome";
       location.reload();

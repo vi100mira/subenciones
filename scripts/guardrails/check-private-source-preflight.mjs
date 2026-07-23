@@ -14,13 +14,14 @@ const localSummary = await policy.summarizeDirectoryHandle({
   name: "PROYECTOS",
   async *values() {
     yield { kind: "file", name: "memoria.pdf", getFile: async () => ({ size: 120_000 }) };
+    yield { kind: "file", name: "dni-representante.jpg", getFile: async () => ({ size: 30_000 }) };
     yield { kind: "file", name: "nota.txt", getFile: async () => ({ size: 50 }) };
     yield { kind: "directory", name: "anexos", async *values() {
       yield { kind: "file", name: "presupuesto.xlsx", getFile: async () => ({ size: 60_000 }) };
     } };
   }
 });
-assert.deepEqual(localSummary, { rootName: "PROYECTOS", totalFiles: 3, supportedFiles: 2, supportedBytes: 180_000 });
+assert.deepEqual(localSummary, { rootName: "PROYECTOS", totalFiles: 4, supportedFiles: 3, supportedBytes: 210_000 });
 
 const endpoint = fs.readFileSync("api/private-source-preflight.ts", "utf8");
 const ingestion = fs.readFileSync("api/ingestion-dispatch.ts", "utf8");

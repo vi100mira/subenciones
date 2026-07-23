@@ -33,7 +33,7 @@ export function assessPrivateSourceManifest(input: unknown, acceptLimited = fals
   if (!manifest.totalFiles) {
     status = "blocked"; reason = "La fuente está vacía.";
   } else if (!manifest.supportedFiles) {
-    status = "blocked"; reason = "No contiene archivos PDF, DOCX o XLSX utilizables.";
+    status = "blocked"; reason = "No contiene archivos PDF, DOCX, XLSX, JPG o PNG utilizables.";
   } else if (manifest.supportedBytes < PRIVATE_PREFLIGHT_EMPTY_BYTES) {
     status = "blocked"; reason = "Los archivos compatibles están vacíos o tienen un tamaño insuficiente.";
   } else if (manifest.supportedFiles < PRIVATE_PREFLIGHT_MIN_FILES || manifest.supportedBytes < PRIVATE_PREFLIGHT_MIN_BYTES) {

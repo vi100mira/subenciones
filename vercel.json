@@ -20,6 +20,9 @@
     "api/source-blob-upload.ts": {
       "maxDuration": 60
     },
+    "api/private-annex-file.ts": {
+      "maxDuration": 60
+    },
     "api/source-connections.ts": {
       "maxDuration": 30
     },

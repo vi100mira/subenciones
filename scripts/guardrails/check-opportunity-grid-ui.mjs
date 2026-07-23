@@ -51,7 +51,7 @@ assert(tenantRecommendations.includes("function publishLoadState") && tenantReco
 assert(styles.includes(".metric > summary > strong"), "El tamano del contador se aplica tambien al contenido desplegado");
 assert(requirements.includes("data-workspace-back") && requirements.includes("Volver a candidaturas"), "El expediente documental no ofrece una salida clara");
 assert(requirements.includes("data-constructed-doc-view") && requirements.includes("data-download-constructed-doc"), "Las plantillas preconstruidas no disponen de visor y descarga");
-assert(requirements.includes("No es el documento final") && requirements.includes("constructedDocumentHtml(doc, pack") && stitch.includes(".constructed-doc-frame"), "El visor no muestra el mismo documento que se descarga");
+assert(/no es documento final/i.test(requirements) && requirements.includes("constructedDocumentHtml(doc, pack") && stitch.includes(".constructed-doc-frame"), "El visor no muestra el mismo documento que se descarga");
 assert(requirements.includes("constructed-doc-generation") && requirements.includes("draftActionButtons(pack)") && requirements.includes("incluido este"), "El visor de esqueleto no conecta con la generación versionada de la candidatura");
 assert(index.includes("constructed-document-prefill.js") && requirements.includes("ConstructedDocumentPrefill") && requirements.includes("draft-agent-run-updated"), "El visor documental no pre-rellena campos ni recibe las versiones generadas");
 assert(requirements.includes("data-bases-review-request") && requirements.includes("data-open-bases-status") && !requirements.includes("Primero: revisar y aprobar las bases"), "El bloqueo de bases sigue siendo un callejón sin salida para el tenant");

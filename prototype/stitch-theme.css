@@ -3626,8 +3626,37 @@ body:has([data-constructed-doc-modal]) #help-assistant-panel { display: none; }
 .master-fact-meta .conflict { background: #fff1cf; color: #8a5a12; }
 .master-fact-decision { display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 13px; font-weight: 750; }
 .master-fact-decision select { min-width: 180px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: inherit; }
+.annex-viewer-backdrop { z-index: 120; padding: 16px; }
+.annex-viewer-modal { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(1480px, calc(100vw - 32px)); height: calc(100dvh - 32px); max-height: none; padding: 0; overflow: hidden; background: #fff; }
+.annex-viewer-heading { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.annex-viewer-heading h2 { margin: 3px 0 0; overflow-wrap: anywhere; }
+.annex-viewer-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, 350px); min-height: 0; background: #edf2f0; }
+.annex-viewer-sidebar { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 14px; overflow: auto; background: #fff; }
+.annex-viewer-sidebar > * { width: 100%; margin: 0; }
+.annex-viewer-status { display: grid; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.annex-viewer-status .badge { justify-self: start; }
+.annex-viewer-sidebar dl { display: grid; gap: 8px; }
+.annex-viewer-sidebar dl div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding-bottom: 7px; border-bottom: 1px solid #edf0ee; }
+.annex-viewer-sidebar dt { color: var(--muted); font-size: 12px; font-weight: 750; }
+.annex-viewer-sidebar dd { margin: 0; overflow-wrap: anywhere; font-size: 12px; font-weight: 750; }
+.annex-viewer-notice { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid #b9d6c7; border-radius: 8px; color: #285c47; background: #eff8f3; font-size: 13px; font-weight: 750; }
+.annex-viewer-notice svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.annex-viewer-stage { position: relative; min-height: 0; overflow: auto; border-right: 1px solid var(--line); background: #36423e; }
+.annex-viewer-stage iframe, .annex-viewer-stage img { display: block; width: 100%; height: 100%; min-height: 0; border: 0; object-fit: contain; background: #fff; }
+.annex-viewer-empty { display: grid; place-items: center; align-content: center; gap: 10px; height: 100%; min-height: 420px; padding: 30px; color: #eaf1ed; text-align: center; }
+.annex-viewer-empty svg { width: 42px; height: 42px; }
+.annex-viewer-empty span { max-width: 520px; color: #c8d4ce; line-height: 1.5; }
+.annex-viewer-watermark { position: absolute; right: 14px; bottom: 12px; padding: 6px 9px; border-radius: 6px; color: #fff; background: rgba(22, 33, 29, .72); font-size: 11px; pointer-events: none; }
+.annex-viewer-modal > footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 18px; border-top: 1px solid var(--line); background: #fff; }
+.annex-viewer-modal > footer span { color: var(--muted); font-size: 12px; }
 @media (max-width: 820px) {
   .private-knowledge-steps, .private-source-options, .guided-knowledge-grid, .master-fact-groups, .document-agent-capabilities, .preparation-route-options, .plan-area-detail-grid, .knowledge-operation-list { grid-template-columns: 1fr; }
   .private-knowledge-status { align-items: flex-start; flex-direction: column; }
   .private-template-prompt { align-items: flex-start; flex-direction: column; }
+  .annex-viewer-backdrop { padding: 0; }
+  .annex-viewer-modal { width: 100vw; height: 100dvh; border-radius: 0; }
+  .annex-viewer-heading { grid-template-columns: minmax(0, 1fr) auto; }
+  .annex-viewer-heading > .ghost-action { display: none; }
+  .annex-viewer-workspace { grid-template-columns: 1fr; grid-template-rows: minmax(360px, 55vh) auto; overflow: auto; }
+  .annex-viewer-sidebar { overflow: visible; }
 }

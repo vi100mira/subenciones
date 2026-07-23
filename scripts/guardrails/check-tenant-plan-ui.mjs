@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { chromium } from "playwright";
 
 const policy = fs.readFileSync("src/tenantPlan.ts", "utf8");
@@ -32,16 +33,37 @@ let ingestionRequests = 0;
 let privateSources = [];
 let privateIngestionRuns = [];
 let privateReviewFacts = [];
+let privateDocumentCandidates = [];
+const previewPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+const previewPngHash = createHash("sha256").update(previewPng).digest("hex");
 await context.addInitScript((value) => {
   sessionStorage.setItem("subvenciones.auth.session.v1", JSON.stringify(value));
   sessionStorage.setItem("prototype-role", "entity");
 }, session);
 await context.route("**/api/**", async (route) => {
-  const path = new URL(route.request().url()).pathname;
+  const requestUrl = new URL(route.request().url());
+  const path = requestUrl.pathname;
+  if (path === "/api/auth-session" && route.request().method() === "POST") {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: {
+      ...session, accessToken: "renewed-ui-check", expiresAt: Math.floor(Date.now() / 1000) + 3600
+    } }) });
+    return;
+  }
+  if (path === "/api/private-annex-file" && requestUrl.searchParams.get("mode") === "preview") {
+    await route.fulfill({ status: 200, contentType: "application/pdf", body: Buffer.from("%PDF-1.4\n%%EOF") });
+    return;
+  }
   if (path === "/api/ingestion-dispatch") ingestionRequests += 1;
   if (path === "/api/tenant-agent-governance" && route.request().method() === "PATCH") {
     const body = route.request().postDataJSON();
     if (body.action === "grant_consent" && body.consentType === "ai_processing") aiGranted = true;
+  }
+  if (path === "/api/private-document-candidates" && route.request().method() === "PATCH") {
+    const body = route.request().postDataJSON();
+    for (const review of body.reviews || []) {
+      const candidate = privateDocumentCandidates.find((item) => item.id === review.id);
+      if (candidate) candidate.metadata_json.review_status = review.status;
+    }
   }
   const readyAgents = new Set(["grant_search", "match_agent", "document_review"]);
   if (aiGranted && privateSources.length) readyAgents.add("draft_agent");
@@ -58,6 +80,7 @@ await context.route("**/api/**", async (route) => {
   const data = path === "/api/tenant-agent-governance"
     ? { agents, executionControls, consents: [...(aiGranted ? [{ consent_type: "ai_processing", status: "granted" }] : []), ...(privateSources.length ? [{ consent_type: "manual_upload", status: "granted" }] : [])], webSource: null, privateSources, privateIngestionRuns, profileReviewState: "approved" }
     : path === "/api/tenant-profile-review" ? privateReviewFacts
+      : path === "/api/private-document-candidates" ? privateDocumentCandidates
       : path === "/api/entity-research-runs" ? []
       : path === "/api/tenant-match-runs" ? { run: null, recommendations: [] } : [];
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
@@ -77,11 +100,20 @@ try {
   }
   if ((await plan.locator(".pricing-card.is-current").count()) !== 1) throw new Error("El plan actual no está destacado de forma única");
   if ((await page.locator("#private-knowledge-panel").count()) !== 0) throw new Error("Entidad conserva un panel operativo privado demasiado exhaustivo");
+  const commonKnowledgeNav = page.locator('.nav-item[data-screen="knowledge"]');
+  if (!(await commonKnowledgeNav.isVisible())) throw new Error("La base común no aparece para una entidad con preparación documental");
+  await commonKnowledgeNav.click();
+  const commonKnowledgeText = await page.locator("#common-knowledge-library").innerText();
+  for (const expected of ["Biblioteca común para todas las candidaturas", "Documentación fuente", "Datos reutilizables", "Añadir o actualizar documentación"]) {
+    if (!commonKnowledgeText.includes(expected)) throw new Error(`Base común incompleta: ${expected}`);
+  }
+  await page.screenshot({ path: ".tmp/common-knowledge-library.png", fullPage: true });
+  await page.locator('.nav-item[data-screen="entity"]').click();
   if ((await plan.locator("[data-plan-area-info]").count()) !== 6) throw new Error("Las áreas incluidas no ofrecen puntos de información");
   await plan.locator('[data-plan-area-info="draft_agent"]').click();
   const areaModal = page.locator("[data-plan-area-modal]");
   const areaText = await areaModal.innerText();
-  for (const expected of ["Preparación documental", "Curador de conocimiento", "Redactor documental", "Conocimiento progresivo del tenant", "Gestionar desde Asistentes"]) {
+  for (const expected of ["Preparación documental", "Curador de conocimiento", "Redactor documental", "Conocimiento progresivo del tenant", "Gestionar desde Base común"]) {
     if (!areaText.includes(expected)) throw new Error(`Información de Preparación documental incompleta: ${expected}`);
   }
   if (areaText.includes("Aprobar esta fuente")) throw new Error("Entidad duplica la aprobación de fuentes privadas");
@@ -138,6 +170,62 @@ try {
   privateSources = [{ id: "completed-project-source", label: "Proyectos presentados", kind: "local_simulation", scope: "tenant_private", status: "active", config_json: { preflight: { version: "v1", status: "ready" }, lastInventory: { runId: "completed-private-run", documentsScanned: 350, proposalCount: 11, externalAiCalls: 0, quarantineIndex: { chunks: 148, status: "prepared_pending_review", embeddingState: "not_started" } } } }];
   privateIngestionRuns = [{ id: "completed-private-run", source_connection_id: "completed-project-source", status: "completed", scanned: 350, inserted: 11, finished_at: "2026-07-18T10:30:00.000Z", created_at: "2026-07-18T10:00:00.000Z" }];
   privateReviewFacts = Array.from({ length: 11 }, (_, index) => ({ id: `fact-${index}`, field_key: "mission", suggested_value: `Propuesta institucional ${index + 1}`, source_type: "uploaded_document", evidence_excerpt: `Documento local ${index + 1}`, metadata_json: { data_class: "internal" }, confidence: "medium", status: "pending" }));
+  privateDocumentCandidates = [
+    { id: "document-candidate-1", title: "Estatutos vigentes.pdf", mime_type: "application/pdf", data_class: "internal", source_sha256: "1234567890abcdef", blob_path: null, extraction_status: "pending", metadata_json: { document_candidate: true, recommendation: "reference_only", review_status: "pending" } },
+    { id: "document-candidate-2", title: "DNI representante.jpg", mime_type: "image/jpeg", data_class: "personal", source_sha256: previewPngHash, blob_path: null, extraction_status: "blocked", metadata_json: { document_candidate: true, recommendation: "manual_only", review_status: "pending" } }
+  ];
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/private-document-candidates")),
+    page.evaluate(() => window.dispatchEvent(new Event("role-session-applied")))
+  ]);
+  await commonKnowledgeNav.click();
+  const documentCandidate = page.locator(".master-fact-card").filter({ hasText: "Estatutos vigentes.pdf" });
+  if ((await documentCandidate.count()) !== 1 || !(await documentCandidate.innerText()).includes("Documento de referencia")) throw new Error("La Base común no muestra la propuesta documental explicada");
+  const restrictedCandidate = page.locator(".master-fact-card").filter({ hasText: "DNI representante.jpg" });
+  await restrictedCandidate.locator("[data-annex-open]").click();
+  const localViewer = page.locator("[data-annex-viewer]");
+  await localViewer.waitFor({ state: "visible" });
+  const localViewerText = await localViewer.innerText();
+  if (!localViewerText.includes("DOCUMENTO DE LA ENTIDAD")
+    || !localViewerText.includes("Clase de datos")) throw new Error(`El documento no se abre en el visor integrado: ${localViewerText.slice(0, 200)}`);
+  page.once("dialog", (dialog) => dialog.accept());
+  await localViewer.locator("[data-annex-local-preview]").setInputFiles({ name: "DNI representante.png", mimeType: "image/png", buffer: previewPng });
+  if (!(await localViewer.isVisible()) || !(await localViewer.innerText()).includes("Acceso restringido y auditado")
+    || (await localViewer.locator("img").count()) !== 1) throw new Error("El visor local restringido no permite comprobar la imagen antes de aprobar");
+  await page.screenshot({ path: ".tmp/common-annex-local-viewer.png" });
+  await localViewer.locator(".annex-viewer-heading [data-annex-viewer-close]").last().click();
+  await documentCandidate.locator("[data-annex-open]").click();
+  await page.locator('[data-annex-viewer] [data-review-status="approved"]').click();
+  await documentCandidate.getByText("Aprobado", { exact: true }).waitFor({ state: "visible" });
+  await documentCandidate.locator("[data-annex-open]").click();
+  const approvedViewer = page.locator("[data-annex-viewer]");
+  if (!(await approvedViewer.innerText()).includes("Guardar original privado")) throw new Error("Un documento aprobado no ofrece almacenamiento Blob");
+  await approvedViewer.locator(".annex-viewer-heading [data-annex-viewer-close]").last().click();
+  privateDocumentCandidates[0].blob_path = "tenants/demo/annex-vault/document-candidate-1/original.pdf";
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/private-document-candidates")),
+    page.evaluate(() => window.dispatchEvent(new Event("role-session-applied")))
+  ]);
+  await documentCandidate.locator("[data-annex-open]").click();
+  const storedViewer = page.locator("[data-annex-viewer]");
+  await storedViewer.waitFor({ state: "visible" });
+  const storedViewerVisible = await storedViewer.isVisible();
+  const storedViewerText = storedViewerVisible ? await storedViewer.innerText() : "";
+  const storedViewerFrames = await storedViewer.locator("iframe").count();
+  if (!storedViewerVisible || !storedViewerText.includes("Blob privado") || storedViewerFrames !== 1) {
+    throw new Error(`El visor autenticado no abre el PDF guardado: visible=${storedViewerVisible}, frames=${storedViewerFrames}, text=${storedViewerText.slice(0, 160)}`);
+  }
+  await page.screenshot({ path: ".tmp/common-annex-private-viewer.png" });
+  await storedViewer.locator(".annex-viewer-heading [data-annex-viewer-close]").last().click();
+  await restrictedCandidate.locator("[data-annex-open]").click();
+  await page.locator('[data-annex-viewer] [data-review-status="restricted"]').click();
+  await restrictedCandidate.getByText("Aprobado · restringido", { exact: true }).waitFor({ state: "visible" });
+  await restrictedCandidate.locator("[data-annex-open]").click();
+  const restrictedApprovedViewer = page.locator("[data-annex-viewer]");
+  if (!(await restrictedApprovedViewer.innerText()).includes("Guardar original privado")) throw new Error("El DNI restringido no ofrece almacenamiento privado");
+  await restrictedApprovedViewer.locator(".annex-viewer-heading [data-annex-viewer-close]").last().click();
+  await page.screenshot({ path: ".tmp/common-document-approval.png", fullPage: true });
+  await page.locator('.nav-item[data-screen="agents"]').click();
   await documentManager.locator('[data-tenant-agent-action="grant-ai"]').click();
   await page.waitForFunction(() => ![...document.querySelectorAll('[data-tenant-agent-action="grant-ai"]')].some((button) => button.offsetParent));
   const completedManagerText = await documentManager.innerText();
@@ -364,6 +452,7 @@ try {
   if ((await socialPlan.locator(".contracted-area.is-contracted").count()) !== 4) throw new Error("Equipo social no limita sus áreas contratadas");
   if ((await socialPlan.locator(".contracted-area.is-unavailable").count()) !== 2) throw new Error("Equipo social no identifica las áreas excluidas");
   if (await socialPage.locator('.nav-item[data-screen="workspace"]').isVisible()) throw new Error("Equipo social conserva Candidatura fuera de su plan");
+  if (await socialPage.locator('.nav-item[data-screen="knowledge"]').isVisible()) throw new Error("Equipo social conserva Base común sin preparación documental");
   if ((await socialPage.locator("#private-knowledge-panel").count()) !== 0) throw new Error("Entidad X conserva el panel operativo privado");
   await socialPlan.locator('[data-plan-area-info="draft_agent"]').click();
   if (!(await socialPage.locator("[data-plan-area-modal]").isVisible())) throw new Error("El área no incluida carece de explicación informativa");
@@ -371,7 +460,27 @@ try {
   if (!socialText.includes("Contratación de Entidad X") || !socialText.includes("Cuota actual\n29 €")) throw new Error("El plan no se adapta a otra entidad");
   await socialContext.close();
 
-  console.log(JSON.stringify({ ok: true, appUrl, plans: 3, contractedAreas: 6, privateKnowledge: "managed-from-assistants", preparationRoutes: 2, candidateTaskInfo: 5, guidedFacts: 11, documentManager: "public-mode-operational", entityXContractedAreas: 4, mobileColumns: 1, screenshot: ".tmp/candidate-task-information.png" }, null, 2));
+  await commonKnowledgeNav.click();
+  await page.evaluate(() => {
+    const expired = JSON.parse(sessionStorage.getItem("subvenciones.auth.session.v1"));
+    expired.expiresAt = Math.floor(Date.now() / 1000) - 60;
+    sessionStorage.setItem("subvenciones.auth.session.v1", JSON.stringify(expired));
+    window.CredentialsAuth.authHeaders(expired);
+  });
+  const expiredStatus = page.locator("#public-login-status");
+  await expiredStatus.waitFor({ state: "visible" });
+  if (!(await expiredStatus.innerText()).includes("no se ha registrado ni enviado ningún documento")) {
+    throw new Error("La sesión caducada conserva el error técnico o no confirma que no hubo envío");
+  }
+  await page.locator("#public-login-form [name='email']").fill("gestor@example.invalid");
+  await page.locator("#public-login-form [name='password']").fill("local-pass");
+  await page.locator("#public-login-form button[type='submit']").click();
+  await page.locator("#common-knowledge-library").waitFor({ state: "visible" });
+  if ((await page.locator("#screen-title").innerText()) !== "Base común de la entidad") {
+    throw new Error("El nuevo acceso no regresa a Base común tras caducar la sesión");
+  }
+
+  console.log(JSON.stringify({ ok: true, appUrl, plans: 3, contractedAreas: 6, privateKnowledge: "visible-common-library", preparationRoutes: 2, candidateTaskInfo: 5, guidedFacts: 11, documentManager: "public-mode-operational", entityXContractedAreas: 4, mobileColumns: 1, screenshot: ".tmp/candidate-task-information.png" }, null, 2));
 } finally {
   await browser.close();
 }

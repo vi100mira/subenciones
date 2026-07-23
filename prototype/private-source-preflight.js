@@ -4,7 +4,7 @@
   function summarizeFiles(input) {
     const files = [...(input?.files || [])];
     if (!files.length) return null;
-    const supported = files.filter((file) => /\.(pdf|docx|xlsx)$/i.test(file.name));
+    const supported = files.filter((file) => /\.(pdf|docx|xlsx|jpe?g|png)$/i.test(file.name));
     const relative = files[0].webkitRelativePath || files[0].name;
     return {
       rootName: relative.split("/")[0] || "Carpeta local",
@@ -20,7 +20,7 @@
       for await (const entry of directory.values()) {
         if (entry.kind === "directory") { await visit(entry); continue; }
         totalFiles += 1;
-        if (!/\.(pdf|docx|xlsx)$/i.test(entry.name)) continue;
+        if (!/\.(pdf|docx|xlsx|jpe?g|png)$/i.test(entry.name)) continue;
         const file = await entry.getFile();
         supportedFiles += 1;
         supportedBytes += Number(file.size || 0);

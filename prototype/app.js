@@ -6,6 +6,7 @@ const titles = {
   dashboard: "Panel de oportunidades",
   opportunities: "Gesti\u00f3n de oportunidades",
   entity: "Perfil de entidad",
+  knowledge: "Base común de la entidad",
   governance: "Gobernanza del dato",
   agents: "Asistentes y servicios",
   workspace: "Candidatura",

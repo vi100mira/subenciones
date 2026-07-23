@@ -14,7 +14,7 @@
     "check:project-docs": "node scripts/guardrails/check-project-documentation.mjs",
     "check:help-assistant": "node scripts/guardrails/check-help-assistant.mjs",
     "check:evidence": "node scripts/guardrails/check-source-evidence-fixtures.mjs && node scripts/guardrails/check-grant-source-authority.mjs && node scripts/guardrails/check-bdns-evidence-policy.mjs && node scripts/guardrails/check-supplementary-basis-sources.mjs && node scripts/guardrails/check-proposal-constraints.mjs && node scripts/guardrails/check-grant-requirements.mjs && node scripts/guardrails/check-document-requirement-classifier.mjs && node scripts/guardrails/check-openai-bases-provider.mjs && node scripts/guardrails/check-private-radar-gate.mjs && node scripts/guardrails/check-draft-agent-contract.mjs && node scripts/guardrails/check-openai-draft-provider.mjs && node scripts/guardrails/check-proposal-pdf.mjs && node scripts/guardrails/check-approved-draft-export.mjs && npm run platform:verify-source-evidence -- --today=2026-07-06",
-    "check:ui": "node scripts/guardrails/check-opportunity-grid-ui.mjs && node scripts/guardrails/check-onboarding-ui.mjs",
+    "check:ui": "node scripts/guardrails/check-opportunity-grid-ui.mjs && node scripts/guardrails/check-generic-technical-memory.mjs && node scripts/guardrails/check-onboarding-ui.mjs",
     "check:platform-superadmin": "node scripts/guardrails/check-platform-superadmin-ui.mjs",
     "check:e2e:onboarding": "node scripts/guardrails/check-onboarding-e2e.mjs",
     "check:tenant-agents": "node scripts/guardrails/check-tenant-agent-registry.mjs",

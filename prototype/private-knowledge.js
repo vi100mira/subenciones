@@ -5,6 +5,8 @@
     sharepoint: { consent: "sharepoint_connection", kind: "microsoft_graph", connector: "microsoft_graph", label: "SharePoint autorizado" }
   };
   let governance = null;
+  let libraryFacts = [];
+  let libraryDocuments = [];
   let localFolderSelection = null;
   const localFormSelections = new WeakMap();
 
@@ -92,12 +94,67 @@
       headers: { "Content-Type": "application/json", "x-tenant-id": current?.tenantId || "", ...window.CredentialsAuth.authHeaders(current), ...(options.headers || {}) }
     });
     const payload = await response.json().catch(() => null);
+    if (response.status === 401) {
+      window.CredentialsAuth.handleUnauthorized?.();
+      throw new Error("Tu sesión ha caducado. Vuelve a acceder para continuar.");
+    }
     if (!response.ok || !payload?.ok) throw new Error(payload?.error || "No se pudo completar la operación");
     return payload.data;
   }
 
   function render() {
     document.querySelector("#private-knowledge-panel")?.remove();
+    const panel = document.querySelector("#common-knowledge-library");
+    if (!panel) return;
+    const current = source();
+    const inventory = inventorySummary();
+    const documents = Number(inventory.documentsScanned || 0);
+    const approved = libraryFacts.filter((fact) => fact.status === "approved").length;
+    const pending = libraryFacts.filter((fact) => fact.status === "pending").length;
+    const sourceState = current ? "is-done" : "is-current";
+    const inventoryState = documents ? "is-done" : current ? "is-current" : "";
+    const reviewState = pending ? "is-current" : libraryFacts.length ? "is-done" : "";
+    const useState = approved ? "is-done" : "";
+    const approvedDocuments = libraryDocuments.filter((item) => ["approved", "restricted"].includes(item.metadata_json?.review_status)).length;
+    const documentLabel = (value) => ({
+      map_before_prefill: "Mapear campos seguros", manual_review: "Revisión necesaria", manual_only: "Solo uso manual",
+      reference_only: "Documento de referencia", reference_only_filled: "Ejemplar cumplimentado",
+      duplicate_reference: "Duplicado", blocked_sensitive: "Bloqueado por sensibilidad"
+    }[value] || "Clasificación pendiente");
+    const documentCards = libraryDocuments.length ? libraryDocuments.map((item) => {
+      const status = item.metadata_json?.review_status || "pending";
+      const restricted = ["personal", "sensitive"].includes(item.data_class);
+      const stored = Boolean(item.blob_path);
+      const recommendation = documentLabel(item.metadata_json?.recommendation);
+      const tone = ["approved", "restricted"].includes(status) ? "safe" : status === "rejected" || status === "blocked" ? "danger" : "warning";
+      const statusText = status === "approved" ? "Aprobado" : status === "restricted" ? "Aprobado · restringido" : status === "rejected" ? "Descartado" : status === "blocked" ? "Bloqueado para IA" : "Por revisar";
+      return `<article class="master-fact-card"><div class="master-fact-card-head"><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(recommendation)} · ${escapeHtml(item.mime_type)}</small></div><span class="badge ${tone}">${statusText}</span></div>
+        <p>Clase de datos: <strong>${escapeHtml(item.data_class)}</strong> · Huella: ${escapeHtml(String(item.source_sha256 || "").slice(0, 12))}</p>
+        <div class="button-row"><button class="primary-action" data-annex-open="${escapeHtml(item.id)}" data-annex-title="${escapeHtml(item.title)}" data-annex-mime="${escapeHtml(item.mime_type)}" data-annex-class="${escapeHtml(item.data_class)}" data-annex-sha="${escapeHtml(item.source_sha256)}" data-annex-status="${escapeHtml(status)}" data-annex-recommendation="${escapeHtml(recommendation)}" data-annex-restricted="${restricted}" data-annex-stored="${stored}" type="button"><i data-lucide="scan-search"></i>Abrir documento</button></div></article>`;
+    }).join("") : `<div class="empty-state compact"><strong>El inventario no contiene fichas documentales</strong><span>${documents
+      ? `Hay ${documents} documentos contabilizados, pero este análisis antiguo no guardó sus fichas. Deben regenerarse antes de poder abrir los visores.`
+      : "Añade una carpeta y completa el inventario local. Aquí aparecerán las clasificaciones sin copiar el contenido."}</span></div>`;
+    panel.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Corpus privado · solo esta entidad</p><h2>Biblioteca común para todas las candidaturas</h2></div><span class="badge safe">Aislada por entidad</span></div>
+      <p class="private-knowledge-intro">Aquí vive la documentación institucional reutilizable. No pertenece a una convocatoria concreta: cada candidatura recupera únicamente los datos aprobados que necesita y muestra su procedencia.</p>
+      <ol class="private-knowledge-steps">
+        ${workflowStep(1, "Añadir fuentes", current ? escapeHtml(current.label || "Fuente privada autorizada") : "Autoriza una carpeta o completa el formulario", sourceState)}
+        ${workflowStep(2, "Analizar documentos", documents ? `${documents} documentos inventariados` : "Todavía no hay documentos inventariados", inventoryState)}
+        ${workflowStep(3, "Revisar datos", pending ? `${pending} propuestas esperan tu decisión` : "No hay propuestas pendientes", reviewState)}
+        ${workflowStep(4, "Reutilizar", approved ? `${approved} hechos aprobados disponibles` : "Aprueba hechos para autorrellenar", useState)}
+      </ol>
+      <div class="master-fact-groups knowledge-availability-grid">
+        <article><div><strong>Documentación fuente</strong><span>${documents} inventariados · ${approvedDocuments} aprobados${current ? ` · ${escapeHtml(current.label || "fuente autorizada")}` : ""}</span></div><span class="badge ${documents ? "safe" : "warning"}">${documents ? "Disponible" : "Sin cargar"}</span></article>
+        <article><div><strong>Datos reutilizables</strong><span>${approved} hechos aprobados con evidencia y vigencia</span></div><span class="badge ${approved ? "safe" : "warning"}">${approved ? "Autorrelleno activo" : "Pendiente"}</span></article>
+      </div>
+      <section><div class="panel-heading"><div><p class="eyebrow">Aprobación documental</p><h3>Documentos propuestos por el inventario</h3></div><span class="badge neutral">${libraryDocuments.length} propuestas</span></div><div class="master-fact-review-grid">${documentCards}</div></section>
+      <div class="plain-note"><strong>Qué entra y qué no</strong><span>Estatutos, trayectoria, metodología, equipo agregado, indicadores y evidencias pueden alimentar esta base. Los borradores, importes y decisiones de una candidatura permanecen en su expediente hasta que una persona decida convertirlos en conocimiento reutilizable.</span></div>
+      <div class="knowledge-operation-list">
+        <article><span>1</span><div><strong>Aportar</strong><p>Conecta una carpeta autorizada o responde el formulario maestro sin datos personales.</p></div></article>
+        <article><span>2</span><div><strong>Aprobar</strong><p>Revisa cada dato propuesto, su evidencia y su vigencia antes de incorporarlo.</p></div></article>
+        <article><span>3</span><div><strong>Mejorar</strong><p>Las candidaturas futuras se autorrellenan con más cobertura, sin mezclar entidades.</p></div></article>
+      </div>
+      <div class="button-row"><button class="primary-action" data-private-knowledge-open type="button"><i data-lucide="folder-plus"></i>Añadir o actualizar documentación</button><button class="ghost-action" data-private-review type="button">Revisar datos reutilizables${pending ? ` (${pending})` : ""}</button><button class="ghost-action" data-private-knowledge-status type="button">Ver estado detallado</button></div>`;
+    window.lucide?.createIcons();
   }
 
   function inventorySummary() {
@@ -228,7 +285,13 @@
   function closeModal() { document.querySelector("[data-private-modal]")?.remove(); }
   function toast(message) { if (typeof window.showToast === "function") window.showToast(message); }
 
-  async function refresh() { try { governance = await request("/api/tenant-agent-governance"); render(); } catch { render(); } }
+  async function refresh() {
+    try { governance = await request("/api/tenant-agent-governance"); } catch { governance = null; }
+    try { libraryFacts = await request("/api/tenant-profile-review?scope=private"); } catch { libraryFacts = []; }
+    const current = source();
+    try { libraryDocuments = current ? await request(`/api/private-document-candidates?sourceId=${encodeURIComponent(current.id)}`) : []; } catch { libraryDocuments = []; }
+    render();
+  }
   async function submitSource(form) {
     const status = form.querySelector("[data-private-status]"); const choice = sourceOptions[new FormData(form).get("private-source")];
     if (choice === sourceOptions.local) {
@@ -325,8 +388,52 @@
     }
   }
 
-  function goToAssistantsAndOpen() {
-    document.querySelector('[data-screen="agents"]')?.click();
+  async function reviewDocumentCandidate(button) {
+    const current = source();
+    if (!current) return;
+    button.disabled = true;
+    try {
+      await request(`/api/private-document-candidates?sourceId=${encodeURIComponent(current.id)}`, {
+        method: "PATCH", body: JSON.stringify({ sourceId: current.id, reviews: [{ id: button.dataset.documentCandidateReview, status: button.dataset.reviewStatus }] })
+      });
+      await refresh(); window.PrivateAnnexViewer?.close?.(); toast("Decisión documental guardada y auditada.");
+    } catch (error) { toast(error.message); button.disabled = false; }
+  }
+
+  async function uploadAnnex(input) {
+    const file = input.files?.[0]; const current = session();
+    if (!file || !current) return;
+    if (file.size > 4 * 1024 * 1024) return void toast("Este primer almacén admite anexos de hasta 4 MB.");
+    const restricted = input.dataset.annexRestricted === "true";
+    const contentType = file.type || ({ pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }[file.name.split(".").pop()?.toLowerCase()]);
+    if (!contentType) return void toast("Formato de anexo no permitido.");
+    if (restricted && !window.confirm("Se almacenará un documento personal en Vercel Blob privado. No se enviará a IA ni se crearán embeddings. ¿Continuar?")) { input.value = ""; return; }
+    try {
+      const response = await fetch(`/api/private-annex-file?documentId=${encodeURIComponent(input.dataset.annexFile)}`, {
+        method: "POST", headers: { "Content-Type": "application/octet-stream", "x-annex-content-type": contentType,
+          "x-annex-restricted-confirmed": String(restricted), "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) }, body: file
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) throw new Error(payload?.error || "No se pudo guardar el anexo");
+      await refresh(); window.PrivateAnnexViewer?.close?.(); toast("Archivo completo guardado en Blob privado.");
+    } catch (error) { toast(error.message); } finally { input.value = ""; }
+  }
+
+  async function downloadAnnex(button) {
+    const current = session(); if (!current) return;
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/private-annex-file?documentId=${encodeURIComponent(button.dataset.annexDownload)}`, {
+        headers: { "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current) }
+      });
+      if (!response.ok) throw new Error((await response.json().catch(() => null))?.error || "No se pudo descargar el anexo");
+      const url = URL.createObjectURL(await response.blob()); const link = document.createElement("a");
+      link.href = url; link.download = "anexo-privado"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { toast(error.message); } finally { button.disabled = false; }
+  }
+
+  function goToKnowledgeAndOpen() {
+    document.querySelector('[data-screen="knowledge"]')?.click();
     setTimeout(preparationModal, 0);
   }
 
@@ -353,7 +460,11 @@
   document.addEventListener("click", async (event) => {
     const target = event.target instanceof Element ? event.target.closest("button") : null; if (!target) return;
     if (target.matches("[data-private-source]")) sourceModal();
-    if (target.matches("[data-private-knowledge-open]")) goToAssistantsAndOpen();
+    if (target.matches("[data-private-knowledge-open]")) goToKnowledgeAndOpen();
+    if (target.matches("[data-private-knowledge-status]")) knowledgeStatusModal();
+    if (target.matches("[data-document-candidate-review]")) reviewDocumentCandidate(target);
+    if (target.matches("[data-annex-select]")) target.parentElement?.querySelector("[data-annex-file]")?.click();
+    if (target.matches("[data-annex-download]")) downloadAnnex(target);
     if (target.matches("[data-private-form]")) formModal();
     if (target.matches("[data-private-review]")) { closeModal(); window.MasterFactReview?.open("Aprueba solo información institucional que puedas verificar."); }
     if (target.matches("[data-private-update-analysis]")) {
@@ -369,6 +480,7 @@
     if (target.matches("[data-private-inventory]")) { target.disabled = true; try { await request("/api/ingestion-dispatch", { method: "POST", body: JSON.stringify({ sourceConnectionId: target.dataset.privateInventory }) }); save({ phase: "inventory", ingestionQueued: true }); toast("Inventario encolado. La vista no avanzará hasta recibir el resultado."); } catch (error) { toast(error.message); target.disabled = false; } }
   });
   document.addEventListener("change", (event) => {
+    if (event.target.matches?.("[data-annex-file]")) { uploadAnnex(event.target); return; }
     const form = event.target.closest?.("[data-private-source-form], [data-local-folder-form]");
     if (!form) return;
     if (event.target.matches('input[name="private-source"]')) {
@@ -382,8 +494,8 @@
     }
   });
   window.addEventListener("tenant-agent-governance-loaded", (event) => { governance = event.detail; render(); });
-  window.addEventListener("master-facts-updated", (event) => save({ phase: event.detail?.finalized ? "approved" : "proposals" }));
+  window.addEventListener("master-facts-updated", (event) => { save({ phase: event.detail?.finalized ? "approved" : "proposals" }); refresh(); });
   window.addEventListener("role-session-applied", () => setTimeout(refresh, 0));
-  window.PrivateKnowledge = { open: preparationModal, openPreparation: preparationModal, goToAssistants: goToAssistantsAndOpen, render };
+  window.PrivateKnowledge = { open: preparationModal, openPreparation: preparationModal, goToAssistants: goToKnowledgeAndOpen, goToKnowledge: goToKnowledgeAndOpen, render };
   document.addEventListener("DOMContentLoaded", refresh);
 })();

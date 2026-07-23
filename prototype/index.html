@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="./styles.css?v=20260715-line-budget" />
     <link rel="stylesheet" href="./app-modals-responsive.css?v=20260716-readable-source-text" />
     <link rel="stylesheet" href="./public-entry.css?v=20260716-brand-lockup" />
-    <link rel="stylesheet" href="./stitch-theme.css?v=20260720-template-viewer" />
+    <link rel="stylesheet" href="./stitch-theme.css?v=20260723-integrated-viewer" />
     <link rel="stylesheet" href="./grid-filters.css?v=20260713-sticky-grid-head" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
@@ -38,6 +38,9 @@
           </button>
           <button class="nav-item" data-screen="entity">
             <i data-lucide="building-2"></i><span>Entidad</span>
+          </button>
+          <button class="nav-item" data-screen="knowledge">
+            <i data-lucide="library-big"></i><span>Base común</span>
           </button>
           <button class="nav-item" data-screen="agents">
             <i data-lucide="bot"></i><span>Asistentes</span>
@@ -193,6 +196,10 @@
               <div id="review-queue" class="stack-list"></div>
             </article>
           </div>
+        </section>
+
+        <section class="screen" id="knowledge" aria-labelledby="screen-title">
+          <article class="panel" id="common-knowledge-library"></article>
         </section>
 
         <section class="screen" id="agents" aria-labelledby="screen-title">
@@ -372,12 +379,12 @@
     <script src="./workspace-flow.js?v=20260716-workspace-modes"></script>
     <script src="./watch-actions.js?v=20260701-private-corpus"></script>
     <script src="./alert-actions.js?v=20260630-alert-actions"></script>
-    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260716-tenant-brand"></script><script src="./tenant-plan.js?v=20260716-progressive-knowledge"></script><script src="./public-entry.js?v=20260716-brand-lockup"></script>
+    <script src="./onboarding-actions.js?v=20260713-beta-language"></script><script src="./auth-credentials.js?v=20260723-session-recovery"></script><script src="./tenant-plan.js?v=20260716-progressive-knowledge"></script><script src="./public-entry.js?v=20260723-session-recovery"></script>
     <script src="./ui-polish.js?v=20260715-sync-review-2"></script>
     <script src="./platform-source-manager.js?v=20260706-source-normalization-read"></script>
     <script src="./agents-readiness.js?v=20260716-progressive-knowledge"></script>
     <script src="./entity-activation.js?v=20260715-entity-plans"></script>
-    <script src="./master-fact-review.js?v=20260716-real-master-facts"></script><script src="./private-source-preflight.js?v=20260718-insubstantial-guard"></script><script src="./private-analysis-state.js?v=20260718-analysis-history"></script><script src="./private-knowledge.js?v=20260718-analysis-history"></script>
+    <script src="./master-fact-review.js?v=20260716-real-master-facts"></script><script src="./private-source-preflight.js?v=20260718-insubstantial-guard"></script><script src="./private-analysis-state.js?v=20260718-analysis-history"></script><script src="./private-annex-viewer.js?v=20260723-integrated-viewer"></script><script src="./private-knowledge.js?v=20260723-integrated-viewer"></script>
     <script src="./visual-flows.js?v=20260713-no-opportunity-guide"></script>
     <script src="./tenant-agent-runtime.js?v=20260716-progressive-knowledge"></script>
     <script src="./recommendation-reconciliation.js?v=20260715-sync-review"></script><script src="./tenant-recommendations-runtime.js?v=20260715-sync-review"></script>

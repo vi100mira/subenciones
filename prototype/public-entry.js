@@ -83,7 +83,8 @@
   }
 
   function initialScreen(session, requested) {
-    return requested || "dashboard";
+    if (requested && requested !== "welcome") return requested;
+    return window.CredentialsAuth.consumeReturnScreen?.() || "dashboard";
   }
 
   function showPublic() {
@@ -98,6 +99,19 @@
     appShell.hidden = false;
     document.querySelector(`[data-screen="${screen}"]`)?.click();
   }
+  function showSessionNotice() {
+    const message = window.CredentialsAuth.consumeNotice?.();
+    if (!message) return;
+    const status = entry.querySelector("#public-login-status");
+    status.hidden = false;
+    status.innerHTML = "<strong>Sesión caducada</strong><span></span>";
+    status.querySelector("span").textContent = message;
+  }
+  window.addEventListener("auth-session-expired", () => {
+    document.querySelectorAll(".modal-backdrop").forEach((modal) => modal.remove());
+    showPublic();
+    showSessionNotice();
+  });
 
   function loginHelp(email, fallback) {
     if (email.endsWith("@novatera.org.es")) return "Revisa el email: Novaterra lleva doble r. Usa pmira@novaterra.org.es.";
@@ -163,6 +177,7 @@
   const target = session ? initialScreen(session, requested) : "";
   if (mode === "public-entry" || hash === "#view-welcome" || !session || !window.CredentialsAuth.canAccess(target || "dashboard", session)) {
     showPublic();
+    showSessionNotice();
   } else {
     showApp(session, target);
   }

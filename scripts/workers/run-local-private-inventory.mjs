@@ -98,6 +98,30 @@ async function persist(db, run, result) {
   const { inventory, master, quarantine, artifactSha } = result;
   const byId = new Map(inventory.documents.map((item) => [item.document_id, item.source_sha256]));
   const byPath = new Map(inventory.documents.map((item) => [item.relative_path, item.source_sha256]));
+  const mime = { ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+  const externalIds = inventory.documents.map((item) => `local-inventory:${item.document_id}`);
+  const { data: existingDocuments, error: existingError } = externalIds.length ? await db.from("source_documents")
+    .select("external_id, metadata_json").eq("tenant_id", tenantId).eq("source_connection_id", sourceId).in("external_id", externalIds) : { data: [], error: null };
+  if (existingError) throw existingError;
+  const previousReviews = new Map((existingDocuments || []).map((item) => [item.external_id, item.metadata_json?.review_status]));
+  const documentRows = inventory.documents.map((item) => ({
+    tenant_id: tenantId, source_connection_id: sourceId, external_id: `local-inventory:${item.document_id}`,
+    title: path.basename(item.relative_path), path: `private://${sourceId}/${item.document_id}`,
+    mime_type: mime[item.extension] || "application/octet-stream", data_class: item.data_class,
+    source_sha256: item.source_sha256, extracted_text: null,
+    extraction_status: item.data_class === "sensitive" ? "blocked" : "pending",
+    metadata_json: {
+      document_candidate: true, template_candidate: item.candidate, ingestion_run_id: run.id, kind: item.kind, recommendation: item.decision,
+      review_status: item.decision === "blocked_sensitive" ? "blocked" : previousReviews.get(`local-inventory:${item.document_id}`) || "pending",
+      safe_field_keys: item.safe_field_keys, blocked_field_keys: item.blocked_field_keys,
+      content_stored_remotely: false, local_only_extraction: true
+    }
+  }));
+  if (documentRows.length) {
+    const { error } = await db.from("source_documents").upsert(documentRows, { onConflict: "tenant_id,source_connection_id,external_id" });
+    if (error) throw error;
+  }
   const proposals = [];
   for (const [fieldKey, item] of Object.entries(master.institutional_facts || {})) if (item?.value) proposals.push({ fieldKey, value: String(item.value), sourceSha: byPath.get(item.evidence?.[0]) || artifactSha, confidence: item.status === "proposed" ? "high" : "medium" });
   for (const [fieldKey, item] of Object.entries(master.section_proposals || {})) if (item?.text) proposals.push({ fieldKey, value: String(item.text), sourceSha: byId.get(item.document_id) || artifactSha, confidence: Number(item.score || 0) >= 30 ? "high" : "medium" });

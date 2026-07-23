@@ -1,6 +1,6 @@
 # Índice documental canónico de INSERTIA
 
-Actualizado el 22 de julio de 2026. Este índice evita usar un documento histórico como descripción del sistema vigente.
+Actualizado el 23 de julio de 2026. Este índice evita usar un documento histórico como descripción del sistema vigente.
 
 ## Lectura recomendada
 
@@ -17,6 +17,7 @@ Actualizado el 22 de julio de 2026. Este índice evita usar un documento histór
 | Quién valida las bases y cómo | `docs/architecture/validacion-experta-de-bases-por-tenant.md` |
 | Agentes, permisos y puertas humanas | `docs/product/agentic-architecture.md` |
 | Evolución propuesta del rellenado documental | `docs/product/document-construction-v2.md` |
+| Objetivo y fases del expediente documental completo | `docs/product/expediente-documental-plan.md` |
 | Autenticación y secretos | `docs/architecture/credentials-and-tenant-auth.md` y `docs/security/credentials-and-logging.md` |
 | Cambios y alertas | `docs/architecture/change-detection-and-tenant-alerts.md` |
 | Orden de construcción y validación | `docs/product/mvp-execution-plan.md` |
