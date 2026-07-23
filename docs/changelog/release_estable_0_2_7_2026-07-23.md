@@ -31,7 +31,7 @@ Respaldar y publicar como versión estable la Base común reutilizable de la ent
 ## Publicación
 
 - Versión: `0.2.7`.
-- Etiqueta estable: `v0.2.7-stable.20260723`.
+- Etiqueta estable final: `v0.2.7-stable.20260723.1`; sustituye a la etiqueta inicial tras cerrar la exposición de metadatos del endpoint demo detectada en el smoke test.
 - GitHub: rama `codex/agent-flow-real-audit` y PR de publicación existentes.
 - Vercel: despliegue explícito al proyecto ya enlazado `subvenciones-rag`.
 

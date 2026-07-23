@@ -20,11 +20,19 @@ if (!baseUrl) {
   process.exit(0);
 }
 
-const demoResponse = await fetch(`${baseUrl}/api/demo-tenant-status`);
-assert(demoResponse.ok, `GET demo-tenant-status fallo con HTTP ${demoResponse.status}`);
-const demoPayload = await demoResponse.json();
-assert(demoPayload.ok, "demo-tenant-status no devolvio ok=true");
-assert(demoPayload.data?.organization?.slug === "novaterra-demo", "Demo tenant inesperado");
+const accessToken = process.env.ONBOARDING_E2E_ACCESS_TOKEN || "";
+const tenantId = process.env.ONBOARDING_E2E_TENANT_ID || "";
+const demoResponse = await fetch(`${baseUrl}/api/demo-tenant-status`, {
+  headers: accessToken && tenantId ? { Authorization: `Bearer ${accessToken}`, "x-tenant-id": tenantId } : {}
+});
+if (!accessToken || !tenantId) {
+  assert(demoResponse.status === 401, `demo-tenant-status debe exigir sesión; devolvió HTTP ${demoResponse.status}`);
+} else {
+  assert(demoResponse.ok, `GET demo-tenant-status fallo con HTTP ${demoResponse.status}`);
+  const demoPayload = await demoResponse.json();
+  assert(demoPayload.ok, "demo-tenant-status no devolvio ok=true");
+  assert(demoPayload.data?.organization?.slug === "novaterra-demo", "Demo tenant inesperado");
+}
 
 let writeResult = "omitido";
 if (writeEnabled) {
@@ -52,7 +60,7 @@ console.log(
     {
       ok: true,
       baseUrl,
-      demoTenant: demoPayload.data.organization.slug,
+      demoTenant: accessToken && tenantId ? "novaterra-demo autenticado" : "protegido sin sesión",
       write: writeResult
     },
     null,
