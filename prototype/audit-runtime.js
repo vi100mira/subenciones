@@ -2,13 +2,29 @@
   const state = { events: [], filters: { search: "", actor: "", date: "" }, loading: false, error: "" };
   const labels = {
     "entity_research.queued": "Investigación de entidad encolada",
+    "entity_research.started": "Investigación de entidad iniciada",
     "entity_research.generated_for_review": "Investigación preparada para revisión",
+    "entity_research.failed": "Investigación de entidad fallida",
     "entity_profile.suggestions_reviewed": "Sugerencias de perfil revisadas",
     "entity_profile.approved": "Perfil de entidad aprobado",
-    "tenant_match.queued": "Cálculo de encaje encolado",
-    "tenant_match.generated_for_review": "Encaje preparado para revisión",
+    "match_agent.queued": "Cálculo de encaje encolado",
+    "match_agent.started": "Cálculo de encaje iniciado",
+    "match_agent.generated_for_review": "Encaje preparado para revisión",
+    "match_agent.failed": "Cálculo de encaje fallido",
     "document_review.queued": "Revisión documental encolada",
+    "document_review.started": "Revisión documental iniciada",
+    "document_review.generated_for_review": "Revisión documental preparada",
+    "document_review.failed": "Revisión documental fallida",
     "draft_agent.queued": "Borrador documental encolado",
+    "draft_agent.started": "Borrador documental iniciado",
+    "draft_agent.generated_for_review": "Borrador preparado para revisión",
+    "draft_agent.failed": "Preparación documental fallida",
+    "private_ingestion.queued": "Análisis documental privado encolado",
+    "private_ingestion.started": "Análisis documental privado iniciado",
+    "private_ingestion.completed": "Análisis documental privado completado",
+    "private_ingestion.cancelled": "Análisis documental privado cancelado",
+    "private_ingestion.failed": "Análisis documental privado fallido",
+    "entity_profile.master_approved": "Plantilla maestra privada aprobada",
     "audit.exported": "Auditoría exportada"
   };
 
@@ -27,6 +43,10 @@
       body: body ? JSON.stringify(body) : undefined
     });
     const payload = await response.json().catch(() => null);
+    if (response.status === 401) {
+      window.CredentialsAuth.handleUnauthorized?.();
+      throw new Error("Tu sesiÃ³n ha caducado. Vuelve a acceder para consultar la auditorÃ­a.");
+    }
     if (!response.ok || !payload?.ok) throw new Error(payload?.error || `Error HTTP ${response.status}`);
     return payload.data;
   }

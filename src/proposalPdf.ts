@@ -31,7 +31,7 @@ export async function renderProposalPdf(title: string, sections: PdfSection[], r
   for (const section of sections) {
     document.font(fontName(rules)).fontSize(Math.min(15, size + 2)).text(section.title).moveDown(0.35);
     document.font(fontName(rules)).fontSize(size);
-    for (const line of section.lines) document.text(`• ${line}`, { indent: 12, lineGap: gap }).moveDown(0.25);
+    for (const line of section.lines) document.text(`- ${line}`, { indent: 12, lineGap: gap }).moveDown(0.25);
     document.moveDown(0.45);
   }
   const pageCount = document.bufferedPageRange().count;

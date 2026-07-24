@@ -31,7 +31,7 @@
     { icon: "shield-check", title: "4. Aprobacion", detail: "Activar radar solo con evidencia, ruta y decision humana.", tip: "El tenant no recibe nada automaticamente." }
   ];
   const normalizedKey = "source-normalization.done.v1";
-  const normalizationState = { tab: "flow", activeName: "Fundacion ONCE", done: readDone() };
+  const normalizationState = { tab: "flow", done: readDone() };
   function reviewChecks(source) {
     return [
       ["Fuente oficial", "La URL pertenece al financiador o a su plataforma oficial."],
@@ -112,42 +112,12 @@
         <div><strong>Estado</strong><span>${status}</span></div>
         <div><strong>Bases / evidencia</strong><span>${source.basis || "Pendiente de localizar"}</span></div>
         ${badge(status)}
-        <div><button class="${done ? "ghost-action" : "primary-action"}" data-normalize-source="${escapeAttr(source.name)}" type="button">${done ? "Ver ficha" : "Revisar y normalizar"}</button></div>
+        <div><button class="${done ? "ghost-action" : "primary-action"}" data-normalize-source="${escapeAttr(source.name)}" type="button">${done ? "Ver revision" : "Revisar y normalizar"}</button></div>
       </div>`;
   }
 
   function privateSources() {
     return sources.filter((source) => source.group.includes("Privado"));
-  }
-
-  function normalizationDetail(source = privateSources()[0]) {
-    const status = displayStatus(source);
-    const done = status === "Fuente normalizada";
-    const evidenceUrl = source.basisUrl || source.verificationUrl || source.url;
-    const evidenceLabel = source.basisUrl ? "Abrir bases normalizadas" : "Abrir URL de verificacion";
-    return `
-      <div class="plain-note">
-        <strong>${done ? "Fuente normalizada" : "Ficha de normalizacion abierta"}: ${source.name}</strong>
-        <span>${done ? "La fuente queda lista como patron controlado de plataforma. Cualquier oportunidad concreta seguira necesitando evidencia y revision humana." : "Revisa estos cuatro puntos. Si falta uno, la fuente no debe salir como oportunidad viva para ningun tenant."}</span>
-        <div class="button-row">
-          <a class="ghost-action" href="${source.url}" target="_blank" rel="noreferrer">Leer fuente oficial</a>
-          <a class="ghost-action" href="${evidenceUrl}" target="_blank" rel="noreferrer">${evidenceLabel}</a>
-        </div>
-      </div>
-      <div class="source-control-row">
-        <div><strong>Fuente</strong><span>${source.territory}</span></div>
-        <div><strong>1. Entrada oficial</strong><span>Confirmar que la pagina pertenece al financiador y no es una noticia secundaria.</span></div>
-        <div><strong>2. Bases claras</strong><span>${source.basis || "Localizar PDF, ficha o formulario con requisitos verificables."}</span></div>
-        <div><strong>3. Estado operativo</strong><span>${source.doubt}</span></div>
-        <div><strong>4. Decision humana</strong><span>${source.output || source.action}</span></div>
-      </div>
-      <div class="source-control-row">
-        <div><strong>Agente posterior</strong><span>Monitor de cambios privados</span></div>
-        <div><strong>Que vigila</strong><span>Bases, plazo, estado, formulario, FAQ y resoluciones.</span></div>
-        <div><strong>Cuando alerta</strong><span>Si detecta cambio relevante o duda nueva, saltara una alerta revisable.</span></div>
-        <div><strong>Impacto tenant</strong><span>Alerta revisable; nunca envio automatico.</span></div>
-      </div>
-      <div class="plain-note"><strong>Resultado de normalizar</strong><span>No se crea una oportunidad viva hasta tener fuente oficial, bases o URL de verificacion, plazo/estado y aprobacion humana de plataforma. Una vez aprobada, otro agente vigila cambios como en fuentes publicas.</span></div>`;
   }
 
   function reviewModal(source) {
@@ -201,9 +171,8 @@
 
   function approveSource(sourceName) {
     const source = sources.find((item) => item.name === sourceName);
-    normalizationState.activeName = source.name;
     normalizationState.done.add(source.name);
-    normalizationState.tab = "detail";
+    normalizationState.tab = "sources";
     saveDone();
     closeReviewModal();
     renderNormalizationShell();
@@ -211,11 +180,10 @@
   }
 
   function stepRow(step) {
-    return `<div class="normalization-step" title="${step.tip}"><i data-lucide="${step.icon}"></i><strong>${step.title}</strong><span>${step.detail}</span><button class="info-dot" title="${step.tip}" type="button">i</button></div>`;
+    return `<div class="normalization-step"><i data-lucide="${step.icon}"></i><strong>${step.title}</strong><button class="info-dot" title="${step.tip}" aria-label="${step.tip}" type="button">i</button></div>`;
   }
 
   function normalizationShell() {
-    const activeSource = privateSources().find((source) => source.name === normalizationState.activeName) || privateSources()[0];
     const doneCount = privateSources().filter((source) => displayStatus(source) === "Fuente normalizada").length;
     return `
       <div class="normalization-hero">
@@ -225,7 +193,6 @@
       <div class="segmented normalization-tabs" aria-label="Pasos de normalizacion">
         <button class="${normalizationState.tab === "flow" ? "is-selected" : ""}" data-normalization-tab="flow" type="button"><i data-lucide="workflow"></i> Flujo</button>
         <button class="${normalizationState.tab === "sources" ? "is-selected" : ""}" data-normalization-tab="sources" type="button"><i data-lucide="library"></i> Fuentes</button>
-        <button class="${normalizationState.tab === "detail" ? "is-selected" : ""}" data-normalization-tab="detail" type="button"><i data-lucide="clipboard-check"></i> Ficha</button>
         <button class="${normalizationState.tab === "review" ? "is-selected" : ""}" data-normalization-tab="review" type="button"><i data-lucide="user-check"></i> Revision</button>
       </div>
       <section data-normalization-pane="flow" ${normalizationState.tab === "flow" ? "" : "hidden"}>
@@ -235,7 +202,6 @@
       <section data-normalization-pane="sources" ${normalizationState.tab === "sources" ? "" : "hidden"}>
         <div class="source-control-list">${privateSources().map(normalizationRow).join("")}</div>
       </section>
-      <section data-normalization-pane="detail" ${normalizationState.tab === "detail" ? "" : "hidden"} id="source-normalization-detail">${normalizationDetail(activeSource)}</section>
       <section data-normalization-pane="review" ${normalizationState.tab === "review" ? "" : "hidden"}>
         <div class="stack-list">${reviews.map(reviewRow).join("")}</div>
       </section>`;
@@ -256,22 +222,21 @@
   function installNormalizationStyles() {
     if (document.querySelector("#source-normalization-styles")) return;
     document.head.insertAdjacentHTML("beforeend", `<style id="source-normalization-styles">
-      .normalization-hero { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:12px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#f8fbfa; }
+      .normalization-hero { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:12px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#f8fbfa; }
       .normalization-hero h2 { margin:2px 0 4px; }
-      .normalization-tabs { margin-bottom:12px; }
-      .normalization-tabs button { display:inline-flex; gap:6px; align-items:center; }
-      .normalization-flow { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
-      .normalization-step { position:relative; min-height:118px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+      .normalization-tabs { width:min(100%, 540px); grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:12px; }
+      .normalization-tabs button { display:inline-flex; min-width:0; justify-content:center; gap:6px; align-items:center; white-space:nowrap; }
+      .normalization-flow { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; margin-bottom:12px; }
+      .normalization-step { position:relative; min-height:88px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
       .normalization-step svg { width:24px; height:24px; color:var(--teal-dark); margin-bottom:10px; }
-      .normalization-step strong, .normalization-step span { display:block; }
-      .normalization-step span { margin-top:6px; color:var(--muted); line-height:1.4; }
+      .normalization-step strong { display:block; padding-right:34px; }
       .normalization-step .info-dot { position:absolute; top:10px; right:10px; }
       .source-control-row.is-selected { border-color:var(--teal); box-shadow:0 0 0 2px rgba(0,116,105,.12); }
       .normalization-review-check { display:grid; grid-template-columns:220px 1fr; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; }
       .normalization-review-check span:first-child { color:var(--ink); font-weight:800; }
       .normalization-review-check span:last-child { color:var(--muted); line-height:1.4; }
-      @media (max-width: 1180px) { .normalization-flow { grid-template-columns:repeat(2,minmax(0,1fr)); } .normalization-hero { flex-direction:column; } }
-      @media (max-width: 560px) { .normalization-flow, .normalization-review-check { grid-template-columns:1fr; } }
+      @media (max-width: 700px) { .normalization-hero { flex-direction:column; } }
+      @media (max-width: 560px) { .normalization-flow, .normalization-review-check { grid-template-columns:1fr; } .normalization-tabs { width:100%; } .normalization-tabs button { padding:10px 6px; font-size:13px; } }
     </style>`);
   }
 
@@ -313,13 +278,7 @@
       }
       if (normalize) {
         const source = sources.find((item) => item.name === normalize.dataset.normalizeSource);
-        if (displayStatus(source) === "Fuente normalizada") {
-          normalizationState.activeName = source.name;
-          normalizationState.tab = "detail";
-          renderNormalizationShell();
-        } else {
-          openReviewModal(source);
-        }
+        openReviewModal(source);
       }
       if (approve) {
         const unchecked = [...document.querySelectorAll("[data-normalization-check]")].some((check) => !check.checked);

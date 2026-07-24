@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createHash } from "node:crypto";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -48,6 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(ok(data || []));
     }
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
+    await requireTenantAgentEntitlement(supabase, actor.tenantId, "entity_research");
 
     const [agentResult, consentResult, sourceResult] = await Promise.all([
       supabase.from("tenant_agent_configs").select("status, enabled").eq("tenant_id", actor.tenantId).eq("agent_key", "entity_research").maybeSingle(),
@@ -86,7 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await supabase.from("audit_events").insert({
       tenant_id: actor.tenantId,
       actor_user_id: actor.userId,
-      actor_label: actor.role,
+      actor_label: actor.email,
       action: "entity_research.queued",
       target_type: "agent_run",
       target_id: run.id,
@@ -95,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(202).json(ok({ run, dispatch, message: "Investigación pública encolada para revisión humana." }));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    const status = message.includes("Permiso") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : 400;
+    const status = message.includes("Permiso") || message.includes("no incluido") ? 403 : message.includes("autoriz") || message.includes("Token") ? 401 : 400;
     return res.status(status).json(fail(message));
   }
 }

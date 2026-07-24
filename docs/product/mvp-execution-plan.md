@@ -52,7 +52,7 @@ Acceptance:
 
 ## Hito 3: Worker de Extraccion y Chunking
 
-Status: iniciado con worker de chunking.
+Estado: parcial; chunking disponible y consumidor privado completo pendiente.
 
 Deliverables:
 
@@ -79,7 +79,7 @@ Next implementation cut:
 
 ## Hito 4: Matching RAG Minimo
 
-Status: pendiente.
+Estado: base operativa; encaje alojado condicionado a perfil aprobado.
 
 Deliverables:
 
@@ -96,7 +96,7 @@ Acceptance:
 
 ## Hito 4b: Cambios, Versiones y Alertas
 
-Status: pendiente.
+Estado: base operativa para versiones y alertas dentro de la app; emisores externos pendientes.
 
 Deliverables:
 
@@ -118,7 +118,7 @@ Acceptance:
 
 ## Hito 5: Cockpit Conectado
 
-Status: pendiente.
+Estado: parcial; cockpit conectado en flujos críticos y demostraciones aún presentes.
 
 Deliverables:
 
@@ -136,7 +136,7 @@ Acceptance:
 
 ## Hito 6: Pilot Review
 
-Status: pendiente.
+Estado: en validación con tenant piloto, sin convertirlo en supuesto global.
 
 Deliverables:
 

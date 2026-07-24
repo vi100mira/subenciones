@@ -4,8 +4,9 @@ function opportunities() {
 }
 const titles = {
   dashboard: "Panel de oportunidades",
-  opportunities: "Oportunidades vivas",
+  opportunities: "Gesti\u00f3n de oportunidades",
   entity: "Perfil de entidad",
+  knowledge: "Base común de la entidad",
   governance: "Gobernanza del dato",
   agents: "Asistentes y servicios",
   workspace: "Candidatura",
@@ -22,36 +23,9 @@ function renderStackItem(item) {
 function scoreLabel(score) {
   return score >= 75 ? "Prioridad alta" : score >= 55 ? "Prioridad media" : "Prioridad baja";
 }
+/* Dashboard rendering lives in dashboard-renderer.js to keep this entrypoint reviewable. */
 function renderDashboard() {
-  const isPlatform = document.body.dataset.role === "superadmin";
-  const summary = window.OpportunityScope?.summary() || { total: 0, open: 0, highPriority: 0, uncertain: 0 };
-  const metrics = document.querySelectorAll("#dashboard .metric");
-  const values = [
-    ["Oportunidades en seguimiento", summary.total, "Coincide con la vista Oportunidades"],
-    ["Con plazo abierto", summary.open, "Solicitud abierta confirmada"],
-    ["Prioridad alta", summary.highPriority, "Segun el perfil de la entidad"],
-    ["Plazo por confirmar", summary.uncertain, "Requiere revision antes de decidir"]
-  ];
-  metrics.forEach((metric, index) => {
-    metric.querySelector("span").textContent = values[index][0];
-    metric.querySelector("strong").textContent = values[index][1];
-    metric.querySelector("small").textContent = values[index][2];
-  });
-  document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
-  document.querySelector("#agent-runs-small").innerHTML = (isPlatform ? window.MOCK.platformRuns : window.MOCK.runs).slice(0, 3).map(renderStackItem).join("");
-  document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
-  document.querySelector("#source-map").innerHTML = `
-    <div class="source-legend">
-      <span><i class="legend-dot active"></i>Operativa</span>
-      <span><i class="legend-dot warning"></i>Con avisos</span>
-      <span><i class="legend-dot pending"></i>No conectada</span>
-      <span><i class="legend-dot blocked"></i>Bloqueada</span>
-    </div>
-  ` + window.MOCK.sources.filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant")).map((source) => {
-    const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
-    const cls = `${source.scope.includes("privado") || source.scope.includes("curada") || source.kind === "Privativa" ? " private" : ""}${status}`;
-    return `<div class="source-node${cls}"><strong>${source.name}</strong><span>${source.status}</span></div>`;
-  }).join("");
+  window.DashboardRenderer.render({ opportunities, badge, renderStackItem });
 }
 function renderOpportunities() {
   const list = document.querySelector("#opportunity-list");
@@ -245,7 +219,6 @@ function renderPlatform() {
       </details>
     `;
   };
-  const tenantRow = (item) => `<div class="tenant-grid-row" data-tenant-slug="${item.slug || ""}"><div><strong>${item.title}</strong><span>${item.detail}</span></div><div>${badge(item.state, item.state === "Activa" ? "safe" : "review")}</div><div><span>Gobierno</span><strong>Registro y ciclo de vida auditados</strong></div><div class="tenant-actions"><button class="ghost-action" data-tenant-admin-action="export" type="button">Exportar</button><button class="ghost-action" data-tenant-admin-action="activate" type="button">Activar</button><button class="ghost-action" data-tenant-admin-action="archive" type="button">Archivar</button><button class="ghost-action" data-tenant-admin-action="restore" type="button">Restaurar</button></div></div>`;
   document.querySelector("#tenant-list").innerHTML = `
     <div class="source-control-row"><div><strong>Tenant minimo</strong><span>Nombre, web publica, email admin y consentimiento.</span></div><div><strong>Agente investigador</strong><span>12 paginas, profundidad 2, 90s, 3 MB.</span></div><div><strong>Revision humana</strong><span>Tipo, territorio, temas y logo quedan pendientes.</span></div></div>
     <div class="inline-form">
@@ -254,8 +227,9 @@ function renderPlatform() {
       <button class="primary-action" data-tenant-provision type="button">Crear estructura tenant</button>
     </div>
     <div class="plain-note" data-tenant-admin-status><strong>Alta gobernada</strong><span>Crea estructura y agentes bloqueados por sus puertas; no concede consentimientos ni investiga automáticamente.</span></div>
-    <div class="tenant-grid"><div class="tenant-grid-head"><span>Entidad</span><span>Estado</span><span>Control</span><span>Operaciones</span></div>${window.MOCK.tenants.map(tenantRow).join("")}</div>
+    <div data-tenant-grid-host></div>
   `;
+  window.TenantGrid?.render(window.MOCK.tenants);
   document.querySelector("#platform-campaigns").innerHTML = `<div class="source-control-row"><div><strong>Detectar cambios</strong><span>Hash/etag sin IA antes de modelos.</span></div><div><strong>Programar cron</strong><span>Cadencia y presupuesto por campana.</span></div><div><strong>Ejecutar ahora</strong><span>Manual con motivo y auditoria.</span></div></div><div class="plain-note"><strong>Flujo del agente</strong><span>Abre cada revision para editar cron, presupuesto y ejecucion manual.</span></div>${window.MOCK.platformCampaigns.map(row).join("")}`;
 }
 
@@ -286,7 +260,17 @@ function showScreen(screenId) {
   });
   const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Oportunidades de la plataforma", agents: "Asistentes de la plataforma", audit: "Auditoria global" };
   document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && platformTitles[screenId] ? platformTitles[screenId] : titles[screenId];
-  document.querySelector(".top-actions .primary-action").innerHTML = (screenId === "platform" || screenId === "operations" || document.body.dataset.role === "superadmin") ? '<i data-lucide="play"></i>Ejecutar ahora' : '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
+  const primaryAction = document.querySelector(".top-actions .primary-action");
+  const refreshAction = document.querySelector("#refresh-button");
+  const isPlatformAdmin = document.body.dataset.role === "superadmin";
+  const refreshScreens = ["opportunities", "agents", "audit", "operations"];
+  primaryAction.style.display = !isPlatformAdmin && screenId === "opportunities" ? "" : "none";
+  refreshAction.style.display = refreshScreens.includes(screenId) ? "" : "none";
+  if (screenId === "dashboard") {
+    renderDashboard();
+    window.refreshTenantMatchState?.();
+  }
+  primaryAction.innerHTML = '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
@@ -300,10 +284,13 @@ function bindNavigation() {
 
 function bindJumps() {
   document.querySelectorAll("[data-jump]").forEach((button) => {
-    button.addEventListener("click", () => showScreen(button.dataset.jump));
+    button.addEventListener("click", () => {
+      showScreen(button.dataset.jump);
+      const target = document.getElementById(button.dataset.focusTarget || "");
+      if (target) requestAnimationFrame(() => { target.scrollIntoView({ block: "start" }); target.focus({ preventScroll: true }); });
+    });
   });
   document.querySelectorAll("[data-platform-tab]").forEach((button) => button.addEventListener("click", () => { document.querySelectorAll("[data-platform-tab]").forEach((tab) => tab.classList.toggle("is-selected", tab === button)); document.querySelectorAll("[data-platform-pane]").forEach((pane) => { pane.hidden = pane.dataset.platformPane !== button.dataset.platformTab; }); }));
-  document.querySelectorAll("#platform-campaigns details summary").forEach((summary) => summary.addEventListener("click", (event) => { event.preventDefault(); summary.parentElement.open = !summary.parentElement.open; }));
 }
 
 function showToast(message) {
@@ -327,10 +314,13 @@ function init() {
   renderPlatform();
   renderOperations();
   window.refreshRoleViews = () => { renderDashboard(); renderOpportunities(); renderAgents(); renderAudit(); renderOperations(); window.renderPlatformOperations?.(); };
+  window.addEventListener("tenant-recommendations-applied", () => { renderDashboard(); renderOpportunities(); });
+  ["tenant-match-load-state", "tenant-match-state", "role-session-applied"].forEach((eventName) => window.addEventListener(eventName, renderDashboard));
   bindNavigation();
   bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
 
   document.querySelector("#refresh-button").addEventListener("click", () => {
+    if (document.body.dataset.role === "superadmin" && window.PlatformRuntime?.refresh) return window.PlatformRuntime.refresh();
     showToast("Fuentes actualizadas. No se ha enviado ningún dato privado.");
   });
 

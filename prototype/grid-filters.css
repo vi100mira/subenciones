@@ -1,36 +1,33 @@
+.opportunity-grid thead > tr:first-child th {
+  box-sizing: border-box;
+  height: 40px;
+}
+
 .opportunity-grid .grid-filter-row th {
   top: 40px;
   z-index: 6;
-  padding-top: 6px;
-  padding-bottom: 8px;
-  background: #f4fbf8;
+  padding-top: 4px;
+  padding-bottom: 6px;
+  background: #f8fffc;
   text-transform: none;
 }
 
 .grid-filter {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-width: 116px;
-}
-
-.grid-filter span {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .grid-filter input {
   width: 100%;
-  min-height: 28px;
+  min-height: 26px;
   border: 1px solid #bfd1cc;
   border-radius: 6px;
   background: #ffffff;
   color: #14231f;
   font: inherit;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 3px 7px;
 }
 
 .grid-filter input:focus {

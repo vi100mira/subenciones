@@ -8,6 +8,8 @@ const provisioningSql = fs.readFileSync(
 );
 const reconcileFixSql = fs.readFileSync("supabase/migrations/20260713211000_fix_reconcile_ambiguous_columns.sql", "utf8");
 const reconcileConflictFixSql = fs.readFileSync("supabase/migrations/20260713212000_fix_reconcile_conflict_target.sql", "utf8");
+const publicDraftSql = fs.readFileSync("supabase/migrations/20260716122500_public_document_drafts_without_ai_consent.sql", "utf8");
+const progressiveKnowledgeSql = fs.readFileSync("supabase/migrations/20260716193000_draft_agent_progressive_tenant_knowledge.sql", "utf8");
 const provisioningApi = fs.readFileSync("api/admin-tenant-provision.ts", "utf8");
 const researchEvidenceSql = fs.readFileSync(
   "supabase/migrations/20260713190000_entity_research_evidence.sql",
@@ -18,6 +20,11 @@ const matchSql = fs.readFileSync(
   "utf8"
 );
 const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
+const tenantAgentRuntime = fs.readFileSync("prototype/tenant-agent-runtime.js", "utf8");
+const dashboardRuntime = fs.readFileSync("prototype/dashboard-renderer.js", "utf8");
+const auditRuntime = fs.readFileSync("prototype/audit-runtime.js", "utf8");
+const permissionRuntime = fs.readFileSync("src/supabaseAdmin.ts", "utf8");
+const credentialRuntime = fs.readFileSync("prototype/auth-credentials.js", "utf8");
 const profileReviewApi = fs.readFileSync("api/tenant-profile-review.ts", "utf8");
 const lifecycleApi = fs.readFileSync("api/admin-tenant-lifecycle.ts", "utf8");
 const authApi = fs.readFileSync("api/auth-session.ts", "utf8");
@@ -61,6 +68,12 @@ assert(!provisioningSql.toLowerCase().includes("novaterra"), "La provisión no p
 assert(reconcileFixSql.includes("consent.status = 'granted'"), "La reconciliación conserva columnas PL/pgSQL ambiguas");
 assert(reconcileFixSql.includes("config.profile_json"), "El perfil reconciliado no usa alias explícito");
 assert(reconcileConflictFixSql.includes("on conflict on constraint tenant_agent_configs_pkey"), "La reconciliación conserva agent_key ambiguo en ON CONFLICT");
+assert(publicDraftSql.includes("'grant_search', 'document_review', 'draft_agent', 'alert_agent'"), "El Gestor documental público sigue bloqueado por consentimiento");
+assert(publicDraftSql.includes("Operativo con bases públicas; datos internos no autorizados"), "La reconciliación no distingue borrador público de personalización interna");
+assert(publicDraftSql.includes("internal_facts_requires_consent"), "El contrato no limita el consentimiento a hechos internos");
+assert(publicDraftSql.includes("perform 1 from public.reconcile_tenant_agent_suite"), "La migración no reconcilia los tenants existentes");
+assert(progressiveKnowledgeSql.includes("tenant_knowledge_curator") && progressiveKnowledgeSql.includes("document_drafter"), "Preparación documental no declara sus dos capacidades internas");
+assert(progressiveKnowledgeSql.includes("approved_tenant_knowledge_only") && progressiveKnowledgeSql.includes("external_submission_allowed', false"), "La mejora documental carece de límites de aprendizaje o presentación");
 assert(provisioningApi.includes("requirePlatformAdmin"), "La provisión debe exigir administración de plataforma");
 assert(provisioningApi.includes('req.method !== "POST"'), "La provisión solo debe aceptar POST");
 assert(provisioningApi.includes('rpc("provision_tenant_agent_suite"'), "La API debe usar la transacción SQL");
@@ -83,11 +96,29 @@ assert(governanceApi.includes("requireSourcePermission"), "El gobierno no exige 
 assert(governanceApi.includes("Falta alcance explícito"), "El consentimiento no exige alcance");
 assert(governanceApi.includes("validConsentScope"), "El consentimiento no valida su alcance");
 assert(governanceApi.includes("scope_keys"), "La auditoría conserva el alcance completo");
+assert(governanceApi.includes("profileReviewState"), "El gobierno no expone la finalización persistida del perfil");
+assert(governanceApi.includes("tenantDocumentSummary") && governanceApi.includes('from("source_documents")'),
+  "El panel tenant conserva el contador documental simulado");
+assert(tenantAgentRuntime.includes("response.status === 401") && tenantAgentRuntime.includes("handleUnauthorized"),
+  "Los asistentes conservan una sesión tenant caducada");
+assert(dashboardRuntime.includes("TENANT_DOCUMENT_SUMMARY") && dashboardRuntime.includes("documentCount"),
+  "El panel no consume el inventario privado aislado del tenant");
+assert(permissionRuntime.includes("if (membershipError) {")
+  && permissionRuntime.includes("throw membershipError")
+  && permissionRuntime.includes("Token sin pertenencia activa a entidad"),
+  "Una sesión con tenant obsoleto sigue respondiendo 400");
+assert(auditRuntime.includes("response.status === 401") && auditRuntime.includes("handleUnauthorized"),
+  "Auditoría conserva una sesión tenant caducada");
+assert(permissionRuntime.includes("requestedTenant") && permissionRuntime.includes("Token con tenant invalido"),
+  "El servidor consulta Supabase con un tenantId antiguo o mal formado");
+assert(credentialRuntime.includes("hasInvalidTenantScope") && credentialRuntime.includes("session?.role === \"entity\""),
+  "El navegador conserva una sesión tenant con identificador obsoleto");
 assert(governanceApi.includes("reconcile_tenant_agent_suite"), "Los cambios no reconcilian agentes");
 assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa reversible de agentes");
 assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");
 assert(!governanceApi.toLowerCase().includes("novaterra"), "El gobierno depende del piloto");
 assert(profileReviewApi.includes('.eq("status", "pending")'), "La revisión puede sobrescribir decisiones previas");
+assert(profileReviewApi.includes("sugerencias por revisar antes de aprobar") && profileReviewApi.includes('approveMaster ? "la plantilla maestra" : "el perfil"'), "El perfil o la plantilla maestra pueden aprobarse con sugerencias pendientes");
 assert(profileReviewApi.includes('review_state: "approved"'), "La revisión no aprueba el perfil explícitamente");
 assert(profileReviewApi.includes("reconcile_tenant_agent_suite"), "Aprobar perfil no habilita capacidades reconciliadas");
 assert(profileReviewApi.includes("evidence_excerpt"), "La revisión no muestra evidencia");

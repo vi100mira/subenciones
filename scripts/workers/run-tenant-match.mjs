@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { matchOpportunity } from "./tenant-match-contract.mjs";
+import { recordAgentRunAudit } from "./agent-run-audit.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -137,6 +138,7 @@ async function main() {
   const supabase = client();
   const run = await claim(supabase);
   if (!run) return console.log(JSON.stringify({ mode: "idle", message: "No hay cálculos de encaje en cola." }, null, 2));
+  await recordAgentRunAudit(supabase, run, "match_agent.started", "tenant-match-worker");
   try {
     const profileContext = await loadProfile(supabase, run.tenant_id);
     const versions = await loadOpportunities(supabase);
@@ -173,6 +175,7 @@ async function main() {
     await supabase.from("tenant_agent_runs").update({
       status: "failed", error: message.slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).eq("id", run.id);
+    await recordAgentRunAudit(supabase, run, "match_agent.failed", "tenant-match-worker", { error: message.slice(0, 500) }).catch(() => {});
     throw error;
   }
 }

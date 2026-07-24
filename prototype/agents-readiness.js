@@ -36,11 +36,10 @@
       note: "Revisa BDNS y fuentes territoriales; vigila 15 financiadores privados curados. Una privada solo se incorpora con bases oficiales y vigencia verificable."
     },
     "Investigador de entidad": {
-      status: "Pendiente de activación",
-      tone: "warning",
+      status: "Comprobando estado",
+      tone: "review",
       disabled: true,
-      platformOnly: true,
-      note: "El agente está desplegado. La entidad debe autorizar y aprobar su fuente web antes de ejecutarlo."
+      note: "Consulta el permiso web, la fuente aprobada y la última investigación de esta entidad."
     },
     "Asistente de encaje": {
       status: "Disponible en esta versión",
@@ -48,11 +47,12 @@
       disabled: false,
       note: "Ayuda a comparar oportunidades y explicar encaje, riesgos e información pendiente."
     },
-    "Politicas de datos": {
-      status: "En desarrollo",
-      tone: "warning",
-      disabled: true,
-      note: "Hay normas visibles de protección, pero algunos bloqueos automáticos siguen en preparación."
+    "Control de datos": {
+      status: "Control activo",
+      tone: "safe",
+      disabled: false,
+      governanceControl: true,
+      note: "No calcula encaje. Bloquea capacidades sin permiso, limita las clases autorizadas y registra los cambios; no detecta por sí solo cualquier dato sensible."
     },
     "Revision documental": {
       status: "Parcial con revision",
@@ -60,11 +60,11 @@
       disabled: false,
       note: "Lee bases públicas y sus límites. La lista automática de requisitos y la documentación privada requieren revisión."
     },
-    "Gestor documental": {
+    "Preparación documental": {
       status: "Preparado, pendiente de activación",
       tone: "review",
       disabled: false,
-      note: "Organiza requisitos y borradores de candidatura. No genera texto con IA hasta que la entidad lo autorice."
+      note: "Incluye un curador que propone conocimiento reutilizable y un redactor que prepara borradores. Solo usa hechos aprobados; nunca aprueba, firma ni presenta."
     },
     "Avisos y recordatorios": {
       status: "En desarrollo",
@@ -105,10 +105,15 @@
       card.classList.toggle("is-disabled", meta.disabled);
       card.classList.toggle("is-platform-only", Boolean(meta.platformOnly));
       card.classList.toggle("is-active-prototype", !meta.disabled);
+      card.classList.toggle("is-governance-control", Boolean(meta.governanceControl));
+      if (meta.governanceControl) card.dataset.componentType = "control-transversal";
       card.setAttribute("aria-disabled", String(meta.disabled));
       card.querySelector(".opportunity-topline")?.classList.add("agent-card-topline");
       const oldBadge = card.querySelector(".badge");
       if (oldBadge) oldBadge.outerHTML = statusDot(meta);
+      if (meta.governanceControl) {
+        card.querySelector(".agent-icon")?.insertAdjacentHTML("afterend", '<span class="component-kicker">Control transversal · no es un agente</span>');
+      }
       card.insertAdjacentHTML("beforeend", `<p class="agent-readiness">${meta.note}</p>`);
     });
   }
@@ -138,8 +143,8 @@
     if (!screen || document.querySelector("#agents-readiness-note")) return;
     screen.insertAdjacentHTML("afterbegin", `
       <div class="plain-note agent-readiness-note" id="agents-readiness-note">
-        <strong>Qué está disponible hoy</strong>
-        <span>La búsqueda funciona automáticamente y el redactor está preparado. La investigación web de la entidad, el análisis de documentos privados y los avisos externos siguen en preparación.</span>
+        <strong>Ciclo de estudio y encaje</strong>
+        <span>Las oportunidades visibles pertenecen al radar general. No demuestran que el encaje de la entidad esté calculado: primero se investiga la web autorizada, después se revisa el perfil y finalmente se calcula el encaje.</span>
       </div>`);
   }
 

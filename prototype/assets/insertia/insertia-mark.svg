@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Insertia: corazón con check</title>
+  <defs>
+    <linearGradient id="mint" x1="102" y1="112" x2="418" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9cd7b2"/>
+      <stop offset="1" stop-color="#69b986"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="206" y1="267" x2="397" y2="398" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#dc961e"/>
+      <stop offset="1" stop-color="#c97700"/>
+    </linearGradient>
+  </defs>
+  <circle cx="154" cy="105" r="38" fill="url(#gold)"/>
+  <path d="M118 159c0-8 6-14 14-14h45c8 0 14 6 14 14v163c0 56 32 101 84 101 52 0 92-39 99-94l45-45v39c0 82-63 151-144 160-92 10-157-59-157-161V159Z" fill="url(#mint)"/>
+  <path d="M275 174c-34-46-112-22-112 36 0 66 112 143 112 143s112-77 112-143c0-58-78-82-112-36Z" fill="#d92d45"/>
+  <path d="m196 278 58 58 119-119" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round" stroke-width="31"/>
+</svg>

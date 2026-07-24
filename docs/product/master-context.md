@@ -59,12 +59,13 @@ Agents are permissioned services with scopes, inputs, outputs, and audit events:
 - Busqueda de convocatorias / Explorer: public and approved source refresh.
 - Investigador de entidad / Entity Research: public website analysis, logo candidates, and suggested facts.
 - Asistente de encaje / Match: fit, risks, missing data, and evidence.
-- Politicas de datos / Governance: data classification and blocked use.
 - Revision documental / Documentary: requirements, bases, checklists.
 - Borrador de memoria / Draft: Word drafts with evidence and approved facts.
 - Avisos y recordatorios / Monitor: alerts and channel-safe summaries.
 
 No agent may access sensitive/private tenant data unless policy allows it. No agent may submit, send, or externally share without human approval.
+
+Control de datos / Governance no es un agente de análisis: es la capa transversal que aplica permisos, consentimiento, aislamiento tenant, clases de datos permitidas, auditoría y puertas de revisión humana.
 
 ## Current Implementation State
 

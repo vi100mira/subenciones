@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import { contractForConstraints, validateDraftOutput } from "./draft-agent-contract.mjs";
 import { generatePublicDraft, maximumRunCostEur } from "./openai-draft-provider.mjs";
+import { recordAgentRunAudit } from "./agent-run-audit.mjs";
+import { basesAcceptanceContractHash, combineApprovedBasesRows } from "../../src/basesContract.mjs";
 
 function loadEnv(content) {
   for (const line of content.split(/\r?\n/)) {
@@ -33,6 +35,35 @@ function providerReady() {
   return process.env.AI_DRAFT_PROVIDER === "openai" && Boolean(process.env.OPENAI_API_KEY);
 }
 
+function missingAcceptanceSchema(error) {
+  return ["42P01", "PGRST205"].includes(String(error?.code || ""))
+    || /tenant_bases_acceptances.*(?:not exist|schema cache)/i.test(String(error?.message || ""));
+}
+
+async function approvedRequirements(supabase, versionId, tenantId) {
+  const { data, error } = await supabase.from("platform_bases_interpretations")
+    .select("id, status, citations_verified, contract_json").eq("opportunity_version_id", versionId)
+    .in("status", ["approved", "review_required"]);
+  if (error) throw error;
+  const rows = data || [];
+  const acceptanceResult = await supabase.from("tenant_bases_acceptances")
+    .select("status, interpretation_ids, contract_hash").eq("tenant_id", tenantId)
+    .eq("opportunity_version_id", versionId).maybeSingle();
+  if (acceptanceResult.error && !missingAcceptanceSchema(acceptanceResult.error)) throw acceptanceResult.error;
+  const acceptance = acceptanceResult.error ? null : acceptanceResult.data;
+  if (acceptance?.status === "discrepancy_reported") throw new Error("La entidad señaló una discrepancia vigente en las bases.");
+  const acceptedIds = acceptance?.status === "accepted"
+    && basesAcceptanceContractHash(rows, acceptance.interpretation_ids) === acceptance.contract_hash
+    ? acceptance.interpretation_ids : [];
+  const combined = combineApprovedBasesRows(rows, acceptedIds);
+  const requirements = combined.requirementsContract;
+  if (requirements.documentaryGate !== "requirements_approved") {
+    throw new Error(`Las bases validadas dejaron de estar completas: ${requirements.missingCoreSections.join(", ") || "sin interpretación vigente"}.`);
+  }
+  return { ...requirements, proposalConstraints: combined.proposalConstraints,
+    interpretationIds: combined.approvedInterpretationIds };
+}
+
 async function claim(supabase, ready) {
   const statuses = ready ? ["queued", "awaiting_provider"] : ["queued"];
   const { data: queued, error: queueError } = await supabase.from("tenant_agent_runs")
@@ -48,14 +79,41 @@ async function claim(supabase, ready) {
   return data ? queued : null;
 }
 
+async function approvedFactContext(supabase, run) {
+  if (!run.use_approved_internal_facts) return [];
+  const { data: consent, error: consentError } = await supabase.from("tenant_data_consents")
+    .select("id").eq("tenant_id", run.tenant_id).eq("consent_type", "ai_processing").eq("status", "granted")
+    .order("granted_at", { ascending: false }).limit(1).maybeSingle();
+  if (consentError) throw consentError;
+  if (!consent) throw new Error("El consentimiento para usar hechos internos con IA ya no esta vigente.");
+  const selected = (run.input_manifest_json?.approvedFactRefs || []).slice(0, 20);
+  const ids = selected.map((fact) => fact.id).filter(Boolean);
+  const selectionById = new Map(selected.map((fact) => [fact.id, fact]));
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from("tenant_profile_suggestions")
+    .select("id, field_key, suggested_value, source_type, confidence, source_sha256")
+    .eq("tenant_id", run.tenant_id).eq("status", "approved")
+    .in("source_type", ["guided_interview", "manual_entry", "uploaded_document"]).in("id", ids);
+  if (error) throw error;
+  return (data || []).map((fact) => ({
+    id: fact.id, fieldKey: String(fact.field_key || "").slice(0, 100),
+    value: String(fact.suggested_value || "").slice(0, 1200), sourceType: fact.source_type,
+    confidence: fact.confidence, sourceSha256: fact.source_sha256 || null,
+    retrievalScore: Number(selectionById.get(fact.id)?.retrievalScore || 0),
+    matchedTerms: (selectionById.get(fact.id)?.matchedTerms || []).slice(0, 8)
+  }));
+}
+
 async function contextManifest(supabase, run) {
-  if (run.use_approved_internal_facts) throw new Error("La fase autorizada solo permite evidencia pública; los hechos internos no se enviarán.");
+  const approvedFacts = await approvedFactContext(supabase, run);
   const { data: version, error: versionError } = await supabase.from("platform_opportunity_versions")
     .select("id, source_url, official_url, bases_url, content_hash, deadline_text, deadline_status, amount_text, eligibility_text, criteria_text, required_documents_text, submission_channel_text, evidence_json")
     .eq("id", run.opportunity_version_id).eq("version_status", "current").maybeSingle();
   if (versionError) throw versionError;
   if (!version || version.deadline_status !== "open") throw new Error("La versión oficial o el plazo dejaron de estar vigentes.");
-  const constraints = version.evidence_json?.proposal_constraints;
+  const requirementsContract = await approvedRequirements(supabase, version.id, run.tenant_id);
+  const constraints = requirementsContract.proposalConstraints.draftingGate === "constraints_verified"
+    ? requirementsContract.proposalConstraints : version.evidence_json?.proposal_constraints;
   if (constraints?.draftingGate !== "constraints_verified") throw new Error("Los límites de redacción dejaron de estar verificados.");
   const { data: opportunity, error: opportunityError } = await supabase.from("platform_opportunities")
     .select("title, funder_name").eq("id", run.opportunity_id).single();
@@ -68,10 +126,13 @@ async function contextManifest(supabase, run) {
       deadlineHash: hash(version.deadline_text),
       criteriaHash: hash(version.criteria_text),
       submissionChannelHash: hash(version.submission_channel_text),
-      constraints
+      constraints,
+      requirementsContractHash: hash(JSON.stringify(requirementsContract)),
+      basesInterpretationIds: requirementsContract.interpretationIds
     },
-    approvedFacts: [],
-    allowedDataClasses: ["public"],
+    approvedFactRefs: approvedFacts.map((fact) => ({ id: fact.id, sourceType: fact.sourceType, sourceSha256: fact.sourceSha256 })),
+    privateRetrieval: run.input_manifest_json?.privateRetrieval || null,
+    allowedDataClasses: approvedFacts.length ? ["public", "internal_approved"] : ["public"],
     rawPrivateTextPersisted: false,
     humanReviewRequired: true,
     externalSubmissionAllowed: false,
@@ -82,7 +143,7 @@ async function contextManifest(supabase, run) {
     deadlineText: version.deadline_text, amountText: version.amount_text,
     eligibilityText: version.eligibility_text, criteriaText: version.criteria_text,
     requiredDocumentsText: version.required_documents_text,
-    submissionChannelText: version.submission_channel_text, constraints
+    submissionChannelText: version.submission_channel_text, constraints, requirementsContract, approvedFacts
   } };
 }
 
@@ -101,6 +162,7 @@ async function main() {
   const ready = providerReady();
   const run = await claim(supabase, ready);
   if (!run) return console.log(JSON.stringify({ mode: "idle", message: "No hay ejecuciones del redactor en cola." }, null, 2));
+  await recordAgentRunAudit(supabase, run, "draft_agent.started", "draft-agent-worker");
   try {
     const prepared = await contextManifest(supabase, run);
     const manifest = prepared.manifest;
@@ -118,23 +180,24 @@ async function main() {
     const { error: generatingError } = await supabase.from("tenant_agent_runs").update({ status: "generating", provider, model: process.env.AI_DRAFT_MODEL || "gpt-5.6-luna", context_manifest_json: manifest, updated_at: new Date().toISOString() }).eq("id", run.id);
     if (generatingError) throw generatingError;
     const generated = await generatePublicDraft(prepared.publicContext);
-    const validation = validateDraftOutput(generated.output, prepared.publicContext.constraints);
+    const validation = validateDraftOutput(generated.output, prepared.publicContext.constraints, prepared.publicContext.requirementsContract);
     const status = validation.valid ? "review_required" : "failed";
     const { error } = await supabase.from("tenant_agent_runs").update({
       status, provider, model: generated.model, context_manifest_json: manifest, output_json: generated.output,
-      usage_json: { ...generated.usage, validationState: validation.validationState, validationErrors: validation.errors, publicOnly: true, responseId: generated.responseId },
+      usage_json: { ...generated.usage, validationState: validation.validationState, validationErrors: validation.errors, documentCoverage: validation.documentCoverage, generatedDocuments: validation.generatedDocuments, publicOnly: !run.use_approved_internal_facts, approvedFactCount: prepared.publicContext.approvedFacts.length, responseId: generated.responseId },
       error: validation.valid ? null : validation.errors.join(" ").slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).eq("id", run.id);
     if (error) throw error;
     await supabase.from("audit_events").insert({
       tenant_id: run.tenant_id, actor_user_id: run.requested_by, actor_label: "draft-agent-worker",
       action: "draft_agent.generated_for_review", target_type: "agent_run", target_id: run.id,
-      detail_json: { status, provider, model: generated.model, tokens: generated.usage.total_tokens, estimated_eur: generated.usage.estimated_eur, public_only: true, output_hash: hash(JSON.stringify(generated.output)), validation_state: validation.validationState }
+      detail_json: { status, provider, model: generated.model, tokens: generated.usage.total_tokens, estimated_eur: generated.usage.estimated_eur, public_only: !run.use_approved_internal_facts, approved_fact_count: prepared.publicContext.approvedFacts.length, output_hash: hash(JSON.stringify(generated.output)), validation_state: validation.validationState, document_coverage: validation.documentCoverage, generated_documents: validation.generatedDocuments }
     });
     console.log(JSON.stringify({ mode: "generated", runId: run.id, status, provider, model: generated.model, usage: generated.usage, validation: validation.validationState }, null, 2));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado";
     await supabase.from("tenant_agent_runs").update({ status: "failed", error: message.slice(0, 4000), finished_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", run.id);
+    await recordAgentRunAudit(supabase, run, "draft_agent.failed", "draft-agent-worker", { error: message.slice(0, 500) }).catch(() => {});
     throw error;
   }
 }

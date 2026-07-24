@@ -36,8 +36,8 @@ assert(worker.includes('.eq("agent_key", "document_review")'), "El worker no aí
 assert(worker.includes("external_ai_calls: 0"), "El worker no declara consumo IA");
 assert(worker.includes("document_review.generated_for_review"), "Falta auditoría del resultado");
 assert(api.includes("requireSourcePermission"), "La API no exige permiso tenant");
-assert(api.includes('inputs: { proceso: "documentos" }'), "La API no despacha el worker alojado");
-assert(api.includes("humanReviewRequired: true"), "La API no exige revisión humana");
+assert(api.includes("status(410)") && !api.includes('inputs: { proceso: "documentos" }'), "La API permite nuevas altas del flujo documental plano");
+assert(api.includes("human_review_status") && api.includes("reviewed_by"), "El historial no conserva la revisión humana");
 assert(workflow.includes("scripts/workers/run-document-review.mjs"), "El worker no está alojado");
 
-console.log(JSON.stringify({ ok: true, requirements: result.requirements.length, evidence: "versionada", aiCalls: 0, review: "humana obligatoria" }, null, 2));
+console.log(JSON.stringify({ ok: true, legacyRequirements: result.requirements.length, evidence: "versionada", newRuns: "retirados", historicalReview: "disponible" }, null, 2));

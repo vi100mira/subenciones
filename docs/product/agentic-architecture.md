@@ -12,9 +12,8 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 | Monitor de cambios | Detectar cambios de plazo, criterios, documentos, presupuesto y presentación | Evidencia pública o curada de plataforma | Los cambios críticos quedan pendientes de revisión |
 | Investigador de entidad | Analizar la web pública y proponer hechos, logotipos y temas | Web pública con consentimiento explícito | Antes de aprobar hechos |
 | Asistente de encaje | Explicar encaje, riesgos y datos ausentes | Convocatorias públicas y perfil aprobado | Antes de iniciar una candidatura |
-| Políticas de datos | Clasificar fragmentos internos y bloquear usos inseguros | Metadatos y fragmentos aportados | Para aprobar contexto interno |
-| Agente documental | Extraer requisitos y preparar paquetes documentales tenant-scoped | Bases públicas y hechos internos aprobados | Antes de activar proyecto y exportar |
-| Agente redactor | Crear esquemas y borradores ajustados a límites oficiales | Evidencia pública y hechos internos aprobados | Antes de exportar o compartir |
+| Control de datos (transversal, no agente) | Autorizar o bloquear capacidades según permisos, consentimiento y clase de datos | Metadatos, alcance del consentimiento y referencias aprobadas | Para aprobar contexto interno y cualquier uso externo |
+| Preparación documental | Curar conocimiento privado aprobado y preparar paquetes y borradores tenant-scoped | Bases públicas; fuentes privadas autorizadas; hechos internos aprobados | Antes de aprobar hechos, activar proyecto y exportar |
 | Agente de avisos | Producir alertas y recordatorios | Resúmenes de encaje y plazos | Antes de enviar por un canal no público |
 
 ## Responsabilidades del orquestador
@@ -27,6 +26,19 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 - Recalcular el impacto en tenants cuando cambia una convocatoria.
 - Entregar respuestas adecuadas al canal sin exponer contexto privado.
 
+## Política de ejecución visible
+
+| Capacidad | Disparador permitido | Lo que ve el analista |
+| --- | --- | --- |
+| Radar público | Cron de plataforma diario (05:15 UTC) u operación de plataforma | modo programado y próximo ciclo |
+| Investigador de entidad | Acción humana sobre la web consentida | fecha, resultado y persona solicitante |
+| Encaje | Acción humana tras aprobar el perfil | cola autorizada; el consumidor de 15 minutos no crea ejecuciones |
+| Revisión documental | Evento de expediente o cambio de bases | expediente que originó la ejecución y estado de revisión |
+| Preparación documental | Acción humana con fuente privada o formulario | último análisis, actor y posibilidad de actualizarlo |
+| Avisos | Programación del canal cuando esté activo | programación efectiva o aviso de que falta activar el canal |
+
+La API registra al solicitante humano en `.queued`; el worker registra `.started`, el resultado `generated_for_review` y `.failed`. Esos eventos se almacenan por tenant en `audit_events`. Un cron de recuperación puede consumir una cola autorizada, pero nunca crea por sí solo una ejecución privada, un encaje o un borrador.
+
 ## Ciclo del agente redactor
 
 1. `POST /api/draft-agent-runs` valida que convocatoria, versión y plazo estén vigentes.
@@ -37,6 +49,18 @@ Los agentes son servicios con permisos, no cajas negras autónomas. Cada agente 
 6. Sin proveedor autorizado, deja la ejecución en `awaiting_provider`; nunca simula una respuesta de IA.
 7. Con proveedor y clave instalados, la integración produce salida JSON estructurada, valida límites y queda en `review_required`.
 8. Ningún agente puede presentar, enviar o compartir externamente sin aprobación humana.
+
+## Conocimiento progresivo del tenant
+
+`draft_agent` es una sola capacidad contratada con dos especialidades internas. El **curador de conocimiento** inventaría fuentes privadas autorizadas, detecta hechos reutilizables, vigencia y contradicciones, y crea propuestas con evidencia. El **redactor documental** consume exclusivamente hechos aprobados y requisitos versionados para preparar borradores.
+
+La mejora procede de una plantilla maestra tenant-scoped y versionada, no de entrenar o modificar un modelo. Una corrección humana puede generar una nueva propuesta, pero nunca se reutiliza hasta ser aprobada. Los hechos, fragmentos, embeddings y decisiones no cruzan tenants.
+
+La entrada operativa se gestiona desde **Asistentes > Preparación documental** y obliga a elegir una única vía por preparación: inventariar proyectos de una fuente privada autorizada o responder un formulario guiado. La pantalla **Entidad** solo explica la capacidad y sus límites; no aprueba fuentes ni ejecuta ingestas.
+
+La fuente local del piloto se ejecuta mediante un puente local determinista y controlado por el operador. El puente reclama una sola ejecución encolada para el tenant y la fuente configurados, excluye contenido personal o sensible antes de proponer hechos, no usa IA externa y elimina los artefactos temporales. Conserva en `%LOCALAPPDATA%/Insertia/private-index` un índice FTS tenant-scoped en cuarentena; ningún fragmento queda activo ni llega al redactor hasta que una persona aprueba el hecho correspondiente. Supabase conserva métricas, huellas y metadatos mínimos de revisión documental —nombre, tipo, clasificación, recomendación y estado—, nunca rutas locales, contenido ni fragmentos. Solo después de una aprobación explícita el archivo completo puede copiarse a Vercel Blob privado bajo `tenants/{tenant_id}/annex-vault/{document_id}/{sha256}.{ext}`; la aplicación persiste únicamente el `pathname` privado y sirve descargas autenticadas. No es un agente autónomo ni un conector distribuible: Drive y SharePoint necesitan adaptadores con credenciales delegadas y alcance propio.
+
+Antes de cualquier ingesta privada se ejecuta un **preflight sin IA** común a carpeta local, Google Drive y SharePoint. El adaptador entrega únicamente recuentos agregados de archivos compatibles y bytes; no rutas ni nombres. El servidor guarda el resultado en la fuente, audita bloqueo/advertencia/aceptación y rechaza la cola si el estado no es `ready` o `ready_limited`. El estado limitado solo se obtiene mediante confirmación humana explícita.
 
 ## Puerta de candidata a proyecto
 

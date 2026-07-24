@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { combineProposalConstraints, extractProposalConstraints } from "./extract-proposal-constraints.mjs";
+import { combineGrantRequirements, extractGrantRequirements } from "./extract-grant-requirements.mjs";
 
 const args = new Map(process.argv.slice(2).map((arg) => {
   const [key, ...rest] = arg.replace(/^--/, "").split("=");
@@ -43,32 +44,67 @@ export function hasSubstantiveBases(text = "") {
   return signals.filter(Boolean).length >= 3;
 }
 
-export function verifiedEvidence(result, expectedUrl) {
+export function hasApplicationMaterial(text = "") {
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const signals = [/solicitud|anexo/.test(normalized), /documentacion|memoria|declaracion/.test(normalized), /firma|nif|dni|representante|adjunt/.test(normalized)];
+  return signals.filter(Boolean).length >= 2;
+}
+
+function journalTarget(document, options) {
+  if (options.sourceAuthority !== "official_journal") {
+    return { text: document.extracted_text || "", pages: document.page_evidence || [], locator: null };
+  }
+  const bdnsId = String(options.canonicalId || "").match(/\d{5,}/)?.[0] || "";
+  const tokens = String(options.opportunityTitle || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .split(/[^a-z0-9]+/).filter((token) => token.length > 5 && !["bases", "reguladoras", "convocatoria", "subvenciones", "ayudas"].includes(token));
+  const pages = (document.page_evidence || []).filter((page) => {
+    const text = String(page.text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const titleMatches = tokens.filter((token) => text.includes(token)).length;
+    return bdnsId && text.includes(bdnsId) && titleMatches >= 4;
+  });
+  if (!pages.length) return null;
+  return {
+    text: pages.map((page) => page.text || "").join("\n\n"),
+    pages,
+    locator: { kind: "official_journal_bdns_match", bdnsId, pages: pages.map((page) => page.page).filter(Boolean) }
+  };
+}
+
+export function verifiedEvidence(result, expectedUrl, options = {}) {
   const expected = comparableUrl(expectedUrl);
-  const documents = (result.evidence_documents || []).filter((document) => {
+  const documents = (result.evidence_documents || []).flatMap((document) => {
     const officialPath = comparableUrl(document.curated_basis_origin || document.source_url) === expected;
-    return officialPath
+    const target = journalTarget(document, options);
+    const accepted = officialPath
       && document.extraction_status === "ready"
       && /^[a-f0-9]{64}$/i.test(document.sha256 || "")
-      && (document.extracted_text || "").trim().length >= 1000
-      && hasSubstantiveBases(document.extracted_text);
-  }).map((document) => ({
+      && (target?.text || "").trim().length >= 1000
+      && (hasSubstantiveBases(target?.text) || (options.applicationMaterial && hasApplicationMaterial(target?.text)));
+    return accepted ? [{ document, target }] : [];
+  }).map(({ document, target }) => ({
     sourceUrl: document.source_url,
     officialBasesUrl: expectedUrl,
     sha256: document.sha256,
     pageCount: document.page_count,
+    sourceLocator: target.locator,
     extractionStatus: document.extraction_status,
-    extractedChars: document.extracted_text.length,
-    excerpt: document.extracted_text.slice(0, 4000),
-    proposalConstraints: extractProposalConstraints(document.extracted_text, {
+    extractedChars: target.text.length,
+    excerpt: target.text.slice(0, 4000),
+    proposalConstraints: extractProposalConstraints(target.text, {
       sourceUrl: document.source_url,
       documentSha256: document.sha256,
-      pageEvidence: document.page_evidence
+      pageEvidence: target.pages
+    }),
+    requirementsContract: extractGrantRequirements(target.text, {
+      sourceUrl: document.source_url,
+      documentSha256: document.sha256,
+      pageEvidence: target.pages,
+      sourceAuthority: options.sourceAuthority
     })
   }));
 
   const best = result.best_evidence || {};
-  const verifiedHtml = comparableUrl(best.url) === expected
+  const verifiedHtml = comparableUrl(best.curated_basis_origin || best.url) === expected
     && best.curated_basis === true
     && /^[a-f0-9]{64}$/i.test(best.content_sha256 || "")
     && (best.extracted_text || "").trim().length >= 1000
@@ -86,6 +122,11 @@ export function verifiedEvidence(result, expectedUrl) {
       proposalConstraints: extractProposalConstraints(best.extracted_text, {
         sourceUrl: best.url,
         documentSha256: best.content_sha256
+      }),
+      requirementsContract: extractGrantRequirements(best.extracted_text, {
+        sourceUrl: best.url,
+        documentSha256: best.content_sha256,
+        sourceAuthority: options.sourceAuthority
       })
     });
   }
@@ -113,22 +154,31 @@ async function main() {
 
   const opportunities = (dataset.opportunities || []).map((item) => {
     const results = byOpportunity.get(item.id) || [];
-    const expectedUrls = item.basesUrls?.length ? item.basesUrls : item.basesUrl ? [item.basesUrl] : [];
+    const expectedDocuments = item.basisDocuments?.length ? item.basisDocuments : (item.basesUrls?.length ? item.basesUrls : item.basesUrl ? [item.basesUrl] : []).map((url, index) => ({ url, role: index ? "supporting" : "primary" }));
     const evidenceByResult = results.map((result) => ({
       index: resultIndex(result.id),
-      evidence: verifiedEvidence(result, expectedUrls[resultIndex(result.id)])
+      evidence: verifiedEvidence(result, expectedDocuments[resultIndex(result.id)]?.url, {
+        applicationMaterial: expectedDocuments[resultIndex(result.id)]?.role === "application_form",
+        sourceAuthority: expectedDocuments[resultIndex(result.id)]?.sourceAuthority,
+        canonicalId: item.id,
+        opportunityTitle: item.title
+      })
     }));
-    const complete = expectedUrls.length > 0
-      && results.length === expectedUrls.length
-      && expectedUrls.every((_, index) => evidenceByResult.some((entry) => entry.index === index && entry.evidence.length > 0));
+    const legalDocumentIndexes = new Set(expectedDocuments.map((document, index) => [document, index])
+      .filter(([document]) => document.role !== "application_form")
+      .map(([, index]) => index));
+    const complete = expectedDocuments.length > 0
+      && evidenceByResult.some((entry) => legalDocumentIndexes.has(entry.index) && entry.evidence.length > 0);
     const basesEvidence = evidenceByResult.flatMap((entry) => entry.evidence);
     const proposalConstraints = combineProposalConstraints(basesEvidence.map((entry) => entry.proposalConstraints));
+    const requirementsContract = combineGrantRequirements(basesEvidence.map((entry) => entry.requirementsContract));
     return {
       ...item,
       actionable: Boolean(item.actionable && complete),
       basesStatus: complete ? "extracted" : item.basesUrl ? "extraction_pending_or_failed" : "missing",
       basesEvidence,
       proposalConstraints,
+      requirementsContract,
       extractedText: [item.extractedText, ...basesEvidence.map((entry) => entry.excerpt)].filter(Boolean).join("\n\n")
     };
   });

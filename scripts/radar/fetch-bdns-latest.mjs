@@ -22,6 +22,7 @@ const campaignDescriptions = campaign === "municipal-social"
   : [];
 const detailDelayMs = Number(args.get("detail-delay-ms") || 250);
 const retryCount = Number(args.get("retries") || 2);
+const detailIds = (args.get("detail-ids") || "").split(",").map((value) => value.trim()).filter(Boolean);
 const today = args.get("today") || new Date().toISOString().slice(0, 10);
 const currentYear = Number(today.slice(0, 4));
 
@@ -75,21 +76,98 @@ export function documentDownloadUrl(id) {
   return id ? `${API_BASE}/convocatorias/documentos?idDocumento=${encodeURIComponent(id)}` : "";
 }
 
+function documentLabel(document) {
+  return `${document.description || ""} ${document.filename || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function declaredSpanishCall(document) {
+  return /documento de la convocatoria en espanol|texto en castellano de la convocatoria/.test(documentLabel(document));
+}
+
+function applicationDocument(document) {
+  return /documentacion a presentar|\bsolicitud\b|ficha terceros|declaracion responsable|memoria (?:tecnica|del proyecto)|modalidad \d|anexo (?:i{1,3}|[123])\b/.test(documentLabel(document));
+}
+
+function regulatoryDocument(document) {
+  return /\b(bases|normas|ordenanza)\b/.test(documentLabel(document));
+}
+
+function excludedDocument(document) {
+  return /extracto|cuenta justificativa|justificacion|certificado de difusion|aceptacion|reformulacion|resolucion de concesion|concesion (?:provisional|definitiva)|correccion/.test(documentLabel(document));
+}
+
 export function primaryCallDocument(documents) {
-  const excluded = /\b(anexo|extracto|certificad|cuenta justificativa|declaraci[oó]n|solicitud|correcci[oó]n|concesi[oó]n)\b/i;
   const score = (document) => {
-    const text = `${document.description || ""} ${document.filename || ""}`;
-    if (excluded.test(text)) return -1;
+    const text = documentLabel(document);
+    if (excludedDocument(document) && !declaredSpanishCall(document)) return -1;
     let value = 0;
-    if (/bases|normas|ordenanza/i.test(text)) value += 100;
-    if (/convocatoria/i.test(document.filename || "")) value += 80;
-    if (/documento de la convocatoria en espa[nñ]ol|texto en castellano de la convocatoria/i.test(document.description || "")) value += 60;
-    if (/lengua cooficial|otra lengua/i.test(document.description || "")) value -= 20;
+    if (declaredSpanishCall(document)) value += 140;
+    if (regulatoryDocument(document)) value += 120;
+    if (/convocatoria/.test(text)) value += 60;
+    if (/lengua cooficial|otra lengua|euskera/.test(text)) value -= 80;
     return value;
   };
   return [...documents].map((document) => ({ document, score: score(document) }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || String(a.document.id).localeCompare(String(b.document.id)))[0]?.document || null;
+}
+
+export function callDocumentSet(documents) {
+  const primary = primaryCallDocument(documents);
+  if (!primary) return [];
+  const hasSpanishCall = documents.some(declaredSpanishCall);
+  const selected = documents.filter((document) => {
+    if (document.id === primary.id) return true;
+    const text = documentLabel(document);
+    if (excludedDocument(document)) return false;
+    if (hasSpanishCall && /lengua cooficial|otra lengua|euskera/.test(text)) return false;
+    return declaredSpanishCall(document) || regulatoryDocument(document) || applicationDocument(document)
+      || (/convocatoria/.test(text) && !/extracto/.test(text));
+  });
+  return [primary, ...selected.filter((document) => document.id !== primary.id)]
+    .filter((document, index, list) => list.findIndex((candidate) => candidate.id === document.id) === index)
+    .slice(0, 8);
+}
+
+export function isSpecificOfficialDocumentUrl(value) {
+  try {
+    const url = new URL(value);
+    const pathAndQuery = `${url.pathname}${url.search}`.toLowerCase();
+    if (url.pathname === "/" || /^\/(?:info\.0|portalbop)\/?$/i.test(url.pathname)) return false;
+    return /\.pdf(?:$|[?#])|preview-document|download|document|anuncio|boletines?\//.test(pathAndQuery);
+  } catch {
+    return false;
+  }
+}
+
+function basisDocumentRole(document, primary) {
+  if (document.id === primary?.id) return "primary";
+  if (applicationDocument(document)) return "application_form";
+  if (regulatoryDocument(document)) return "regulatory";
+  return "call";
+}
+
+export function buildBasisDocuments(documents, regulatoryBasesUrls = []) {
+  const callDocuments = callDocumentSet(documents);
+  const primaryDocument = callDocuments[0] || null;
+  const registryDocuments = callDocuments.map((document) => ({
+    id: document.id,
+    url: document.downloadUrl,
+    role: basisDocumentRole(document, primaryDocument),
+    description: document.description,
+    filename: document.filename
+  }));
+  const seenUrls = new Set(registryDocuments.map((document) => document.url));
+  const externalRegulations = regulatoryBasesUrls
+    .filter((url) => isSpecificOfficialDocumentUrl(url) && !seenUrls.has(url))
+    .map((url, index) => ({
+      id: null,
+      url,
+      role: registryDocuments.length || index ? "regulatory" : "primary",
+      description: "Bases reguladoras oficiales",
+      filename: ""
+    }));
+  return [...registryDocuments, ...externalRegulations].slice(0, 8);
 }
 
 function isCompetitive(detail) {
@@ -275,8 +353,9 @@ function normalizeGrant(detail, generatedAt) {
     textPreview: plainText(item.texto).slice(0, 900)
   }));
   const regulatoryBasesUrls = urlsFrom(detail.urlBasesReguladoras);
-  const primaryDocument = primaryCallDocument(documents);
-  const basesUrls = primaryDocument?.downloadUrl ? [primaryDocument.downloadUrl] : regulatoryBasesUrls;
+  const basisDocuments = buildBasisDocuments(documents, regulatoryBasesUrls);
+  const primaryDocument = basisDocuments.find((document) => document.role === "primary") || null;
+  const basesUrls = basisDocuments.map((document) => document.url);
   const basesUrl = basesUrls[0] || "";
   const deadline = deadlineStatus(detail, documents, announcements, basesUrls.length > 0);
   const evidence = [
@@ -316,8 +395,9 @@ function normalizeGrant(detail, generatedAt) {
     officialUrl: `https://www.infosubvenciones.es/bdnstrans/api/convocatorias?vpd=${PORTAL}&numConv=${detail.codigoBDNS}`,
     basesUrl,
     basesUrls,
-    supplementaryBasesUrls: primaryDocument ? regulatoryBasesUrls : [],
-    basesSourceStrategy: primaryDocument ? "bdns_primary_call_document" : regulatoryBasesUrls.length ? "official_regulatory_url" : "missing",
+    basisDocuments,
+    supplementaryBasesUrls: primaryDocument?.id ? regulatoryBasesUrls : [],
+    basesSourceStrategy: primaryDocument?.id ? "bdns_call_document_set" : regulatoryBasesUrls.length ? "official_regulatory_url" : "missing",
     applicationUrl: detail.sedeElectronica || "",
     documents,
     announcements,
@@ -396,15 +476,20 @@ async function main() {
   let totalElements = null;
   const queryTotals = [];
   const descriptions = campaignDescriptions.length ? campaignDescriptions : [args.get("descripcion")];
-  for (const description of descriptions) {
-    for (let page = 0; page < pages; page += 1) {
-      const endpoint = mode === "search" ? "/convocatorias/busqueda" : "/convocatorias/ultimas";
-      const params = mode === "search" ? searchParams(page, description) : { page, pageSize, vpd: PORTAL };
-      const url = apiUrl(endpoint, params);
-      const payload = await getJson(url);
-      totalElements = descriptions.length === 1 ? payload.totalElements ?? totalElements : null;
-      if (page === 0) queryTotals.push({ description: description || null, totalElements: payload.totalElements ?? null });
-      listed.push(...(payload.content || []));
+  if (detailIds.length) {
+    listed.push(...detailIds.map((numeroConvocatoria) => ({ numeroConvocatoria })));
+    totalElements = detailIds.length;
+  } else {
+    for (const description of descriptions) {
+      for (let page = 0; page < pages; page += 1) {
+        const endpoint = mode === "search" ? "/convocatorias/busqueda" : "/convocatorias/ultimas";
+        const params = mode === "search" ? searchParams(page, description) : { page, pageSize, vpd: PORTAL };
+        const url = apiUrl(endpoint, params);
+        const payload = await getJson(url);
+        totalElements = descriptions.length === 1 ? payload.totalElements ?? totalElements : null;
+        if (page === 0) queryTotals.push({ description: description || null, totalElements: payload.totalElements ?? null });
+        listed.push(...(payload.content || []));
+      }
     }
   }
 

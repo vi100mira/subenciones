@@ -135,6 +135,7 @@ async function executePipeline(workDir) {
     `--max-details=${maxDetails}`, "--detail-delay-ms=250", `--out-dir=${workDir}`,
     `--output-name=${path.basename(dataset)}`, `--prototype-out=${prototype}`
   ]);
+  if (apply) await runNode("scripts/platform/apply-approved-basis-sources.mjs", [`--input=${dataset}`, `--output=${dataset}`]);
   await runNode("scripts/radar/prepare-bdns-bases-scan.mjs", [`--input=${dataset}`, `--output=${catalog}`]);
   await runNode("scripts/platform/deep-scan-open-funders.mjs", [`--catalog=${catalog}`, `--write=${scan}`]);
   await runNode("scripts/radar/apply-bdns-bases-scan.mjs", [
@@ -143,7 +144,13 @@ async function executePipeline(workDir) {
   const importArgs = [`--input=${enriched}`];
   if (apply) importArgs.push("--apply=true");
   const importOutput = JSON.parse(await runNode("scripts/platform/import-bdns-radar.mjs", importArgs));
-  return { enriched: JSON.parse(await fs.readFile(enriched, "utf8")), importOutput, workDir };
+  const interpretationArgs = [`--scan=${scan}`];
+  if (apply) interpretationArgs.push("--apply=true");
+  const interpretationOutput = JSON.parse(await runNode("scripts/platform/queue-bases-interpretations.mjs", interpretationArgs));
+  const discoveryArgs = [`--input=${enriched}`, "--max-opportunities=20", "--max-seeds=3", "--max-pages=5", "--timeout-ms=8000"];
+  if (apply) discoveryArgs.push("--apply=true");
+  const discoveryOutput = JSON.parse(await runNode("scripts/platform/discover-supplementary-basis-sources.mjs", discoveryArgs));
+  return { enriched: JSON.parse(await fs.readFile(enriched, "utf8")), importOutput, interpretationOutput, discoveryOutput, workDir };
 }
 
 async function main() {
@@ -169,6 +176,8 @@ async function main() {
       eligibleLive: result.importOutput.eligibleLive || 0,
       rejected: result.importOutput.rejectedByLiveEvidenceGate || 0,
       basesExtracted: quality.basesExtracted || 0,
+      basesInterpretations: result.interpretationOutput,
+      supplementaryBasisDiscovery: result.discoveryOutput,
       runtime,
       workDir
     };
