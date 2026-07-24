@@ -11,6 +11,7 @@
     const current = session(); if (!current) throw new Error("Sesión tenant no disponible");
     const response = await fetch(path, { ...options, headers: { "Content-Type": "application/json", "x-tenant-id": current.tenantId, ...window.CredentialsAuth.authHeaders(current), ...(options.headers || {}) } });
     const payload = await response.json().catch(() => null);
+    if (response.status === 401) window.CredentialsAuth.handleUnauthorized?.();
     if (!response.ok || !payload?.ok) throw new Error(payload?.error || `Error HTTP ${response.status}`);
     return payload.data;
   }

@@ -20,6 +20,7 @@
   function metaFrom(button) {
     return {
       id: button.dataset.annexOpen, title: button.dataset.annexTitle || "Documento privado",
+      sourceId: button.dataset.annexSource || "",
       mime: button.dataset.annexMime || "", dataClass: button.dataset.annexClass || "internal",
       sha: button.dataset.annexSha || "", status: button.dataset.annexStatus || "pending",
       recommendation: button.dataset.annexRecommendation || "Revisión documental",
@@ -41,14 +42,14 @@
           <button class="icon-button" data-annex-viewer-close type="button" aria-label="Cerrar visor"><i data-lucide="x"></i></button></header>
         <div class="annex-viewer-workspace">
           <div class="annex-viewer-stage" data-annex-viewer-stage><div class="annex-viewer-empty"><i data-lucide="${viewable ? "file-search" : "file-down"}"></i>
-            <strong>${meta.stored && viewable ? "Confirma el acceso para mostrar el original" : viewable ? "Selecciona el original para comprobarlo" : "Vista visual no disponible para este formato"}</strong>
-            <span>${viewable ? "Se mostrará aquí, sin enviarlo a IA." : "DOCX y XLSX se mantienen como descarga privada hasta incorporar una conversión segura."}</span></div></div>
+            <strong>${viewable ? "Abriendo el original autorizado…" : "Vista visual no disponible para este formato"}</strong>
+            <span>${viewable ? "Se recupera desde su ubicación privada, sin enviarlo a IA." : "DOCX y XLSX se mantienen como descarga privada hasta incorporar una conversión segura."}</span></div></div>
           <aside class="annex-viewer-sidebar">
             <div class="annex-viewer-status"><span class="badge ${approved ? "safe" : meta.status === "rejected" || meta.status === "blocked" ? "danger" : "warning"}">${statusLabel(meta.status)}</span><strong>${escapeHtml(meta.recommendation)}</strong></div>
-            <dl><div><dt>Clase de datos</dt><dd>${escapeHtml(meta.dataClass)}</dd></div><div><dt>Formato</dt><dd>${escapeHtml(meta.mime)}</dd></div><div><dt>Huella</dt><dd>${escapeHtml(meta.sha.slice(0, 16))}</dd></div><div><dt>Original</dt><dd>${meta.stored ? "Blob privado" : "Carpeta local"}</dd></div></dl>
+            <dl><div><dt>Clase de datos</dt><dd>${escapeHtml(meta.dataClass)}</dd></div><div><dt>Formato</dt><dd>${escapeHtml(meta.mime)}</dd></div><div><dt>Huella</dt><dd>${escapeHtml(meta.sha.slice(0, 16))}</dd></div><div><dt>Original</dt><dd data-annex-origin>${meta.stored ? "Blob privado" : "Carpeta local autorizada"}</dd></div></dl>
             <div class="annex-viewer-notice"><i data-lucide="${meta.restricted ? "shield-alert" : "shield-check"}"></i><span>${meta.restricted ? "Acceso restringido y auditado." : "No se comparte con IA ni se hace público."}</span></div>
-            ${viewable && !meta.stored ? `<input hidden type="file" data-annex-local-preview data-annex-title="${escapeHtml(meta.title)}" data-annex-sha="${escapeHtml(meta.sha)}" data-annex-restricted="${meta.restricted}" accept=".pdf,.jpg,.jpeg,.png"><button class="primary-action" data-annex-local-select type="button"><i data-lucide="folder-open"></i>Seleccionar y visualizar original</button>` : ""}
-            ${!decided ? `<button class="primary-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-review-status="${meta.restricted ? "restricted" : "approved"}" type="button">${meta.restricted ? "Aprobar como restringido" : "Aprobar para Base común"}</button><button class="ghost-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-review-status="rejected" type="button">Descartar documento</button>` : ""}
+            ${viewable && !meta.stored ? `<div class="annex-local-fallback-actions" data-annex-local-fallback hidden><input hidden type="file" data-annex-local-preview data-annex-title="${escapeHtml(meta.title)}" data-annex-sha="${escapeHtml(meta.sha)}" data-annex-restricted="${meta.restricted}" accept=".pdf,.jpg,.jpeg,.png"><button class="primary-action" data-annex-retry type="button"><i data-lucide="refresh-cw"></i>Reintentar apertura</button><button class="ghost-action" data-annex-local-select type="button"><i data-lucide="folder-open"></i>Seleccionar original manualmente</button></div>` : ""}
+            ${!decided ? `<button class="primary-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-document-source="${escapeHtml(meta.sourceId)}" data-review-status="${meta.restricted ? "restricted" : "approved"}" type="button">${meta.restricted ? "Aprobar como restringido" : "Aprobar para Base común"}</button><button class="ghost-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-document-source="${escapeHtml(meta.sourceId)}" data-review-status="rejected" type="button">Descartar documento</button>` : ""}
             ${approved && !meta.stored ? `<input hidden type="file" data-annex-file="${escapeHtml(meta.id)}" data-annex-restricted="${meta.restricted}" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx"><button class="primary-action" data-annex-select type="button"><i data-lucide="lock-keyhole"></i>Guardar original privado</button>` : ""}
             ${meta.stored ? `<button class="ghost-action" data-annex-download="${escapeHtml(meta.id)}" type="button"><i data-lucide="download"></i>Descargar original</button>` : ""}
           </aside>
@@ -92,9 +93,47 @@
     } catch (error) { toast(error.message); }
   }
 
+  function bridgeUrl(meta) {
+    const url = new URL(String(window.INSERTIA_PRIVATE_BRIDGE_URL || "http://127.0.0.1:8000"));
+    if (!["127.0.0.1", "localhost", "::1"].includes(url.hostname)) throw new Error("El puente privado debe ejecutarse en este equipo.");
+    return `${url.origin}/private-documents/${encodeURIComponent(session()?.tenantId || "")}/${encodeURIComponent(meta.sourceId)}/${encodeURIComponent(meta.id)}`;
+  }
+
+  function localFallback(message) {
+    const stage = document.querySelector("[data-annex-viewer-stage]");
+    if (stage) stage.innerHTML = `<div class="annex-viewer-empty"><i data-lucide="folder-search"></i><strong>No se pudo recuperar el original automáticamente</strong><span>${escapeHtml(message)}</span></div>`;
+    const fallback = document.querySelector("[data-annex-local-fallback]");
+    if (fallback) fallback.hidden = false;
+    window.lucide?.createIcons();
+  }
+
+  async function previewAuthorizedLocal(meta) {
+    if (!VIEWABLE.has(meta.mime) || !meta.sourceId || !confirmRestricted(meta.restricted)) return;
+    try {
+      const current = session();
+      if (!current?.accessToken || !current?.tenantId) throw new Error("La sesión del tenant no está disponible.");
+      const response = await fetch(bridgeUrl(meta), { headers: window.CredentialsAuth.authHeaders(current) });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.detail || "La carpeta inventariada no está disponible.");
+      }
+      renderBlob(await response.blob());
+      const fallback = document.querySelector("[data-annex-local-fallback]");
+      if (fallback) fallback.hidden = true;
+      const origin = document.querySelector("[data-annex-origin]");
+      if (origin) origin.textContent = "Carpeta local · acceso autorizado";
+    } catch (error) {
+      localFallback(error.message || "Selecciona el archivo manualmente para continuar.");
+    }
+  }
+
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target.closest("button") : null;
-    if (target?.matches("[data-annex-open]")) { const meta = metaFrom(target); openShell(meta); if (meta.stored) previewStored(meta); }
+    if (target?.matches("[data-annex-open]")) {
+      const meta = metaFrom(target); openShell(meta);
+      if (meta.stored) previewStored(meta); else previewAuthorizedLocal(meta);
+    }
+    if (target?.matches("[data-annex-retry]") && activeMeta) previewAuthorizedLocal(activeMeta);
     if (target?.matches("[data-annex-local-select]")) target.parentElement?.querySelector("[data-annex-local-preview]")?.click();
     if (target?.matches("[data-annex-viewer-close]") || event.target?.matches?.("[data-annex-viewer]")) close();
   });

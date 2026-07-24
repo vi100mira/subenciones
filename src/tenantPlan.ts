@@ -46,6 +46,6 @@ export async function requireTenantAgentEntitlement(supabase: SupabaseClient, te
     .select("motivations_json").eq("tenant_id", tenantId).single();
   if (error) throw error;
   if (!resolveTenantPlan(data?.motivations_json).agentKeys.some((included) => included === agentKey)) {
-    throw new Error("Asistente no incluido en el plan contratado");
+    throw new Error("Permiso insuficiente: Asistente no incluido en el plan contratado");
   }
 }

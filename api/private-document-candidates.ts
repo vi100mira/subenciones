@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 type Decision = { id: string; status: "approved" | "restricted" | "rejected" };
 
@@ -33,6 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method !== "PATCH") return res.status(405).json(fail("Method Not Allowed"));
+    await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
     const reviews: Decision[] = Array.isArray(req.body?.reviews) ? req.body.reviews : [];
     if (!reviews.length || reviews.length > 100) return res.status(400).json(fail("No hay decisiones válidas"));
     if (reviews.some((item) => !item?.id || !["approved", "restricted", "rejected"].includes(item.status))) {

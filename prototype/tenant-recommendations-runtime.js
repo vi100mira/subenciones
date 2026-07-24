@@ -16,6 +16,7 @@
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload?.ok) {
+      if (response.status === 401) window.CredentialsAuth.handleUnauthorized?.();
       const message = response.status === 401
         ? "La sesion ha caducado. Sal y vuelve a acceder para recuperar el encaje."
         : payload?.error || `Error HTTP ${response.status}`;

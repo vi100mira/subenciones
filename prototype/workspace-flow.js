@@ -70,9 +70,7 @@
   }
 
   function card(entry) {
-    const action = entry.active
-      ? `<button class="ghost-action" data-candidate-detail="${entry.item.id}" type="button">Ver tareas</button>`
-      : `<button class="ghost-action" data-workspace-open="${entry.item.id}" type="button">Abrir expediente</button>`;
+    const action = `<button class="ghost-action" data-workspace-open="${entry.item.id}" type="button">Abrir expediente</button>`;
     return `
       <article class="candidate-card ${entry.active ? "is-current" : ""} ${entry.state === "Proyecto activo" || entry.state === "Documentacion preparada" ? "is-active" : ""}">
         <div>
@@ -172,83 +170,14 @@
     window.lucide?.createIcons();
   }
 
-  function checklistTone(state) {
-    if (state === "done") return ["Hecho", "safe"];
-    if (state === "review") return ["Revisar", "warning"];
-    return ["Pendiente", "review"];
-  }
-
-  function candidateTaskTab(action) {
-    if (action === "Ver evidencia") return "analysis";
-    if (action === "Preparar Word") return "draft";
-    if (action === "Añadir documentos") return "documents";
-    return "checklist";
-  }
-
-  function candidateTaskInformation(item, label, tone) {
-    return `
-      <div class="modal-backdrop" data-close-candidate-task-info>
-        <article class="modal candidate-task-info-modal" role="dialog" aria-modal="true" aria-labelledby="candidate-task-info-title">
-          <div class="panel-heading">
-            <div><p class="eyebrow">Tarea de preparación</p><h2 id="candidate-task-info-title">${item.item}</h2></div>
-            <span class="badge ${tone}">${label}</span>
-            <button class="icon-button" data-close-candidate-task-info type="button" aria-label="Cerrar información"><i data-lucide="x"></i></button>
-          </div>
-          <p class="candidate-task-purpose">${item.purpose}</p>
-          <div class="candidate-task-info-grid">
-            <section><i data-lucide="list-checks"></i><div><strong>Qué se comprueba</strong><span>${item.checks}</span></div></section>
-            <section><i data-lucide="file-search"></i><div><strong>Evidencia necesaria</strong><span>${item.evidence}</span></div></section>
-            <section><i data-lucide="user-check"></i><div><strong>Cuándo se considera completada</strong><span>${item.doneWhen}</span></div></section>
-          </div>
-          <div class="plain-note"><strong>Control humano</strong><span>El estado orienta el trabajo. Insertia no confirma por sí sola la elegibilidad ni da por válido un documento.</span></div>
-          <div class="button-row"><button class="ghost-action" data-close-candidate-task-info type="button">Cerrar</button></div>
-        </article>
-      </div>`;
-  }
-
-  function activeCandidateModal(id) {
-    const selected = selectedOpportunities();
-    const entry = selected.find((candidate) => candidate.item.id === id) || selected[0];
-    if (!entry?.item) return "";
-    const items = window.MOCK?.checklist || [];
-    return `
-      <div class="modal-backdrop" data-close-candidate-detail>
-        <article class="modal candidate-detail-modal" role="dialog" aria-modal="true" aria-label="Candidatura activa">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Candidatura activa</p>
-              <h2>${entry.item.title}</h2>
-            </div>
-            <span class="badge review">Revision humana</span>
-            <button class="icon-button" data-close-candidate-detail type="button" aria-label="Cerrar detalle"><i data-lucide="x"></i></button>
-          </div>
-          <div class="plain-note candidate-task-summary"><strong>Plan para dejar la candidatura preparada</strong><span>Estas tareas reúnen comprobaciones, borradores y anexos. Completar la lista no presenta la solicitud: todavía requiere revisión, firma y envío humano.</span></div>
-          <div class="candidate-detail-checklist">
-            ${items.map((item, index) => {
-              const [label, tone] = checklistTone(item.state);
-              return `
-                <div class="candidate-detail-task">
-                  <strong>${item.item}</strong>
-                  <button class="icon-button candidate-task-info-button" data-candidate-task-info="${index}" type="button" title="Información sobre la tarea" aria-label="Información sobre ${item.item}"><i data-lucide="info"></i></button>
-                  <span class="badge ${tone}">${label}</span>
-                  <button class="ghost-action" data-candidate-task="${candidateTaskTab(item.action)}" data-candidate-id="${entry.item.id}" type="button">${item.action}</button>
-                </div>`;
-            }).join("")}
-          </div>
-        </article>
-      </div>`;
-  }
-
   function openActiveCandidateModal(id) {
-    document.querySelector("[data-close-candidate-detail]")?.remove();
-    document.body.insertAdjacentHTML("beforeend", activeCandidateModal(id));
-    window.lucide?.createIcons();
+    return window.openWorkspaceAnalysis?.(id, "overview") || false;
   }
 
   document.addEventListener("click", (event) => {
     const trigger = event.target.closest("[data-workspace-open]");
     if (!trigger) return;
-    if (window.openWorkspaceAnalysis?.(trigger.dataset.workspaceOpen)) return;
+    if (window.openWorkspaceAnalysis?.(trigger.dataset.workspaceOpen, "overview")) return;
     window.openOpportunityModal?.(trigger.dataset.workspaceOpen, "analysis");
   });
 
@@ -256,40 +185,6 @@
     const trigger = event.target.closest("[data-candidate-detail]");
     if (!trigger) return;
     openActiveCandidateModal(trigger.dataset.candidateDetail);
-  });
-
-  document.addEventListener("click", (event) => {
-    const trigger = event.target.closest("[data-candidate-task-info]");
-    if (!trigger) return;
-    const item = (window.MOCK?.checklist || [])[Number(trigger.dataset.candidateTaskInfo)];
-    if (!item) return;
-    const [label, tone] = checklistTone(item.state);
-    document.querySelector("[data-close-candidate-task-info]")?.remove();
-    document.body.insertAdjacentHTML("beforeend", candidateTaskInformation(item, label, tone));
-    window.lucide?.createIcons();
-  });
-
-  document.addEventListener("click", (event) => {
-    const close = event.target.closest("[data-close-candidate-task-info]");
-    if (!close) return;
-    if (close.classList.contains("modal-backdrop") && event.target !== close) return;
-    document.querySelector("[data-close-candidate-task-info]")?.remove();
-  });
-
-  document.addEventListener("click", (event) => {
-    const task = event.target.closest("[data-candidate-task]");
-    if (!task) return;
-    document.querySelector("[data-close-candidate-detail]")?.remove();
-    if (!window.openWorkspaceAnalysis?.(task.dataset.candidateId, task.dataset.candidateTask)) {
-      window.showToast?.("No se ha podido abrir el area de trabajo de esta candidatura.");
-    }
-  });
-
-  document.addEventListener("click", (event) => {
-    const close = event.target.closest("[data-close-candidate-detail]");
-    if (!close) return;
-    if (close.classList.contains("modal-backdrop") && event.target !== close) return;
-    document.querySelector("[data-close-candidate-detail]")?.remove();
   });
 
   document.addEventListener("click", (event) => {

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { errorMessage, fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -50,6 +51,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const privateConsent = PRIVATE_SOURCE_CONSENT[String(kind)];
       if (privateConsent && scope !== "tenant_private") return res.status(400).json(fail("Las fuentes privadas deben usar alcance tenant_private"));
       if (scope === "tenant_private" && !privateConsent) return res.status(400).json(fail("Tipo de fuente privada no permitido"));
+      if (["tenant_private", "tenant_internal"].includes(String(scope))) {
+        await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
+      }
       const sanitizedConfig = scope === "tenant_private" ? safePrivateConfig(config) : (config || {});
       if (scope === "tenant_private") {
         const expectedConnector = kind === "google_drive" ? "google_drive"

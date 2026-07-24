@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { fail } from "../src/apiResponse.js";
 import { logError, logInfo } from "../src/logger.js";
-import { requireSourcePermission } from "../src/supabaseAdmin.js";
+import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -22,6 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const actor = await requireSourcePermission(req.headers.authorization, "sources:write", requestedTenant(req));
+    await requireTenantAgentEntitlement(getSupabaseAdmin(), actor.tenantId, "draft_agent");
     const body = req.body as HandleUploadBody;
 
     const jsonResponse = await handleUpload({

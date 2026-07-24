@@ -20,6 +20,11 @@ const matchSql = fs.readFileSync(
   "utf8"
 );
 const governanceApi = fs.readFileSync("api/tenant-agent-governance.ts", "utf8");
+const tenantAgentRuntime = fs.readFileSync("prototype/tenant-agent-runtime.js", "utf8");
+const dashboardRuntime = fs.readFileSync("prototype/dashboard-renderer.js", "utf8");
+const auditRuntime = fs.readFileSync("prototype/audit-runtime.js", "utf8");
+const permissionRuntime = fs.readFileSync("src/supabaseAdmin.ts", "utf8");
+const credentialRuntime = fs.readFileSync("prototype/auth-credentials.js", "utf8");
 const profileReviewApi = fs.readFileSync("api/tenant-profile-review.ts", "utf8");
 const lifecycleApi = fs.readFileSync("api/admin-tenant-lifecycle.ts", "utf8");
 const authApi = fs.readFileSync("api/auth-session.ts", "utf8");
@@ -92,6 +97,22 @@ assert(governanceApi.includes("Falta alcance explícito"), "El consentimiento no
 assert(governanceApi.includes("validConsentScope"), "El consentimiento no valida su alcance");
 assert(governanceApi.includes("scope_keys"), "La auditoría conserva el alcance completo");
 assert(governanceApi.includes("profileReviewState"), "El gobierno no expone la finalización persistida del perfil");
+assert(governanceApi.includes("tenantDocumentSummary") && governanceApi.includes('from("source_documents")'),
+  "El panel tenant conserva el contador documental simulado");
+assert(tenantAgentRuntime.includes("response.status === 401") && tenantAgentRuntime.includes("handleUnauthorized"),
+  "Los asistentes conservan una sesión tenant caducada");
+assert(dashboardRuntime.includes("TENANT_DOCUMENT_SUMMARY") && dashboardRuntime.includes("documentCount"),
+  "El panel no consume el inventario privado aislado del tenant");
+assert(permissionRuntime.includes("if (membershipError) {")
+  && permissionRuntime.includes("throw membershipError")
+  && permissionRuntime.includes("Token sin pertenencia activa a entidad"),
+  "Una sesión con tenant obsoleto sigue respondiendo 400");
+assert(auditRuntime.includes("response.status === 401") && auditRuntime.includes("handleUnauthorized"),
+  "Auditoría conserva una sesión tenant caducada");
+assert(permissionRuntime.includes("requestedTenant") && permissionRuntime.includes("Token con tenant invalido"),
+  "El servidor consulta Supabase con un tenantId antiguo o mal formado");
+assert(credentialRuntime.includes("hasInvalidTenantScope") && credentialRuntime.includes("session?.role === \"entity\""),
+  "El navegador conserva una sesión tenant con identificador obsoleto");
 assert(governanceApi.includes("reconcile_tenant_agent_suite"), "Los cambios no reconcilian agentes");
 assert(governanceApi.includes('"pause_agent", "resume_agent"'), "Falta pausa reversible de agentes");
 assert(governanceApi.includes("tenant_governance.${action}"), "Falta auditoría de gobierno");

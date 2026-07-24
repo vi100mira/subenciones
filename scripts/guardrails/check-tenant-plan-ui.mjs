@@ -30,6 +30,7 @@ const session = {
 };
 let aiGranted = false;
 let ingestionRequests = 0;
+let privateBridgeQueries = 0;
 let privateSources = [];
 let privateIngestionRuns = [];
 let privateReviewFacts = [];
@@ -78,17 +79,37 @@ await context.route("**/api/**", async (route) => {
     lastRun: agentKey === "entity_research" ? { status: "review_required", finished_at: "2026-07-18T09:15:00.000Z", actorLabel: "gestor@example.invalid" } : null
   }));
   const data = path === "/api/tenant-agent-governance"
-    ? { agents, executionControls, consents: [...(aiGranted ? [{ consent_type: "ai_processing", status: "granted" }] : []), ...(privateSources.length ? [{ consent_type: "manual_upload", status: "granted" }] : [])], webSource: null, privateSources, privateIngestionRuns, profileReviewState: "approved" }
+    ? { agents, executionControls, consents: [...(aiGranted ? [{ consent_type: "ai_processing", status: "granted" }] : []), ...(privateSources.length ? [{ consent_type: "manual_upload", status: "granted" }] : [])], webSource: null, privateSources, privateIngestionRuns, tenantDocumentSummary: { documentCount: 346, sourceCount: 1, activeSourceCount: 1 }, profileReviewState: "approved" }
     : path === "/api/tenant-profile-review" ? privateReviewFacts
       : path === "/api/private-document-candidates" ? privateDocumentCandidates
       : path === "/api/entity-research-runs" ? []
       : path === "/api/tenant-match-runs" ? { run: null, recommendations: [] } : [];
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
 });
+await context.route("http://127.0.0.1:8000/private-knowledge/query", async (route) => {
+  privateBridgeQueries += 1;
+  const request = route.request();
+  const body = request.postDataJSON();
+  if (request.headers().authorization !== "Bearer local-ui-check"
+    || body.tenant_id !== session.tenantId || body.source_id !== "completed-project-source") {
+    throw new Error("El chat privado no conserva sesión, tenant o fuente");
+  }
+  await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: {
+    mode: "local_fts_approved_v1", selectedChunkCount: 1, externalAiCalls: 0,
+    citations: [{ title: "Estatutos vigentes.pdf", ordinal: 2, sourceSha256: "1234567890abcdef",
+      excerpt: "La entidad acredita experiencia mediante itinerarios individualizados de inserción laboral." }]
+  } }) });
+});
 
 const page = await context.newPage();
 try {
   await page.goto(appUrl, { waitUntil: "networkidle" });
+  await page.locator('.nav-item[data-screen="dashboard"]').click();
+  await page.waitForFunction(() => [...document.querySelectorAll("#source-map .source-node")]
+    .some((node) => node.textContent?.includes("Documentos de la entidad") && node.textContent?.includes("346 inventariados")));
+  const tenantDocumentsNode = page.locator("#source-map .source-node").filter({ hasText: "Documentos de la entidad" });
+  if (!(await tenantDocumentsNode.innerText()).includes("346")) throw new Error("El panel conserva el contador documental simulado del tenant");
+  await page.locator('.nav-item[data-screen="entity"]').click();
   const plan = page.locator("#entity-plan");
   if (!(await plan.isVisible())) throw new Error("El plan no aparece dentro de Entidad");
   if ((await page.locator('.nav-item[data-screen="plan"]').count()) !== 0) throw new Error("Plan conserva una entrada separada para la entidad");
@@ -103,10 +124,20 @@ try {
   const commonKnowledgeNav = page.locator('.nav-item[data-screen="knowledge"]');
   if (!(await commonKnowledgeNav.isVisible())) throw new Error("La base común no aparece para una entidad con preparación documental");
   await commonKnowledgeNav.click();
-  const commonKnowledgeText = await page.locator("#common-knowledge-library").innerText();
-  for (const expected of ["Biblioteca común para todas las candidaturas", "Documentación fuente", "Datos reutilizables", "Añadir o actualizar documentación"]) {
-    if (!commonKnowledgeText.includes(expected)) throw new Error(`Base común incompleta: ${expected}`);
+  const commonKnowledge = page.locator("#common-knowledge-library");
+  const commonKnowledgeText = await commonKnowledge.innerText();
+  for (const expected of ["Biblioteca común para todas las candidaturas", "Pregunta a la Base común", "Todos los documentos inventariados"]) {
+    if (!commonKnowledgeText.includes(expected)) throw new Error(`Superficie principal de Base común incompleta: ${expected}`);
   }
+  const overviewInfo = commonKnowledge.locator("[data-knowledge-overview]");
+  if ((await overviewInfo.count()) !== 1 || await overviewInfo.locator(".knowledge-info-card").isVisible()) throw new Error("La información general no comienza recogida");
+  await overviewInfo.locator("summary").click();
+  const overviewText = await overviewInfo.innerText();
+  for (const expected of ["Documentación fuente", "Datos reutilizables", "Añadir o actualizar documentación"]) {
+    if (!overviewText.includes(expected)) throw new Error(`Punto de información general incompleto: ${expected}`);
+  }
+  await overviewInfo.locator("summary").click();
+  if (await commonKnowledge.locator(".private-knowledge-steps").isVisible()) throw new Error("El circuito documental ocupa espacio fuera del punto de información");
   await page.screenshot({ path: ".tmp/common-knowledge-library.png", fullPage: true });
   await page.locator('.nav-item[data-screen="entity"]').click();
   if ((await plan.locator("[data-plan-area-info]").count()) !== 6) throw new Error("Las áreas incluidas no ofrecen puntos de información");
@@ -179,9 +210,32 @@ try {
     page.evaluate(() => window.dispatchEvent(new Event("role-session-applied")))
   ]);
   await commonKnowledgeNav.click();
+  const knowledgeBrowser = page.locator("[data-common-knowledge-browser]");
+  const knowledgeBrowserText = await knowledgeBrowser.innerText();
+  for (const expected of ["Pregunta a la Base común", "Todos los documentos inventariados", "2 de 2 documentos"]) {
+    if (!knowledgeBrowserText.includes(expected)) throw new Error(`Explorador de Base común incompleto: ${expected}`);
+  }
+  const queryInfo = knowledgeBrowser.locator("[data-knowledge-query-info]");
+  if (await queryInfo.locator(".knowledge-info-card").isVisible()) throw new Error("La explicación de consulta comienza desplegada");
+  if (await knowledgeBrowser.locator("[data-knowledge-answer]").isVisible()) throw new Error("La respuesta vacía ocupa espacio antes de preguntar");
+  await queryInfo.locator("summary").click();
+  if (!(await queryInfo.innerText()).includes("subconjunto recomendado por relevancia")) throw new Error("El punto de información no explica el uso en candidaturas");
+  await queryInfo.locator("summary").click();
+  await page.screenshot({ path: ".tmp/common-knowledge-library-focused.png", fullPage: true });
   const documentCandidate = page.locator(".master-fact-card").filter({ hasText: "Estatutos vigentes.pdf" });
   if ((await documentCandidate.count()) !== 1 || !(await documentCandidate.innerText()).includes("Documento de referencia")) throw new Error("La Base común no muestra la propuesta documental explicada");
   const restrictedCandidate = page.locator(".master-fact-card").filter({ hasText: "DNI representante.jpg" });
+  await knowledgeBrowser.locator('[data-knowledge-filter="text"]').fill("DNI");
+  if ((await knowledgeBrowser.locator(".master-fact-card").count()) !== 1) throw new Error("El grid documental no filtra por nombre");
+  await knowledgeBrowser.locator('[data-knowledge-filter="text"]').fill("");
+  await knowledgeBrowser.locator('[data-knowledge-query-form] textarea').fill("¿Qué documentos acreditan experiencia?");
+  await knowledgeBrowser.locator('[data-knowledge-query-form]').evaluate((form) => form.requestSubmit());
+  if (!(await knowledgeBrowser.locator("[data-knowledge-answer]").innerText()).includes("necesita documentos aprobados")) throw new Error("La consulta IA lee documentos sin aprobación");
+  await page.screenshot({ path: ".tmp/common-knowledge-library-grid.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) throw new Error("La Base común provoca desbordamiento móvil");
+  await page.screenshot({ path: ".tmp/common-knowledge-library-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1100 });
   await restrictedCandidate.locator("[data-annex-open]").click();
   const localViewer = page.locator("[data-annex-viewer]");
   await localViewer.waitFor({ state: "visible" });
@@ -197,6 +251,14 @@ try {
   await documentCandidate.locator("[data-annex-open]").click();
   await page.locator('[data-annex-viewer] [data-review-status="approved"]').click();
   await documentCandidate.getByText("Aprobado", { exact: true }).waitFor({ state: "visible" });
+  await knowledgeBrowser.locator('[data-knowledge-query-form] textarea').fill("¿Qué experiencia existe en inserción laboral?");
+  await knowledgeBrowser.locator('[data-knowledge-query-form]').evaluate((form) => form.requestSubmit());
+  await knowledgeBrowser.getByText("1 fragmento relevante recuperado").waitFor({ state: "visible" });
+  const bridgeAnswer = await knowledgeBrowser.locator("[data-knowledge-answer]").innerText();
+  if (privateBridgeQueries !== 1 || !bridgeAnswer.includes("itinerarios individualizados") || !bridgeAnswer.includes("Estatutos vigentes.pdf")) {
+    throw new Error("El chat no muestra la recuperación local con su cita documental");
+  }
+  await page.screenshot({ path: ".tmp/common-knowledge-local-query.png", fullPage: true });
   await documentCandidate.locator("[data-annex-open]").click();
   const approvedViewer = page.locator("[data-annex-viewer]");
   if (!(await approvedViewer.innerText()).includes("Guardar original privado")) throw new Error("Un documento aprobado no ofrece almacenamiento Blob");
@@ -338,34 +400,38 @@ try {
   });
   if (!candidateId) throw new Error("No hay oportunidad de prueba para revisar las tareas");
   await page.locator('.nav-item[data-screen="workspace"]').click();
-  await page.locator(`#workspace .candidate-list [data-candidate-detail="${candidateId}"]`).click();
-  const candidateDetail = page.locator(".modal-backdrop[data-close-candidate-detail]");
-  if ((await candidateDetail.locator("[data-candidate-task-info]").count()) !== 5) throw new Error("No todas las tareas ofrecen información");
-  const candidateDetailText = await candidateDetail.innerText();
-  if (!candidateDetailText.includes("Plan para dejar la candidatura preparada") || !candidateDetailText.includes("Comprobar cofinanciación exigida")) {
-    throw new Error("El detalle no aclara el objetivo de la lista ni la cofinanciación");
+  await page.locator(`#workspace .candidate-list [data-workspace-open="${candidateId}"]`).click();
+  const packageView = page.locator("#documentary-agent-package");
+  await packageView.waitFor({ state: "visible" });
+  if (await page.locator("[data-close-candidate-detail]").count()) throw new Error("Sigue apareciendo el modal intermedio");
+  const map = packageView.locator(".candidature-map");
+  if ((await map.locator(".candidature-map-node.information").count()) !== 6
+    || (await map.locator(".candidature-map-node.action").count()) !== 3) {
+    throw new Error("El mapa no separa información y acciones de la candidatura");
   }
-  await page.screenshot({ path: ".tmp/candidate-task-list.png" });
-  await candidateDetail.locator('[data-candidate-task-info="1"]').click();
-  const taskInfo = page.locator(".modal-backdrop[data-close-candidate-task-info]");
-  const taskInfoText = await taskInfo.innerText();
-  for (const expected of ["Qué se comprueba", "Evidencia necesaria", "Cuándo se considera completada", "no confirma por sí sola la elegibilidad"]) {
+  const mapText = await map.innerText();
+  for (const expected of ["1. Entender", "2. Preparar", "Encaje, riesgos y evidencias", "Generar y versionar la memoria"]) {
+    if (!mapText.includes(expected)) throw new Error(`Mapa de candidatura incompleto: ${expected}`);
+  }
+  await map.locator('[data-candidature-action="checklist"]').click();
+  let panelModal = page.locator("[data-candidature-panel-modal]");
+  if ((await panelModal.locator("[data-candidate-task-info]").count()) !== 5) throw new Error("No todas las tareas ofrecen información");
+  await panelModal.locator('[data-candidate-task-info="1"] > summary').click();
+  const taskInfoText = await panelModal.locator('[data-candidate-task-info="1"]').innerText();
+  for (const expected of ["Qué se comprueba", "Evidencia necesaria", "Cuándo se completa", "no confirma por sí sola la elegibilidad"]) {
     if (!taskInfoText.includes(expected)) throw new Error(`Información de tarea incompleta: ${expected}`);
   }
   await page.screenshot({ path: ".tmp/candidate-task-information.png" });
   await page.setViewportSize({ width: 390, height: 844 });
-  const taskInfoMobile = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth }));
-  if (taskInfoMobile.overflow) throw new Error("La información de tarea provoca desbordamiento móvil");
+  if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) {
+    throw new Error("La información de tarea provoca desbordamiento móvil");
+  }
   await page.setViewportSize({ width: 1440, height: 1050 });
-  await taskInfo.locator("button.ghost-action[data-close-candidate-task-info]").click();
-  if (!(await candidateDetail.isVisible())) throw new Error("Cerrar la información cierra también la candidatura");
-  let mapChecked = false;
-  for (const [taskTab, rowText] of [["analysis", ""], ["draft", ""], ["documents", ""], ["checklist", "Comprobar cofinanciación exigida"]]) {
-    const action = rowText
-      ? candidateDetail.locator(".candidate-detail-task").filter({ hasText: rowText }).locator(`[data-candidate-task="${taskTab}"]`)
-      : candidateDetail.locator(`[data-candidate-task="${taskTab}"]`);
-    await action.click();
-    const panelModal = page.locator("[data-candidature-panel-modal]");
+  await panelModal.locator("[data-close-candidature-panel]").click();
+
+  for (const taskTab of ["analysis", "draft", "documents"]) {
+    await map.locator(`[data-candidature-${taskTab === "analysis" ? "info" : "action"}="${taskTab}"]`).click();
+    panelModal = page.locator("[data-candidature-panel-modal]");
     await panelModal.waitFor({ state: "visible" });
     const expectedContent = { analysis: "lectura del radar", draft: "esquema orientativo", documents: "bases", checklist: "checklist" }[taskTab];
     const panelText = await panelModal.innerText();
@@ -374,55 +440,13 @@ try {
       throw new Error(`La tarea no abre directamente su modal ${taskTab}: ${panelText.slice(0, 240)}`);
     }
     await panelModal.locator("[data-close-candidature-panel]").click();
-    if (!mapChecked) {
-      const map = page.locator(".candidature-map");
-      if ((await map.locator(".candidature-map-node.information").count()) !== 6
-        || (await map.locator(".candidature-map-node.action").count()) !== 3) {
-        throw new Error("El mapa no separa información y acciones de la candidatura");
-      }
-      const mapText = await map.innerText();
-      for (const expected of ["1. Entender", "2. Preparar", "Encaje, riesgos y evidencias", "Generar y versionar la memoria"]) {
-        if (!mapText.includes(expected)) throw new Error(`Mapa de candidatura incompleto: ${expected}`);
-      }
-      const datesNode = map.locator('[data-candidature-info="dates"]');
-      const draftNode = map.locator('[data-candidature-action="draft"]');
-      if ((await datesNode.count()) !== 1 || (await draftNode.count()) !== 1) throw new Error("Los nodos interactivos no son únicos");
-      await datesNode.click();
-      if (!(await panelModal.isVisible()) || !(await panelModal.innerText()).includes("Fechas")) throw new Error("El nodo Fechas no abre su modal informativo");
-      await page.screenshot({ path: ".tmp/candidature-information-modal.png" });
-      await page.setViewportSize({ width: 390, height: 844 });
-      const informationMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-      if (informationMobileOverflow) throw new Error("El modal Entender provoca desbordamiento móvil");
-      await page.screenshot({ path: ".tmp/candidature-information-modal-mobile.png", fullPage: true });
-      await page.setViewportSize({ width: 1440, height: 1050 });
-      await panelModal.locator("[data-close-candidature-panel]").click();
-      await draftNode.click();
-      if (!(await panelModal.isVisible()) || !(await panelModal.innerText()).includes("Esquema orientativo")) throw new Error("El nodo Borrador Word no abre su formulario modal");
-      await page.screenshot({ path: ".tmp/candidature-action-modal.png" });
-      await page.setViewportSize({ width: 390, height: 844 });
-      const actionMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-      if (actionMobileOverflow) throw new Error("El modal Preparar provoca desbordamiento móvil");
-      await page.screenshot({ path: ".tmp/candidature-action-modal-mobile.png", fullPage: true });
-      await page.setViewportSize({ width: 1440, height: 1050 });
-      await panelModal.locator("[data-close-candidature-panel]").click();
-      if ((await page.locator(".requirements-tab-panel.is-active").count()) !== 0) throw new Error("El mapa mantiene formularios desplegados bajo sus nodos");
-      await page.screenshot({ path: ".tmp/candidature-interactive-map.png", fullPage: true });
-      await page.setViewportSize({ width: 390, height: 844 });
-      const mapMobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-      if (mapMobileOverflow) throw new Error("El mapa de candidatura provoca desbordamiento móvil");
-      await page.screenshot({ path: ".tmp/candidature-interactive-map-mobile.png", fullPage: true });
-      await page.setViewportSize({ width: 1440, height: 1050 });
-      mapChecked = true;
-    }
-    await page.locator("[data-workspace-back]").click();
-    if (!(await candidateDetail.isVisible())) throw new Error("Volver desde el expediente no recupera el plan de la candidatura activa");
   }
-  await candidateDetail.locator('[data-candidate-task="draft"]').click();
-  await page.locator("[data-candidature-panel-modal] [data-close-candidature-panel]").click();
+  await page.screenshot({ path: ".tmp/candidature-interactive-map.png", fullPage: true });
+  await page.locator("[data-workspace-back]").click();
+  if (!(await page.locator("#workspace .candidate-list").isVisible())) throw new Error("Volver desde el expediente no recupera la lista");
   await page.locator('.nav-item[data-screen="opportunities"]').click();
   await page.locator('.nav-item[data-screen="workspace"]').click();
-  if (!(await candidateDetail.isVisible())) throw new Error("Volver a Candidatura desde el menú no recupera el plan activo");
-  await candidateDetail.locator("button[data-close-candidate-detail]").click();
+  if (!(await page.locator("#workspace .candidate-list").isVisible())) throw new Error("Volver a Candidatura desde el menú no recupera la lista");
 
   const socialContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const socialSession = {
@@ -440,8 +464,11 @@ try {
   }, socialSession);
   await socialContext.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
-    const agents = session.plan.agentKeys.map((agent_key) => ({ agent_key, enabled: true, status: "ready", status_reason: "Capacidad verificada" }));
-    const data = path === "/api/tenant-agent-governance" ? { agents, consents: [], webSource: null, privateSources: [], profileReviewState: "approved" }
+    const agents = socialSession.plan.agentKeys.map((agent_key) => ({ agent_key, enabled: true, status: "ready", status_reason: "Capacidad verificada" }));
+    const historicalSource = { id: "historical-source", label: "Archivo histórico", kind: "local_simulation", scope: "tenant_private", status: "active", config_json: { lastInventory: { runId: "historical-run", documentsScanned: 1 } } };
+    const historicalDocuments = [{ id: "historical-document", title: "Memoria histórica 2024.pdf", mime_type: "application/pdf", data_class: "internal", source_sha256: "abcdef1234567890", blob_path: null, metadata_json: { document_candidate: true, ingestion_run_id: "historical-run", review_status: "approved" } }];
+    const data = path === "/api/tenant-agent-governance" ? { agents, consents: [], webSource: null, privateSources: [historicalSource], privateIngestionRuns: [], profileReviewState: "approved" }
+      : path === "/api/private-document-candidates" ? historicalDocuments
       : path === "/api/tenant-profile-review" || path === "/api/entity-research-runs" ? []
         : path === "/api/tenant-match-runs" ? { run: null, recommendations: [] } : [];
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
@@ -451,11 +478,36 @@ try {
   const socialPlan = socialPage.locator("#entity-plan");
   if ((await socialPlan.locator(".contracted-area.is-contracted").count()) !== 4) throw new Error("Equipo social no limita sus áreas contratadas");
   if ((await socialPlan.locator(".contracted-area.is-unavailable").count()) !== 2) throw new Error("Equipo social no identifica las áreas excluidas");
-  if (await socialPage.locator('.nav-item[data-screen="workspace"]').isVisible()) throw new Error("Equipo social conserva Candidatura fuera de su plan");
-  if (await socialPage.locator('.nav-item[data-screen="knowledge"]').isVisible()) throw new Error("Equipo social conserva Base común sin preparación documental");
+  if (!(await socialPage.locator('.nav-item[data-screen="workspace"]').isVisible())) throw new Error("Equipo social pierde el histórico de Candidatura");
+  const socialKnowledgeNav = socialPage.locator('.nav-item[data-screen="knowledge"]');
+  if (!(await socialKnowledgeNav.isVisible())) throw new Error("Equipo social pierde sus documentos de Base común");
   if ((await socialPage.locator("#private-knowledge-panel").count()) !== 0) throw new Error("Entidad X conserva el panel operativo privado");
+  await socialKnowledgeNav.click();
+  const readOnlyKnowledge = socialPage.locator("#common-knowledge-library");
+  const readOnlyText = await readOnlyKnowledge.innerText();
+  for (const expected of ["Solo lectura", "Memoria histórica 2024.pdf", "Consulta IA no incluida"]) {
+    if (!readOnlyText.includes(expected)) throw new Error(`Base común sin agente no conserva el estado: ${expected}`);
+  }
+  const readOnlyOverview = readOnlyKnowledge.locator("[data-knowledge-overview]");
+  await readOnlyOverview.locator("summary").click();
+  if (!(await readOnlyOverview.innerText()).includes("Tus datos siguen disponibles")) throw new Error("El punto de información oculta el aviso del plan");
+  await readOnlyOverview.locator("summary").click();
+  if ((await readOnlyKnowledge.locator("[data-private-knowledge-open], [data-private-review]").count()) !== 0) {
+    throw new Error("Base común permite mutaciones sin agente documental");
+  }
+  if (!(await readOnlyKnowledge.locator('[data-knowledge-query-form] button[type="submit"]').isDisabled())) {
+    throw new Error("La consulta IA sigue activa sin agente documental");
+  }
+  await socialPage.screenshot({ path: ".tmp/common-knowledge-read-only-plan.png", fullPage: true });
+  await socialPage.locator('.nav-item[data-screen="entity"]').click();
   await socialPlan.locator('[data-plan-area-info="draft_agent"]').click();
-  if (!(await socialPage.locator("[data-plan-area-modal]").isVisible())) throw new Error("El área no incluida carece de explicación informativa");
+  const socialAreaModal = socialPage.locator("[data-plan-area-modal]");
+  if (!(await socialAreaModal.isVisible())) throw new Error("El área no incluida carece de explicación informativa");
+  const socialAreaText = await socialAreaModal.innerText();
+  const socialPreparationActions = await socialAreaModal.locator("[data-plan-open-preparation]").count();
+  if (!socialAreaText.toLowerCase().includes("área no incluida") || socialPreparationActions !== 0) {
+    throw new Error(`El plan ofrece gestionar un agente documental no contratado: actions=${socialPreparationActions}, text=${socialAreaText.slice(0, 120)}`);
+  }
   const socialText = await socialPlan.innerText();
   if (!socialText.includes("Contratación de Entidad X") || !socialText.includes("Cuota actual\n29 €")) throw new Error("El plan no se adapta a otra entidad");
   await socialContext.close();
@@ -479,6 +531,49 @@ try {
   if ((await page.locator("#screen-title").innerText()) !== "Base común de la entidad") {
     throw new Error("El nuevo acceso no regresa a Base común tras caducar la sesión");
   }
+
+  const rejectedContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await rejectedContext.addInitScript((value) => {
+    sessionStorage.setItem("subvenciones.auth.session.v1", JSON.stringify(value));
+    sessionStorage.setItem("prototype-role", "entity");
+  }, { ...session, expiresAt: Math.floor(Date.now() / 1000) + 3600 });
+  let rejectedMatchRequests = 0;
+  await rejectedContext.route("**/api/**", async (route) => {
+    if (new URL(route.request().url()).pathname === "/api/tenant-match-runs") rejectedMatchRequests += 1;
+    await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ ok: false, error: "Token sin pertenencia activa a entidad" }) });
+  });
+  const rejectedPage = await rejectedContext.newPage();
+  await rejectedPage.goto("http://127.0.0.1:3000/?v=tenant-session-api-recovery#view-dashboard", { waitUntil: "networkidle" });
+  await rejectedPage.locator("#public-login-status").waitFor({ state: "visible" });
+  const requestsAfterRecovery = rejectedMatchRequests;
+  await rejectedPage.waitForTimeout(5200);
+  if (rejectedMatchRequests !== requestsAfterRecovery) throw new Error("El encaje sigue consultando la API tras invalidar la sesión tenant");
+  await rejectedContext.close();
+
+  const legacyContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await legacyContext.addInitScript((value) => {
+    sessionStorage.setItem("subvenciones.auth.session.v1", JSON.stringify(value));
+    sessionStorage.setItem("prototype-role", "entity");
+  }, { ...session, tenantId: "novaterra-demo", expiresAt: Math.floor(Date.now() / 1000) + 3600 });
+  const protectedLegacyPaths = new Set([
+    "/api/tenant-audit-events", "/api/tenant-agent-governance", "/api/tenant-profile-review",
+    "/api/entity-research-runs", "/api/tenant-match-runs"
+  ]);
+  let legacyApiRequests = 0;
+  const legacyProtectedRequests = [];
+  await legacyContext.route("**/api/**", async (route) => {
+    const requestPath = new URL(route.request().url()).pathname;
+    if (protectedLegacyPaths.has(requestPath)) {
+      legacyApiRequests += 1;
+      legacyProtectedRequests.push(requestPath);
+    }
+    await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ ok: false, error: "No debe llamarse" }) });
+  });
+  const legacyPage = await legacyContext.newPage();
+  await legacyPage.goto("http://127.0.0.1:3000/?v=tenant-legacy-scope-recovery#view-dashboard", { waitUntil: "networkidle" });
+  await legacyPage.locator("#public-login-status").waitFor({ state: "visible" });
+  if (legacyApiRequests !== 0) throw new Error(`La sesión tenant antigua llega a las APIs antes de invalidarse: ${legacyProtectedRequests.join(", ")}`);
+  await legacyContext.close();
 
   console.log(JSON.stringify({ ok: true, appUrl, plans: 3, contractedAreas: 6, privateKnowledge: "visible-common-library", preparationRoutes: 2, candidateTaskInfo: 5, guidedFacts: 11, documentManager: "public-mode-operational", entityXContractedAreas: 4, mobileColumns: 1, screenshot: ".tmp/candidate-task-information.png" }, null, 2));
 } finally {

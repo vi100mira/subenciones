@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { errorMessage, fail, ok } from "../src/apiResponse.js";
 import { assessPrivateSourceManifest } from "../src/privateSourcePreflight.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -16,6 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (acceptLimited !== undefined && typeof acceptLimited !== "boolean") return res.status(400).json(fail("Confirmación limitada inválida"));
 
     const supabase = getSupabaseAdmin();
+    await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
     const { data: source, error: sourceError } = await supabase.from("source_connections")
       .select("id, kind, config_json").eq("id", sourceConnectionId).eq("tenant_id", actor.tenantId)
       .eq("scope", "tenant_private").in("kind", ["local_simulation", "manual_upload", "vercel_blob", "google_drive", "microsoft_graph"])

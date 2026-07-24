@@ -55,6 +55,31 @@ def prepare_database(target: Path) -> sqlite3.Connection:
     return connection
 
 
+def write_source_manifest(corpus: Path, target: Path, tenant_id: str, source_id: str,
+                          inventory: dict) -> Path:
+    corpus = corpus.resolve()
+    if not corpus.is_dir():
+        raise ValueError("La carpeta privada autorizada no está disponible.")
+    documents = [{
+        "document_id": item["document_id"],
+        "relative_path": item["relative_path"],
+        "source_sha256": item["source_sha256"],
+        "data_class": item["data_class"],
+    } for item in inventory.get("documents", [])]
+    manifest = {
+        "tenant_id": tenant_id, "source_connection_id": source_id,
+        "corpus_root": str(corpus), "documents": documents,
+        "content_stored_remotely": False, "external_ai_calls": 0,
+    }
+    path = target.resolve().with_name("source-manifest.json")
+    temporary = path.with_suffix(".tmp")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    os.replace(temporary, path)
+    os.chmod(path, 0o600)
+    return path
+
+
 def main() -> None:
     config = parse_args()
     corpus = config.corpus.resolve()
@@ -120,8 +145,10 @@ def main() -> None:
     temporary = target.with_suffix(".tmp")
     os.replace(temporary, target)
     os.chmod(target, 0o600)
+    manifest_path = write_source_manifest(corpus, target, config.tenant, config.source_id, inventory)
     result = {**counts, "external_ai_calls": 0, "embedding_state": "not_started",
-              "index_sha256": file_sha256(target), "index": str(target)}
+              "index_sha256": file_sha256(target), "index": str(target),
+              "local_manifest": str(manifest_path)}
     print(json.dumps({"ok": True, **result}, ensure_ascii=False))
 
 

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 type ReviewDecision = { id: string; status: "approved" | "rejected" };
 type ApprovedFact = { id: string; field_key: string; suggested_value: string };
@@ -59,6 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "POST") {
+      await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
       const proposals = Array.isArray(req.body?.proposals) ? req.body.proposals : [];
       if (req.body?.noPersonalData !== true || req.body?.noSensitiveData !== true) {
         return res.status(400).json(fail("Debe confirmar que las respuestas no contienen datos personales ni sensibles"));
@@ -96,6 +98,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method !== "PATCH") return res.status(405).json(fail("Method Not Allowed"));
+    if (req.body?.reviewScope === "private") {
+      await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
+    }
     const reviews: ReviewDecision[] = Array.isArray(req.body?.reviews) ? req.body.reviews : [];
     const approveProfile = req.body?.approveProfile === true;
     const approveMaster = req.body?.approveMaster === true;

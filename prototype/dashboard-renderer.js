@@ -28,7 +28,10 @@ function sourceCoverage(source) {
   } else if (source.name === "GVA" || source.name === "LABORA") {
     note = "Conector disponible para consulta, sin carga propia diferenciada; los resultados actuales llegan a traves de BDNS.";
   } else if (source.name === "Documentos de la entidad") {
-    note = "No se contabilizan documentos hasta que la entidad autorice y conecte un repositorio privado.";
+    const count = Number(window.TENANT_DOCUMENT_SUMMARY?.documentCount || 0);
+    note = count
+      ? `${count} documentos privados inventariados para esta entidad. Solo se usan en candidaturas tras selección y revisión humana.`
+      : "No se contabilizan documentos hasta que la entidad autorice y conecte un repositorio privado.";
   } else if (source.name === "Casos personales") {
     note = "Fuente bloqueada: los casos personales no forman parte del radar.";
   }
@@ -37,9 +40,12 @@ function sourceCoverage(source) {
 function renderSourceNode(source) {
   const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
   const coverage = sourceCoverage(source);
+  const count = source.name === "Documentos de la entidad"
+    ? Number(window.TENANT_DOCUMENT_SUMMARY?.documentCount || 0)
+    : coverage.rows.length;
   const items = coverage.rows.map((item) => `<button class="source-preview-item" data-grid-opportunity="${item.id}" type="button"><strong>${item.title}</strong><span>${item.source || source.name} · ${item.deadline || item.deadlineStatus || "Estado por revisar"}</span></button>`).join("");
   return `<details class="source-node${status}">
-    <summary><span class="source-node-copy"><strong>${source.name}</strong><span>${source.status}</span></span><b class="source-node-number" aria-label="${coverage.rows.length} elementos">${coverage.rows.length}</b><i data-lucide="chevron-down"></i></summary>
+    <summary><span class="source-node-copy"><strong>${source.name}</strong><span>${source.status}</span></span><b class="source-node-number" aria-label="${count} elementos">${count}</b><i data-lucide="chevron-down"></i></summary>
     <div class="source-node-preview"><p>${coverage.note}</p>${items ? `<div class="source-preview-list">${items}</div>` : `<div class="plain-note"><strong>Sin elementos para mostrar</strong><span>${coverage.note}</span></div>`}</div>
   </details>`;
 }
@@ -143,7 +149,12 @@ function renderDashboard() {
       <span><i class="legend-dot pending"></i>No conectada</span>
       <span><i class="legend-dot blocked"></i>Bloqueada</span>
     </div>
-  ` + window.MOCK.sources.filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant")).map(renderSourceNode).join("");
+  ` + window.MOCK.sources
+    .filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant"))
+    .map((source) => source.name === "Documentos de la entidad" && window.TENANT_DOCUMENT_SUMMARY?.documentCount
+      ? { ...source, status: `${window.TENANT_DOCUMENT_SUMMARY.documentCount} inventariados`, health: "healthy" }
+      : source)
+    .map(renderSourceNode).join("");
   window.lucide?.createIcons();
 }
 
@@ -153,4 +164,8 @@ window.DashboardRenderer = {
     renderDashboard();
   }
 };
+window.addEventListener("tenant-agent-governance-loaded", (event) => {
+  window.TENANT_DOCUMENT_SUMMARY = event.detail?.tenantDocumentSummary || null;
+  if (opportunities) renderDashboard();
+});
 })();

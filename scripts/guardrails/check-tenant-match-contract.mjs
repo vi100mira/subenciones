@@ -85,20 +85,22 @@ assert(reviewRuntime.includes("Abandonar candidatura"), "Una candidatura avanzad
 assert(!workspaceRuntime.includes("|| rows[0]") && !workspaceRuntime.includes("const fallback = rows.filter"), "Candidatura vuelve a fabricar expedientes de relleno");
 assert(workspaceRuntime.includes("Todavia no hay candidaturas"), "Candidatura no comunica el estado vacio real");
 assert(workspaceRuntime.includes('addEventListener("tenant-recommendations-applied", renderWorkspaceFlow)'), "Candidatura no se actualiza al aplicar una preseleccion persistida");
-assert(workspaceRuntime.includes("data-candidate-task") && workspaceRuntime.includes("candidateTaskTab") && workspaceRuntime.includes("task.dataset.candidateTask"), "El detalle de candidatura conserva acciones sin interaccion");
-assert(workspaceRuntime.includes('"Ver evidencia"') && workspaceRuntime.includes('"Preparar Word"') && workspaceRuntime.includes('"Añadir documentos"'), "El detalle no dirige evidencia, borrador y anexos a sus áreas");
-assert(workspaceRuntime.includes("data-candidate-task-info") && workspaceRuntime.includes("candidateTaskInformation"), "Las tareas de candidatura no ofrecen puntos de información");
+assert(workspaceRuntime.includes("data-workspace-open") && workspaceRuntime.includes("openWorkspaceAnalysis?.(id, \"overview\")"), "La candidatura no abre directamente el expediente");
+assert(!workspaceRuntime.includes("data-close-candidate-detail") && !workspaceRuntime.includes("candidateTaskTab"), "Sigue existiendo el modal intermedio redundante");
+assert(requirementsRuntime.includes("data-candidate-task-info") && requirementsRuntime.includes("candidate-task-inline-card"), "Las tareas de candidatura no ofrecen puntos de información");
 assert(["purpose", "checks", "evidence", "doneWhen"].every((field) => mockRuntime.includes(`${field}:`)), "Las tareas no explican finalidad, comprobación, evidencia y cierre");
-assert(workspaceRuntime.includes("Insertia no confirma por sí sola la elegibilidad"), "El detalle de tareas oculta el control humano");
-assert(workspaceRuntime.includes("openWorkspaceAnalysis?.(task.dataset.candidateId, task.dataset.candidateTask)") && requirementsRuntime.includes('initialTab = "analysis"'), "Las acciones del detalle no abren la pestaña correspondiente del expediente");
+assert(requirementsRuntime.includes("Insertia no confirma por sí sola la elegibilidad"), "El detalle de tareas oculta el control humano");
+assert(requirementsRuntime.includes('initialTab = "analysis"'), "El expediente no conserva una entrada verificable");
 assert(requirementsRuntime.includes("workspacePanelTarget") && requirementsRuntime.includes("openWorkspacePanel"), "Los nodos no conservan sus modales contextuales");
 assert(requirementsRuntime.includes('data-candidature-${kind === "information" ? "info" : "action"}') && requirementsRuntime.includes('kind === "information"'), "Información y acciones vuelven a compartir una interacción ambigua");
 assert(!requirementsRuntime.includes("[120, 360].forEach"), "La navegación de pestañas sigue dependiendo de temporizadores");
 assert(requirementsRuntime.includes("let workspacePackageVisible = false") && requirementsRuntime.includes("showWorkspaceCandidateList"), "El expediente se restaura sin una accion explicita");
-assert(requirementsRuntime.includes('.nav-item[data-screen="workspace"]') && requirementsRuntime.includes("reopenActive: workspacePackageVisible"), "La navegación a Candidatura no recupera el plan activo");
+assert(requirementsRuntime.includes('.nav-item[data-screen="workspace"]') && requirementsRuntime.includes("showWorkspaceCandidateList()"), "La navegación a Candidatura no recupera la lista real");
 assert(requirementsRuntime.includes("candidatureMap") && requirementsRuntime.includes('nodes(information, "information")') && requirementsRuntime.includes('nodes(actions, "action")'), "El expediente no separa nodos informativos y de acción");
-assert(workspaceRuntime.includes("candidate-list-panel") && workspaceRuntime.includes("Ver tareas"), "La lista no diferencia las tareas del expediente de trabajo");
+assert(workspaceRuntime.includes("candidate-list-panel") && workspaceRuntime.includes("Abrir expediente"), "La lista no permite abrir el expediente de trabajo");
 assert(workspaceStyles.includes("#workspace.has-documentary-package .candidate-list-panel"), "Lista y expediente pueden mostrarse a la vez");
 assert(recommendationRuntime.includes("tenant-match-load-state") && recommendationRuntime.includes("TENANT_MATCH_LOAD_ERROR"), "El fallo de carga del encaje queda oculto");
+assert(recommendationRuntime.includes("response.status === 401") && recommendationRuntime.includes("handleUnauthorized"),
+  "El encaje deja una carcasa tenant visible tras caducar la sesión");
 
 console.log(JSON.stringify({ ok: true, candidateScore: relevant.score, lowFitScore: uncertain.score, evidence: "versionada", decision: "revisión humana" }, null, 2));

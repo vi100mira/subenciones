@@ -127,17 +127,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       const privateSourceIds = (privateSources.data || []).map((source) => source.id);
       let privateIngestionRuns: Array<Record<string, unknown>> = [];
+      let tenantDocumentCount = 0;
       if (privateSourceIds.length) {
-        const { data, error } = await supabase.from("ingestion_runs")
-          .select("id, source_connection_id, status, scanned, inserted, updated, skipped, blocked, error, started_at, finished_at, created_at")
-          .eq("tenant_id", actor.tenantId).in("source_connection_id", privateSourceIds)
-          .order("created_at", { ascending: false }).limit(20);
-        if (error) throw error;
-        privateIngestionRuns = data || [];
+        const [ingestionResult, documentResult] = await Promise.all([
+          supabase.from("ingestion_runs")
+            .select("id, source_connection_id, status, scanned, inserted, updated, skipped, blocked, error, started_at, finished_at, created_at")
+            .eq("tenant_id", actor.tenantId).in("source_connection_id", privateSourceIds)
+            .order("created_at", { ascending: false }).limit(20),
+          supabase.from("source_documents").select("id", { count: "exact", head: true })
+            .eq("tenant_id", actor.tenantId).in("source_connection_id", privateSourceIds)
+        ]);
+        if (ingestionResult.error) throw ingestionResult.error;
+        if (documentResult.error) throw documentResult.error;
+        privateIngestionRuns = ingestionResult.data || [];
+        tenantDocumentCount = documentResult.count || 0;
       }
       return res.status(200).json(ok({
         agents: agents.data || [], consents: consents.data || [], webSource: webSource.data || null,
         privateSources: privateSources.data || [], privateIngestionRuns, executionControls,
+        tenantDocumentSummary: {
+          documentCount: tenantDocumentCount,
+          sourceCount: privateSourceIds.length,
+          activeSourceCount: (privateSources.data || []).filter((source) => source.status === "active").length
+        },
         profileReviewState: String(tenantConfig.data?.profile_json?.review_state || "")
       }));
     }
@@ -148,6 +160,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let targetId = actor.tenantId;
     if (["grant_consent", "revoke_consent"].includes(action)) {
       if (typeof consentType !== "string" || !CONSENT_TYPES.has(consentType)) return res.status(400).json(fail("Consentimiento no permitido"));
+      if (action === "grant_consent" && consentType !== "public_web_analysis") {
+        await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
+      }
       if (!scope || typeof scope !== "object" || Array.isArray(scope)) return res.status(400).json(fail("Falta alcance explícito del consentimiento"));
       if (!validConsentScope(consentType, scope)) return res.status(400).json(fail("Alcance de consentimiento inválido"));
       targetType = "tenant_consent";
@@ -167,6 +182,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       targetType = "source_connection";
       targetId = data.id;
     } else if (action === "approve_private_source") {
+      await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
       if (typeof sourceId !== "string" || !sourceId) return res.status(400).json(fail("Falta sourceId"));
       const { data: source, error: sourceError } = await supabase.from("source_connections")
         .select("id, kind, config_json").eq("id", sourceId).eq("tenant_id", actor.tenantId)

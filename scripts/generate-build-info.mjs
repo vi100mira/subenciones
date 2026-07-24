@@ -18,7 +18,7 @@ const builtAt = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit"
 }).format(new Date()).replaceAll("-", ".");
 const revision = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || process.env.GITHUB_SHA?.slice(0, 7) || gitValue("rev-parse", "--short=7", "HEAD") || "local";
-const releaseTag = gitValue("describe", "--tags", "--exact-match", "HEAD");
+const releaseTag = packageJson.insertiaReleaseTag || gitValue("describe", "--tags", "--exact-match", "HEAD");
 const info = { version: packageJson.version, builtAt, revision, releaseTag };
 const output = `window.INSERTIA_BUILD_INFO = ${JSON.stringify(info)};\n`;
 

@@ -43,6 +43,10 @@
       body: body ? JSON.stringify(body) : undefined
     });
     const payload = await response.json().catch(() => null);
+    if (response.status === 401) {
+      window.CredentialsAuth.handleUnauthorized?.();
+      throw new Error("Tu sesiÃ³n ha caducado. Vuelve a acceder para consultar la auditorÃ­a.");
+    }
     if (!response.ok || !payload?.ok) throw new Error(payload?.error || `Error HTTP ${response.status}`);
     return payload.data;
   }

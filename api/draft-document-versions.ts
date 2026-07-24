@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
 import { applyDraftEdits, draftContentHash, isEditableDraft, type DraftDocumentEdit } from "../src/draftDocumentVersion.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 function requestedTenant(req: VercelRequest) {
   return req.headers["x-tenant-id"] || req.query.tenantId;
@@ -49,6 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "POST") {
+      await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
       const latest = await supabase.from("tenant_draft_versions")
         .select("id, version_number, content_json").eq("tenant_id", actor.tenantId).eq("agent_run_id", run.id)
         .order("version_number", { ascending: false }).limit(1).maybeSingle();

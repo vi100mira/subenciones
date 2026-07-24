@@ -16,9 +16,13 @@
   function getSession() {
     try {
       const session = JSON.parse(sessionStorage.getItem(sessionKey) || "null");
-      if (isExpired(session)) { expireSession(session); return null; }
+      if (isExpired(session) || hasInvalidTenantScope(session)) { expireSession(session); return null; }
       return session;
     } catch { return null; }
+  }
+  function hasInvalidTenantScope(session) {
+    return session?.role === "entity"
+      && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(session?.tenantId || ""));
   }
   function isExpired(session) {
     const expiresAt = Number(session?.expiresAt || 0);

@@ -15,6 +15,9 @@ const files = {
   documentContext: fs.readFileSync("api/private-document-context.ts", "utf8"),
   apiResponse: fs.readFileSync("src/apiResponse.ts", "utf8"),
   ui: fs.readFileSync("prototype/private-knowledge.js", "utf8"),
+  commonBrowser: fs.readFileSync("prototype/common-knowledge-browser.js", "utf8"),
+  privateBridge: fs.readFileSync("backend/app/services/private_knowledge.py", "utf8"),
+  bridgeApi: fs.readFileSync("backend/app/main.py", "utf8"),
   planUi: fs.readFileSync("prototype/tenant-plan.js", "utf8"),
   agentUi: fs.readFileSync("prototype/tenant-agent-runtime.js", "utf8"),
   masterUi: fs.readFileSync("prototype/master-fact-review.js", "utf8"),
@@ -45,7 +48,9 @@ const checks = [
   [files.ui.includes('document.querySelector("#private-knowledge-panel")?.remove()'), "Entidad conserva el panel operativo privado"],
   [files.index.includes('data-screen="knowledge"') && files.index.includes('id="common-knowledge-library"'), "la base común no tiene una pantalla propia"],
   [files.ui.includes("Biblioteca común para todas las candidaturas") && files.ui.includes("Datos reutilizables"), "la pantalla no explica el corpus común y su reutilización"],
-  [files.ui.includes("Documentos propuestos por el inventario") && files.ui.includes("data-annex-open") && files.annexViewer.includes("data-document-candidate-review"), "la base común no permite abrir y revisar documentos propuestos"],
+  [files.ui.includes("data-common-knowledge-browser") && files.commonBrowser.includes("Todos los documentos inventariados") && files.commonBrowser.includes("data-annex-open") && files.annexViewer.includes("data-document-candidate-review"), "la base común no permite explorar, abrir y revisar documentos propuestos"],
+  [files.commonBrowser.includes("data-knowledge-query-form") && files.commonBrowser.includes("solo fragmentos aprobados") && files.commonBrowser.includes("subconjunto recomendado por relevancia"), "la consulta asistida no limita el corpus ni explica la selección por candidatura"],
+  [files.commonBrowser.includes("/private-knowledge/query") && files.commonBrowser.includes("CredentialsAuth") && files.commonBrowser.includes("source_id: state.sourceId") && !files.commonBrowser.includes("const ranked"), "el chat de Base común sigue simulado o pierde sesión, tenant y fuente"],
   [files.documentCandidates.includes('.eq("tenant_id", actor.tenantId)') && files.documentCandidates.includes('"private_document_candidates.reviewed"'), "la revisión documental no está aislada o auditada"],
   [files.documentCandidates.includes("document_content_copied: false") && files.documentCandidates.includes('review_status: status'), "la aprobación copia contenido o no conserva su decisión"],
   [files.documentCandidates.includes('"restricted"') && files.annexViewer.includes("Aprobar como restringido"), "los anexos personales no tienen aprobación restringida"],
@@ -59,6 +64,12 @@ const checks = [
   [files.annexViewer.includes("crypto.subtle.digest") && files.annexViewer.includes("data-annex-viewer-watermark"), "la vista local no verifica la huella o no marca al usuario"],
   [files.annexViewer.includes("x-annex-restricted-confirmed") && files.annexViewer.includes("No se enviará a IA"), "el visor restringido no exige confirmación explícita"],
   [files.annexViewer.includes("annex-viewer-workspace") && files.annexViewer.includes("annex-viewer-sidebar"), "el documento no se abre en un visor integrado con área visual y control lateral"],
+  [files.commonBrowser.includes("data-annex-source") && files.annexViewer.includes("/private-documents/")
+    && files.annexViewer.includes("previewAuthorizedLocal"), "el visor obliga a seleccionar otra vez un original local inventariado"],
+  [files.privateBridge.includes("authorized_document") && files.privateBridge.includes("candidate.is_relative_to(root)")
+    && files.privateBridge.includes("file_sha256(candidate)"), "el puente local no valida tenant, ruta o huella antes de servir el original"],
+  [files.bridgeApi.includes('@app.get("/private-documents/{tenant_id}/{source_id}/{document_id}")')
+    && files.privateBridge.includes('"private_document.opened_local"'), "la apertura local no tiene endpoint autenticado o auditoría"],
   [files.planUi.includes("data-plan-area-info") && files.planUi.includes("data-plan-open-preparation"), "las áreas del plan no ofrecen información modal o acceso a Asistentes"],
   [files.agentUi.includes("PrivateKnowledge?.openPreparation?.()"), "el agente sigue abriendo Candidatura directamente"],
   [files.ingestion.includes('requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent")'), "la ingesta privada no exige agente contratado"],

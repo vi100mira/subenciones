@@ -95,9 +95,8 @@ try {
   if (!canonicalKey) throw new Error("No hay oportunidad para probar la regeneración");
 
   await page.locator('.nav-item[data-screen="workspace"]').click();
-  await page.locator(`#workspace .candidate-list [data-candidate-detail="${canonicalKey}"]`).click();
-  const detail = page.locator(".modal-backdrop[data-close-candidate-detail]");
-  await detail.locator('[data-candidate-task="draft"]').click();
+  await page.locator(`#workspace .candidate-list [data-workspace-open="${canonicalKey}"]`).click();
+  await page.locator('[data-candidature-action="draft"]').click();
 
   const draftPanel = page.locator('[data-candidature-panel-modal]');
   await draftPanel.locator('[data-draft-agent-start][data-approved-facts="true"]').waitFor({ state: "visible" });
@@ -126,19 +125,19 @@ try {
     throw new Error(`El visor no recupera el estado versionado: ${(await skeletonModal.innerText()).slice(0, 700)}`);
   });
   const skeletonText = await skeletonModal.innerText();
-  for (const expected of ["Borrador de trabajo", "¿Solo aparece el esqueleto?", "Gestionar conocimiento", "Regenerar con conocimiento aprobado (11)"]) {
+  for (const expected of ["¿Solo aparece el esqueleto?", "Ir a Base común", "Regenerar con conocimiento aprobado (11)"]) {
     if (!skeletonText.includes(expected)) throw new Error(`El visor de esqueleto no ofrece: ${expected}`);
   }
   const documentFrame = skeletonModal.frameLocator(".constructed-doc-frame");
-  const prefilledSections = documentFrame.locator(".template-field.is-prefilled");
+  const prefilledSections = documentFrame.locator(".template-field.is-verified, .template-field.is-proposed");
   const documentText = await documentFrame.locator("article").innerText();
   if (!(await prefilledSections.count())) throw new Error(`El documento no pre-rellena ningún apartado con los datos disponibles: ${documentText.slice(0, 800)}`);
-  if (!documentText.toLowerCase().includes("pre-rellenado con datos disponibles") || !documentText.includes("Convocatoria:")) throw new Error(`El documento sigue mostrando solo cajas genéricas: ${documentText.slice(0, 1200)}`);
+  if (!documentText.toLowerCase().includes("pre-rellenado con fuente verificable") || !documentText.includes("Convocatoria:")) throw new Error(`El documento sigue mostrando solo cajas genéricas: ${documentText.slice(0, 1200)}`);
   const generatedTitle = await skeletonModal.locator("#constructed-doc-title").innerText();
   const generatedSectionTitle = await documentFrame.locator("section h2").first().innerText();
   await page.evaluate(({ id, title, section }) => window.dispatchEvent(new CustomEvent("draft-agent-run-updated", { detail: { canonicalKey: id, run: { id: "old-public-draft", status: "review_required", output_json: { title, humanReviewRequired: true, submissionAllowed: false, evidenceRefs: ["evidencia:prueba"], uncertainties: [], documentPlan: [], documents: [{ documentRef: "draft-document:1", title, documentType: title, role: "supporting_draft", requirementRefs: ["requirement:1"], missingInputs: [], evidenceRefs: ["evidencia:prueba"], sections: [{ title: section, paragraphs: ["Contenido generado de prueba con evidencia aprobada."], evidenceRefs: ["evidencia:prueba"] }] }] } } } })), { id: canonicalKey, title: generatedTitle, section: generatedSectionTitle });
-  await documentFrame.getByText("Contenido generado de prueba con evidencia aprobada.", { exact: true }).waitFor({ state: "visible" });
-  if (!(await documentFrame.getByText("Borrador generado · revisión humana pendiente", { exact: true }).isVisible())) throw new Error("El visor no sustituye el apartado por el borrador generado");
+  await documentFrame.getByText("Contenido generado de prueba con evidencia aprobada.", { exact: true }).first().waitFor({ state: "visible" });
+  if (!(await documentFrame.getByText("Propuesto con evidencia · revisión humana pendiente", { exact: true }).first().isVisible())) throw new Error("El visor no sustituye el apartado por el borrador generado");
   const editButton = skeletonModal.locator("[data-document-version-edit]");
   await editButton.waitFor({ state: "visible" });
   await editButton.click();

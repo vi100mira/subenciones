@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { get, put } from "@vercel/blob";
 import { fail, ok } from "../src/apiResponse.js";
 import { getSupabaseAdmin, requireSourcePermission } from "../src/supabaseAdmin.js";
+import { requireTenantAgentEntitlement } from "../src/tenantPlan.js";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const TYPES: Record<string, string> = {
@@ -59,6 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
+    await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
     const reviewStatus = document.metadata_json?.review_status;
     if (!["approved", "restricted"].includes(reviewStatus)) return res.status(409).json(fail("El documento debe aprobarse antes de almacenarlo"));
     if (restricted && reviewStatus !== "restricted") return res.status(409).json(fail("El anexo personal debe aprobarse como restringido"));

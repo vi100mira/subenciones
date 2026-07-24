@@ -89,6 +89,9 @@
 
   async function request(path, options = {}) {
     const current = session();
+    if (!current?.accessToken || !current?.tenantId) {
+      throw new Error("Tu sesión ha caducado. Vuelve a acceder para continuar.");
+    }
     const response = await fetch(path, {
       ...options,
       headers: { "Content-Type": "application/json", "x-tenant-id": current?.tenantId || "", ...window.CredentialsAuth.authHeaders(current), ...(options.headers || {}) }
@@ -116,44 +119,37 @@
     const reviewState = pending ? "is-current" : libraryFacts.length ? "is-done" : "";
     const useState = approved ? "is-done" : "";
     const approvedDocuments = libraryDocuments.filter((item) => ["approved", "restricted"].includes(item.metadata_json?.review_status)).length;
-    const documentLabel = (value) => ({
-      map_before_prefill: "Mapear campos seguros", manual_review: "Revisión necesaria", manual_only: "Solo uso manual",
-      reference_only: "Documento de referencia", reference_only_filled: "Ejemplar cumplimentado",
-      duplicate_reference: "Duplicado", blocked_sensitive: "Bloqueado por sensibilidad"
-    }[value] || "Clasificación pendiente");
-    const documentCards = libraryDocuments.length ? libraryDocuments.map((item) => {
-      const status = item.metadata_json?.review_status || "pending";
-      const restricted = ["personal", "sensitive"].includes(item.data_class);
-      const stored = Boolean(item.blob_path);
-      const recommendation = documentLabel(item.metadata_json?.recommendation);
-      const tone = ["approved", "restricted"].includes(status) ? "safe" : status === "rejected" || status === "blocked" ? "danger" : "warning";
-      const statusText = status === "approved" ? "Aprobado" : status === "restricted" ? "Aprobado · restringido" : status === "rejected" ? "Descartado" : status === "blocked" ? "Bloqueado para IA" : "Por revisar";
-      return `<article class="master-fact-card"><div class="master-fact-card-head"><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(recommendation)} · ${escapeHtml(item.mime_type)}</small></div><span class="badge ${tone}">${statusText}</span></div>
-        <p>Clase de datos: <strong>${escapeHtml(item.data_class)}</strong> · Huella: ${escapeHtml(String(item.source_sha256 || "").slice(0, 12))}</p>
-        <div class="button-row"><button class="primary-action" data-annex-open="${escapeHtml(item.id)}" data-annex-title="${escapeHtml(item.title)}" data-annex-mime="${escapeHtml(item.mime_type)}" data-annex-class="${escapeHtml(item.data_class)}" data-annex-sha="${escapeHtml(item.source_sha256)}" data-annex-status="${escapeHtml(status)}" data-annex-recommendation="${escapeHtml(recommendation)}" data-annex-restricted="${restricted}" data-annex-stored="${stored}" type="button"><i data-lucide="scan-search"></i>Abrir documento</button></div></article>`;
-    }).join("") : `<div class="empty-state compact"><strong>El inventario no contiene fichas documentales</strong><span>${documents
-      ? `Hay ${documents} documentos contabilizados, pero este análisis antiguo no guardó sus fichas. Deben regenerarse antes de poder abrir los visores.`
-      : "Añade una carpeta y completa el inventario local. Aquí aparecerán las clasificaciones sin copiar el contenido."}</span></div>`;
-    panel.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Corpus privado · solo esta entidad</p><h2>Biblioteca común para todas las candidaturas</h2></div><span class="badge safe">Aislada por entidad</span></div>
-      <p class="private-knowledge-intro">Aquí vive la documentación institucional reutilizable. No pertenece a una convocatoria concreta: cada candidatura recupera únicamente los datos aprobados que necesita y muestra su procedencia.</p>
-      <ol class="private-knowledge-steps">
-        ${workflowStep(1, "Añadir fuentes", current ? escapeHtml(current.label || "Fuente privada autorizada") : "Autoriza una carpeta o completa el formulario", sourceState)}
-        ${workflowStep(2, "Analizar documentos", documents ? `${documents} documentos inventariados` : "Todavía no hay documentos inventariados", inventoryState)}
-        ${workflowStep(3, "Revisar datos", pending ? `${pending} propuestas esperan tu decisión` : "No hay propuestas pendientes", reviewState)}
-        ${workflowStep(4, "Reutilizar", approved ? `${approved} hechos aprobados disponibles` : "Aprueba hechos para autorrellenar", useState)}
-      </ol>
-      <div class="master-fact-groups knowledge-availability-grid">
-        <article><div><strong>Documentación fuente</strong><span>${documents} inventariados · ${approvedDocuments} aprobados${current ? ` · ${escapeHtml(current.label || "fuente autorizada")}` : ""}</span></div><span class="badge ${documents ? "safe" : "warning"}">${documents ? "Disponible" : "Sin cargar"}</span></article>
-        <article><div><strong>Datos reutilizables</strong><span>${approved} hechos aprobados con evidencia y vigencia</span></div><span class="badge ${approved ? "safe" : "warning"}">${approved ? "Autorrelleno activo" : "Pendiente"}</span></article>
+    const readOnly = !contracted();
+    panel.innerHTML = `<div class="panel-heading knowledge-main-heading"><div><p class="eyebrow">Corpus privado · solo esta entidad</p><h2>Biblioteca común para todas las candidaturas</h2></div>
+      <div class="knowledge-heading-tools"><span class="badge ${readOnly ? "neutral" : "safe"}">${readOnly ? "Solo lectura · módulo no contratado" : "Aislada por entidad"}</span>
+        <details class="knowledge-info-point" data-knowledge-overview>
+          <summary class="icon-button" aria-label="Información y gestión de la Base común" title="Información y gestión"><i data-lucide="info"></i></summary>
+          <div class="knowledge-info-card knowledge-overview-card">
+            <p class="private-knowledge-intro">Aquí vive la documentación institucional reutilizable. No pertenece a una convocatoria concreta: cada candidatura recupera únicamente los datos aprobados que necesita y muestra su procedencia.</p>
+            ${readOnly ? '<div class="plain-note is-warning"><strong>Tus datos siguen disponibles</strong><span>Puedes consultar y descargar el histórico. La consulta IA, nuevas fuentes, aprobaciones y nuevos análisis se reactivarán al contratar Preparación documental.</span></div>' : ""}
+            <ol class="private-knowledge-steps">
+              ${workflowStep(1, "Añadir fuentes", current ? escapeHtml(current.label || "Fuente privada autorizada") : "Autoriza una carpeta o completa el formulario", sourceState)}
+              ${workflowStep(2, "Analizar documentos", documents ? `${documents} documentos inventariados` : "Todavía no hay documentos inventariados", inventoryState)}
+              ${workflowStep(3, "Revisar datos", pending ? `${pending} propuestas esperan tu decisión` : "No hay propuestas pendientes", reviewState)}
+              ${workflowStep(4, "Reutilizar", approved ? `${approved} hechos aprobados disponibles` : "Aprueba hechos para autorrellenar", useState)}
+            </ol>
+            <div class="master-fact-groups knowledge-availability-grid">
+              <article><div><strong>Documentación fuente</strong><span>${documents} inventariados · ${approvedDocuments} aprobados${current ? ` · ${escapeHtml(current.label || "fuente autorizada")}` : ""}</span></div><span class="badge ${documents ? "safe" : "warning"}">${documents ? "Disponible" : "Sin cargar"}</span></article>
+              <article><div><strong>Datos reutilizables</strong><span>${approved} hechos aprobados con evidencia y vigencia</span></div><span class="badge ${approved ? "safe" : "warning"}">${approved ? "Autorrelleno activo" : "Pendiente"}</span></article>
+            </div>
+            <div class="plain-note"><strong>Qué entra y qué no</strong><span>Estatutos, trayectoria, metodología, equipo agregado, indicadores y evidencias pueden alimentar esta base. Los borradores, importes y decisiones de una candidatura permanecen en su expediente hasta que una persona decida convertirlos en conocimiento reutilizable.</span></div>
+            <div class="knowledge-operation-list">
+              <article><span>1</span><div><strong>Aportar</strong><p>Conecta una carpeta autorizada o responde el formulario maestro sin datos personales.</p></div></article>
+              <article><span>2</span><div><strong>Aprobar</strong><p>Revisa cada dato propuesto, su evidencia y su vigencia antes de incorporarlo.</p></div></article>
+              <article><span>3</span><div><strong>Mejorar</strong><p>Las candidaturas futuras se autorrellenan con más cobertura, sin mezclar entidades.</p></div></article>
+            </div>
+            <div class="button-row">${readOnly ? "" : `<button class="primary-action" data-private-knowledge-open type="button"><i data-lucide="folder-plus"></i>Añadir o actualizar documentación</button><button class="ghost-action" data-private-review type="button">Revisar datos reutilizables${pending ? ` (${pending})` : ""}</button>`}<button class="ghost-action" data-private-knowledge-status type="button">Ver estado detallado</button></div>
+          </div>
+        </details>
       </div>
-      <section><div class="panel-heading"><div><p class="eyebrow">Aprobación documental</p><h3>Documentos propuestos por el inventario</h3></div><span class="badge neutral">${libraryDocuments.length} propuestas</span></div><div class="master-fact-review-grid">${documentCards}</div></section>
-      <div class="plain-note"><strong>Qué entra y qué no</strong><span>Estatutos, trayectoria, metodología, equipo agregado, indicadores y evidencias pueden alimentar esta base. Los borradores, importes y decisiones de una candidatura permanecen en su expediente hasta que una persona decida convertirlos en conocimiento reutilizable.</span></div>
-      <div class="knowledge-operation-list">
-        <article><span>1</span><div><strong>Aportar</strong><p>Conecta una carpeta autorizada o responde el formulario maestro sin datos personales.</p></div></article>
-        <article><span>2</span><div><strong>Aprobar</strong><p>Revisa cada dato propuesto, su evidencia y su vigencia antes de incorporarlo.</p></div></article>
-        <article><span>3</span><div><strong>Mejorar</strong><p>Las candidaturas futuras se autorrellenan con más cobertura, sin mezclar entidades.</p></div></article>
-      </div>
-      <div class="button-row"><button class="primary-action" data-private-knowledge-open type="button"><i data-lucide="folder-plus"></i>Añadir o actualizar documentación</button><button class="ghost-action" data-private-review type="button">Revisar datos reutilizables${pending ? ` (${pending})` : ""}</button><button class="ghost-action" data-private-knowledge-status type="button">Ver estado detallado</button></div>`;
+    </div>
+    <div data-common-knowledge-browser></div>`;
+    window.CommonKnowledgeBrowser?.render(libraryDocuments, { sourceId: current?.id || "", agentEnabled: !readOnly });
     window.lucide?.createIcons();
   }
 
@@ -197,7 +193,7 @@
           <article><span>3</span><div><strong>Preparar una candidatura</strong><p>Insertia buscará entre los hechos aprobados y mostrará cuáles utilizó. La revisión final sigue siendo humana.</p></div></article>
         </div>
         <div class="plain-note is-warning"><strong>¿Qué ocurre con los ${chunks} fragmentos?</strong><span>El análisis ya está hecho y no necesitas repetirlo. El archivo completo permanece en cuarentena hasta incorporar el recuperador histórico; hoy Insertia solo utiliza los hechos que apruebes.</span></div>
-        <div class="button-row"><button class="primary-action" data-private-review type="button">${pending ? `Revisar ${pending} propuestas` : "Ver hechos revisados"}</button><button class="ghost-action" data-private-update-analysis type="button">Volver a analizar la carpeta</button><button class="ghost-action" data-private-close type="button">Cerrar</button></div>
+        <div class="button-row">${contracted() ? `<button class="primary-action" data-private-review type="button">${pending ? `Revisar ${pending} propuestas` : "Ver hechos revisados"}</button><button class="ghost-action" data-private-update-analysis type="button">Volver a analizar la carpeta</button>` : ""}<button class="ghost-action" data-private-close type="button">Cerrar</button></div>
         <p class="form-status">${approved} aprobados · ${rejected} descartados · ${pending} pendientes</p>`);
     } catch (error) {
       openModal(`<div class="panel-heading"><div><p class="eyebrow">Preparación documental</p><h2>Estado y uso del conocimiento</h2></div><button class="icon-button" data-private-close type="button" aria-label="Cerrar"><i data-lucide="x"></i></button></div>
@@ -206,6 +202,10 @@
   }
 
   function preparationModal() {
+    if (!contracted()) {
+      openModal('<div class="panel-heading"><div><p class="eyebrow">Preparación documental</p><h2>Módulo no incluido</h2></div><button class="icon-button" data-private-close type="button" aria-label="Cerrar"><i data-lucide="x"></i></button></div><div class="plain-note is-warning"><strong>Base común en modo solo lectura</strong><span>Tus documentos e históricos permanecen disponibles. Contrata Preparación documental para añadir fuentes, consultar con IA o generar nuevos borradores.</span></div><div class="button-row"><button class="ghost-action" data-private-close type="button">Cerrar</button></div>');
+      return;
+    }
     const current = source();
     const analysis = window.PrivateAnalysisState?.view(governance);
     const completed = analysis?.run?.status === "completed";
@@ -390,13 +390,16 @@
 
   async function reviewDocumentCandidate(button) {
     const current = source();
-    if (!current) return;
+    const sourceId = button.dataset.documentSource || current?.id;
+    if (!sourceId) return;
     button.disabled = true;
     try {
-      await request(`/api/private-document-candidates?sourceId=${encodeURIComponent(current.id)}`, {
-        method: "PATCH", body: JSON.stringify({ sourceId: current.id, reviews: [{ id: button.dataset.documentCandidateReview, status: button.dataset.reviewStatus }] })
+      await request(`/api/private-document-candidates?sourceId=${encodeURIComponent(sourceId)}`, {
+        method: "PATCH", body: JSON.stringify({ sourceId, reviews: [{ id: button.dataset.documentCandidateReview, status: button.dataset.reviewStatus }] })
       });
-      await refresh(); window.PrivateAnnexViewer?.close?.(); toast("Decisión documental guardada y auditada.");
+      await refresh(); window.PrivateAnnexViewer?.close?.();
+      window.dispatchEvent(new CustomEvent("private-document-review-saved"));
+      toast("Decisión documental guardada y auditada.");
     } catch (error) { toast(error.message); button.disabled = false; }
   }
 

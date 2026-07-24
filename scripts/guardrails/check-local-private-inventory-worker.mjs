@@ -36,6 +36,8 @@ assert.ok(backfill.includes('run.status !== "completed"') && backfill.includes("
 assert.ok(backfill.includes("reviews.get(externalId)") && backfill.includes('"private_document_candidates.backfilled"'), "El backfill pierde decisiones o no queda auditado");
 assert.ok(!/openai|anthropic|gemini/i.test(worker), "El inventario local incorpora un proveedor de IA");
 assert.ok(worker.includes("build_quarantine_index.py") && worker.includes('status: "prepared_pending_review"'), "El puente no prepara el índice privado en cuarentena");
+assert.ok(quarantine.includes("write_source_manifest") && quarantine.includes('"content_stored_remotely": False'),
+  "El inventario no conserva el mapa local necesario para abrir originales sin reelección");
 for (const contract of ["local_only", "human_approval_required", "review_status = 'quarantined'", "active = 0", 'embedding_state": "not_started"']) {
   assert.ok(quarantine.includes(contract), `Falta el contrato de cuarentena: ${contract}`);
 }
