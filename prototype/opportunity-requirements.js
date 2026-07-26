@@ -69,6 +69,17 @@
     return String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   }
 
+  function draftRunSignature(run) {
+    if (!run) return "none";
+    return JSON.stringify({
+      id: run.id || null,
+      status: run.status || null,
+      updatedAt: run.updated_at || run.finished_at || null,
+      review: run.human_review || null,
+      output: run.output_json || null
+    });
+  }
+
   function badge(label, tone) {
     return window.badge ? window.badge(label, tone) : `<span class="badge ${tone}">${label}</span>`;
   }
@@ -258,7 +269,7 @@
         <span>Proyecto activo</span>
       </div>
       <div class="document-agent-actions">
-        ${basesApproved ? `<div><strong>Bases validadas; expediente pendiente</strong><span>Gestiona la generación, las nuevas versiones y la revisión humana desde el nodo Borrador Word.</span></div>` : `<div><strong>Bases pendientes de validación experta</strong><span>Tu equipo revisa las cláusulas con sus citas y decide solo para esta entidad.</span></div>`}
+        ${basesApproved ? `<div><strong>Bases validadas; expediente pendiente</strong><span>Genera y versiona los ficheros desde Documentos; controla el paquete completo en Checklist · Carpeta de proyecto.</span></div>` : `<div><strong>Bases pendientes de validación experta</strong><span>Tu equipo revisa las cláusulas con sus citas y decide solo para esta entidad.</span></div>`}
       </div>`;
   }
 
@@ -321,7 +332,7 @@
           : basesApproved && limitsVerified ? "Puedes solicitarlo con los botones inferiores."
           : "Se habilitará al completar los pasos anteriores." }
     ];
-    const next = draft === "done" ? "Exporta el DOCX/PDF desde el nodo Borrador Word."
+    const next = draft === "done" ? "Revisa y descarga el expediente desde Checklist · Carpeta de proyecto."
       : run?.status === "review_required" ? "Abre el borrador y apruébalo o recházalo."
       : generating ? "Ninguno: espera a que el redactor termine."
       : draft === "blocked" ? "Lee el motivo del fallo y solicita una nueva versión."
@@ -471,19 +482,33 @@
   function constructedDocsSummary(pack) {
     const builtDocs = documentBuildPlan(pack);
     return `<div class="constructed-doc-list">
-      ${builtDocs.map((doc, index) => `
+      ${builtDocs.map((doc, index) => {
+        const generated = generatedDocumentFor(pack, doc);
+        const consolidated = generated?.consolidation?.status === "consolidated";
+        const title = consolidated ? generated.title : doc.title;
+        return `
         <article>
-           <div><strong>${escapeHtml(doc.title)}</strong><span>${escapeHtml(doc.requirement)}</span></div>
-           <div class="constructed-doc-actions">${badge(escapeHtml(doc.status), "warning")}<button class="ghost-action" data-constructed-doc-view="${index}" type="button"><i data-lucide="file-text"></i> Ver plantilla</button></div>
+           <div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(doc.requirement)}</span></div>
+           <div class="constructed-doc-actions">${badge(consolidated ? "Consolidado" : generated ? "Borrador editable" : escapeHtml(doc.status), consolidated ? "safe" : "warning")}<button class="ghost-action" data-constructed-doc-view="${index}" type="button"><i data-lucide="file-text"></i> ${consolidated ? "Ver documento" : "Ver borrador"}</button></div>
            <p><b>Qué hará la app:</b> ${escapeHtml(doc.possible)}</p>
            <p><b>Control necesario:</b> ${escapeHtml(doc.pending)}</p>
            ${doc.sourceUrl ? `<p><a href="${escapeHtml(doc.sourceUrl)}" target="_blank" rel="noreferrer">Abrir evidencia${doc.sourcePage ? ` · página ${escapeHtml(doc.sourcePage)}` : ""}</a></p>` : ""}
         </article>
-      `).join("")}
+      `; }).join("")}
     </div>`;
   }
 
+  function updateConstructedDocsSummary(canonicalKey) {
+    const pack = readWorkspacePackage();
+    if (!pack || pack.id !== canonicalKey) return;
+    document.querySelectorAll("#documentary-agent-package .constructed-doc-list, [data-candidature-panel-modal] .constructed-doc-list")
+      .forEach((node) => { node.outerHTML = constructedDocsSummary(pack); });
+    window.lucide?.createIcons();
+  }
+
   function constructedDocumentHtml(doc, pack, generatedDocument = null) {
+    const consolidated = generatedDocument?.consolidation?.status === "consolidated";
+    const displayTitle = consolidated ? generatedDocument.title : doc.title;
     const preparedSections = window.ConstructedDocumentPrefill?.sections(doc, pack, generatedDocument) || [];
     const coverage = window.ConstructedDocumentPrefill?.summary(preparedSections) || { verified: 0, proposed: 0, missing: preparedSections.length, humanOnly: 0 };
     const sections = preparedSections.map((section) => `
@@ -493,12 +518,37 @@
       </section>`).join("");
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeHtml(doc.title)}</title><style>
       *{box-sizing:border-box}body{margin:0;padding:28px;background:#edf2f0;color:#202438;font-family:Arial,sans-serif}article{width:min(780px,100%);min-height:980px;margin:auto;padding:58px 64px;background:#fff;box-shadow:0 8px 28px rgba(25,35,32,.12)}.stamp{display:inline-block;margin:0 0 24px;padding:7px 10px;border:1px solid #b87720;color:#7c5015;font-size:11px;font-weight:700;letter-spacing:.08em}h1{margin:0 0 12px;font-size:30px;line-height:1.2}header>p{margin:0;color:#5b6073;line-height:1.55}.document-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:28px 0;padding:18px;border:1px solid #cfd8d5;background:#f7faf9}.document-meta div:last-child{grid-column:1/-1}.document-meta strong,.document-meta span{display:block}.document-meta span{margin-top:5px;color:#5b6073;line-height:1.45}section{margin-top:28px}h2{margin:0 0 10px;padding-bottom:8px;border-bottom:2px solid #a8d8bd;font-size:19px}.template-field{min-height:110px;padding:14px;border:1px dashed #9da9a5;background:#fbfdfc}.template-field.is-verified,.template-field.is-proposed{border-style:solid;border-color:#9bc9b0;background:#f3faf6}.template-field.is-missing,.template-field.is-human_only{border-color:#d5a93d;background:#fffaf0}.template-field span{color:#3a7f63;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.template-field p{margin:10px 0;color:#4f5568;line-height:1.55}.template-field small{display:block;margin-top:12px;padding-top:9px;border-top:1px solid #dce7e2;color:#667268}.control{margin-top:34px;padding:16px;border-left:4px solid #b87720;background:#fff8ec}.control strong,.control span{display:block}.control span{margin-top:5px;color:#5b6073;line-height:1.5}footer{margin-top:42px;padding-top:14px;border-top:1px solid #dce3e1;color:#737889;font-size:11px}@media(max-width:600px){body{padding:10px}article{min-height:0;padding:30px 24px}.document-meta{grid-template-columns:1fr}.document-meta div:last-child{grid-column:auto}}
-    </style></head><body><article><p class="stamp">BORRADOR ORIENTATIVO · NO ES DOCUMENTO FINAL</p><header><h1>${escapeHtml(doc.title)}</h1><p>${escapeHtml(doc.requirement)}</p></header><div class="document-meta"><div><strong>Estado</strong><span>${generatedDocument ? "Versión generada pendiente de revisión" : escapeHtml(doc.status)}</span></div><div><strong>Cobertura trazable</strong><span>${coverage.verified} verificados · ${coverage.proposed} propuestos · ${coverage.missing} pendientes · ${coverage.humanOnly} humanos</span></div><div><strong>Contenido que puede preparar la app</strong><span>${escapeHtml(doc.possible)}</span></div></div>${sections}<div class="control"><strong>Control pendiente antes de uso</strong><span>${escapeHtml(doc.pending)}</span></div><footer>Insertia · Documento de trabajo sujeto a validación humana · No presentar ni firmar automáticamente</footer></article></body></html>`;
+    </style></head><body><article><p class="stamp">${consolidated ? "DOCUMENTO CONSOLIDADO · REVISIÓN HUMANA COMPLETADA" : "BORRADOR ORIENTATIVO · NO ES DOCUMENTO FINAL"}</p><header><h1>${escapeHtml(displayTitle)}</h1><p>${escapeHtml(doc.requirement)}</p></header><div class="document-meta"><div><strong>Estado</strong><span>${consolidated ? "Consolidado por la entidad" : generatedDocument ? "Versión generada pendiente de revisión" : escapeHtml(doc.status)}</span></div><div><strong>Cobertura trazable</strong><span>${coverage.verified} verificados · ${coverage.proposed} propuestos · ${coverage.missing} pendientes · ${coverage.humanOnly} humanos</span></div><div><strong>Contenido que puede preparar la app</strong><span>${escapeHtml(doc.possible)}</span></div></div>${sections}<div class="control"><strong>${consolidated ? "Control del expediente" : "Control pendiente antes de uso"}</strong><span>${consolidated ? "Este documento está cerrado; el resto del proyecto y la presentación externa mantienen sus controles independientes." : escapeHtml(doc.pending)}</span></div><footer>Insertia · ${consolidated ? "Documento consolidado por revisión humana · Presentación externa todavía bloqueada" : "Documento de trabajo sujeto a validación humana · No presentar ni firmar automáticamente"}</footer></article></body></html>`;
   }
 
   function generatedDocumentFor(pack, doc) {
     const run = latestDraftRuns.get(pack?.id);
     return window.ConstructedDocumentPrefill?.matchGeneratedDocument(doc, run?.output_json) || null;
+  }
+
+  function manualDraftSeed(index) {
+    const pack = readWorkspacePackage();
+    const docs = documentBuildPlan(pack || {});
+    const target = docs[Number(index)];
+    if (!pack || !target) return null;
+    const documents = docs.map((doc, currentIndex) => {
+      const sections = window.ConstructedDocumentPrefill?.sections(doc, pack, null) || [];
+      const evidenceRefs = [...new Set(sections.flatMap((section) => section.evidence || []))];
+      const documentRef = `manual-template:${currentIndex + 1}`;
+      return { documentRef, title: doc.title, documentType: doc.title, role: "supporting_draft",
+        requirementRefs: [doc.requirementRef || `manual-requirement:${currentIndex + 1}`], evidenceRefs,
+        missingInputs: sections.flatMap((section) => section.questions || []), sections: sections.map((section) => ({
+          title: section.title, paragraphs: section.paragraphs, evidenceRefs: section.evidence || []
+        })) };
+    });
+    return { targetDocumentRef: documents[Number(index)].documentRef, content: {
+      title: `${pack.title} · expediente manual`, humanReviewRequired: true, submissionAllowed: false,
+      evidenceRefs: [...new Set(documents.flatMap((document) => document.evidenceRefs))],
+      uncertainties: [...new Set(documents.flatMap((document) => document.missingInputs))], documents,
+      documentPlan: documents.map((document) => ({ title: document.title, category: "generated_draft",
+        preparation: "drafted_in_proposal", requirementRefs: document.requirementRefs, evidenceRefs: document.evidenceRefs,
+        missingInputs: document.missingInputs, draftDocumentRefs: [document.documentRef] }))
+    } };
   }
 
   function openConstructedDocument(index) {
@@ -514,7 +564,7 @@
         <article class="modal constructed-doc-modal" role="dialog" aria-modal="true" aria-labelledby="constructed-doc-title">
           <div class="panel-heading constructed-doc-heading">
             <button class="ghost-action" data-return-constructed-doc type="button"><i data-lucide="arrow-left"></i> Documentos</button>
-            <div><p class="eyebrow">Plantilla preconstruida</p><h2 id="constructed-doc-title">${escapeHtml(doc.title)}</h2></div>
+            <div><p class="eyebrow">${generatedDocument?.consolidation?.status === "consolidated" ? "Documento consolidado" : "Plantilla preconstruida"}</p><h2 id="constructed-doc-title">${escapeHtml(generatedDocument?.consolidation?.status === "consolidated" ? generatedDocument.title : doc.title)}</h2></div>
             <button class="icon-button" data-close-constructed-doc type="button" aria-label="Cerrar visor"><i data-lucide="x"></i></button>
           </div>
           <div class="constructed-doc-workspace">
@@ -524,7 +574,8 @@
               <div class="plain-note"><strong>Este borrador no es la base común</strong><span>La candidatura usa datos reutilizables de la entidad, pero conserva aquí solo su versión específica. Firma, importes y datos sin evidencia siguen pendientes.</span></div>
               <details class="constructed-doc-help"><summary>¿Solo aparece el esqueleto?</summary><p>Genera una nueva versión para completar los documentos redactables, incluido este, usando solo bases verificadas y hechos aprobados.</p></details>
               <button class="ghost-action" data-private-knowledge-open type="button"><i data-lucide="library-big"></i> Ir a Base común</button>
-              ${generatedDocument && run?.id && documentAgentContracted() ? `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(pack?.id)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> Editar borrador</button>` : ""}
+              ${generatedDocument && run?.id && documentAgentContracted() ? `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(pack?.id)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> ${generatedDocument.consolidation?.status === "consolidated" ? "Revisar documento consolidado" : "Editar y consolidar"}</button>`
+                : documentAgentContracted() ? `<button class="primary-action" data-document-version-create data-canonical-key="${escapeHtml(pack?.id)}" data-document-index="${Number(index)}" type="button"><i data-lucide="file-plus-2"></i>Empezar a escribir y consolidar</button>` : ""}
               <div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${escapeHtml(pack?.id)}"></div></div>
             </aside>
           </div>
@@ -559,12 +610,19 @@
     const run = latestDraftRuns.get(canonicalKey);
     const generatedDocument = generatedDocumentFor(pack, doc);
     frame.srcdoc = constructedDocumentHtml(doc, pack, generatedDocument);
+    const title = modal.querySelector("#constructed-doc-title");
+    if (title) title.textContent = generatedDocument?.consolidation?.status === "consolidated" ? generatedDocument.title : doc.title;
+    const eyebrow = modal.querySelector(".constructed-doc-heading .eyebrow");
+    if (eyebrow) eyebrow.textContent = generatedDocument?.consolidation?.status === "consolidated" ? "Documento consolidado" : "Plantilla preconstruida";
+    if (generatedDocument) modal.querySelector("[data-document-version-create]")?.remove();
     const editorButton = modal.querySelector("[data-document-version-edit]");
     if (generatedDocument && run?.id && documentAgentContracted() && !editorButton) {
       modal.querySelector("[data-private-knowledge-open]")?.insertAdjacentHTML("afterend",
-        `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(canonicalKey)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> Editar borrador</button>`);
+        `<button class="primary-action" data-document-version-edit data-run-id="${escapeHtml(run.id)}" data-canonical-key="${escapeHtml(canonicalKey)}" data-document-ref="${escapeHtml(generatedDocument.documentRef)}" type="button"><i data-lucide="file-pen-line"></i> ${generatedDocument.consolidation?.status === "consolidated" ? "Revisar documento consolidado" : "Editar y consolidar"}</button>`);
       window.lucide?.createIcons();
     }
+    if (editorButton) editorButton.innerHTML = `<i data-lucide="file-pen-line"></i> ${generatedDocument?.consolidation?.status === "consolidated" ? "Revisar documento consolidado" : "Editar y consolidar"}`;
+    window.lucide?.createIcons();
   }
 
   function recommendationFor(item) {
@@ -642,9 +700,8 @@
       ["project", "Control", "Límites y aprobación final", "shield-check"]
     ];
     const actions = [
-      ["documents", "Documentos", "Revisar plantillas y anexos", "files"],
-      ["checklist", "Checklist", "Resolver comprobaciones", "list-checks"],
-      ["draft", "Borrador Word", "Generar y versionar la memoria", "file-pen-line"]
+      ["documents", "Documentos", "Generar, editar y versionar", "files"],
+      ["project-folder", "Checklist · Carpeta de proyecto", "Controlar ficheros y descargas", "folder-check"]
     ];
     const nodes = (items, kind) => items.map(([id, label, detail, icon]) => mapNode(id, label, detail, icon, kind, workspaceTargetTab === id)).join("");
     return `<section class="candidature-map" aria-label="Mapa interactivo de la candidatura">
@@ -734,10 +791,9 @@
           `, workspaceTargetTab === "analysis")}
           ${panel("dates", pack.deadlineTrace ? window.deadlineTrace.panelFromTrace(pack.deadlineTrace) : `<div class="plain-note"><strong>Sin traza de plazo</strong><span>El agente aun no ha podido consolidar una fecha o evidencia de plazo.</span></div>`, workspaceTargetTab === "dates")}
           ${panel("requirements", `<div class="compact-list">${list(pack.who)}</div>`, workspaceTargetTab === "requirements")}
-          ${panel("documents", `<div data-candidature-document-selection data-recommendation-id="${escapeHtml(pack.recommendationId)}"></div>${basesClarityPanel(pack)}${constructedDocsSummary(pack)}`, workspaceTargetTab === "documents")}
+          ${panel("documents", `<div class="plain-note"><strong>Ficheros de la candidatura</strong><span>Genera, incorpora, revisa y versiona aquí. La carpeta de proyecto conserva el resultado y sus descargas sin convertir un borrador en documento final.</span></div><div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${escapeHtml(pack.id)}"></div></div><div data-candidature-document-selection data-recommendation-id="${escapeHtml(pack.recommendationId)}"></div>${basesClarityPanel(pack)}${constructedDocsSummary(pack)}`, workspaceTargetTab === "documents")}
           ${panel("steps", `<div class="compact-list">${list(pack.steps)}</div>`, workspaceTargetTab === "steps")}
-          ${panel("checklist", `<div class="compact-tasks">${checklist()}</div>`, workspaceTargetTab === "checklist")}
-          ${panel("draft", `<div class="plain-note"><strong>Esquema orientativo, no generado por IA</strong><span>Genera aquí una versión pública o personalizada. Cada ejecución crea una versión nueva y conserva la anterior para revisión y auditoría.</span></div><div class="constructed-doc-generation">${draftActionButtons(pack)}<div data-draft-agent-status="${pack.id}"></div></div><div class="compact-draft">${outline()}</div>`, workspaceTargetTab === "draft")}
+          ${panel("project-folder", `<div data-project-folder data-recommendation-id="${escapeHtml(pack.recommendationId)}" data-canonical-key="${escapeHtml(pack.id)}"><div class="plain-note"><strong>Preparando la carpeta de proyecto</strong><span>Se está reconstruyendo el estado persistente del expediente.</span></div></div>`, workspaceTargetTab === "project-folder")}
         </div>
       </article>
     `;
@@ -747,6 +803,7 @@
     window.lucide?.createIcons();
     window.dispatchEvent(new CustomEvent("candidature-document-hosts-rendered"));
     window.dispatchEvent(new CustomEvent("draft-agent-hosts-rendered"));
+    window.dispatchEvent(new CustomEvent("project-folder-hosts-rendered"));
     if (workspacePanelTarget) {
       openWorkspacePanel(workspacePanelTarget.id, workspacePanelTarget.kind);
       workspacePanelTarget = null;
@@ -773,7 +830,8 @@
     if (!item) return false;
     const informationIds = ["summary", "project", "analysis", "dates", "requirements", "steps"];
     const overview = initialTab === "overview";
-    const targetTab = [...informationIds, "documents", "checklist", "draft"].includes(initialTab) ? initialTab : "analysis";
+    const legacyTarget = initialTab === "draft" ? "documents" : initialTab === "checklist" ? "project-folder" : initialTab;
+    const targetTab = [...informationIds, "documents", "project-folder"].includes(legacyTarget) ? legacyTarget : "analysis";
     workspacePackageVisible = true;
     workspacePanelTarget = overview ? null : { id: targetTab, kind: informationIds.includes(targetTab) ? "information" : "action" };
     workspaceTargetTab = "";
@@ -932,8 +990,12 @@
   window.addEventListener("draft-agent-run-updated", (event) => {
     const canonicalKey = event.detail?.canonicalKey;
     if (!canonicalKey) return;
-    latestDraftRuns.set(canonicalKey, event.detail.run || null);
+    const previousRun = latestDraftRuns.get(canonicalKey);
+    const nextRun = event.detail.run || null;
+    latestDraftRuns.set(canonicalKey, nextRun);
+    if (draftRunSignature(previousRun) === draftRunSignature(nextRun)) return;
     updateOpenConstructedDocument(canonicalKey);
+    updateConstructedDocsSummary(canonicalKey);
     updateSolicitudPhases(canonicalKey);
   });
   window.addEventListener("draft-document-version-updated", (event) => {
@@ -943,6 +1005,7 @@
     latestDraftRuns.set(canonicalKey, { ...run, output_json: event.detail.content || run.output_json,
       human_review: Object.prototype.hasOwnProperty.call(event.detail, "review") ? event.detail.review : run.human_review });
     updateOpenConstructedDocument(canonicalKey);
+    updateConstructedDocsSummary(canonicalKey);
     updateSolicitudPhases(canonicalKey);
   });
   window.addEventListener("role-session-applied", () => {
@@ -966,5 +1029,6 @@
     openWorkspaceAnalysis(trigger.dataset.workspaceOpen, "overview");
   }, true);
   window.openWorkspaceAnalysis = openWorkspaceAnalysis;
+  window.ConstructedDocumentDraftSeed = manualDraftSeed;
   setTimeout(enhanceDetail, 0);
 })();

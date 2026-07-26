@@ -26,7 +26,8 @@
     return {
       ...item, title: item.title || "Documento sin nombre", status, dataClass, mime, type,
       recommendation: recommendationLabels[item.metadata_json?.recommendation] || "Clasificación pendiente",
-      aiReady: status === "approved" && !["personal", "sensitive", "blocked"].includes(dataClass)
+      aiReady: status === "approved" && item.metadata_json?.ai_allowed !== false
+        && !["personal", "sensitive", "blocked"].includes(dataClass)
     };
   }
 
@@ -54,7 +55,7 @@
   function annexButton(item, compact = false) {
     const restricted = ["personal", "sensitive"].includes(item.dataClass);
     return `<button class="${compact ? "icon-button" : "primary-action"}" data-annex-open="${escapeHtml(item.id)}"
-      data-annex-source="${escapeHtml(state.sourceId)}"
+      data-annex-source="${escapeHtml(item.source_connection_id || state.sourceId)}"
       data-annex-title="${escapeHtml(item.title)}" data-annex-mime="${escapeHtml(item.mime)}"
       data-annex-class="${escapeHtml(item.dataClass)}" data-annex-sha="${escapeHtml(item.source_sha256)}"
       data-annex-status="${escapeHtml(item.status)}" data-annex-recommendation="${escapeHtml(item.recommendation)}"

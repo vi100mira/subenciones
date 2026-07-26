@@ -15,6 +15,7 @@ const session = {
 };
 let canonicalKey = "";
 let basesAccepted = false;
+let currentRunId = "old-public-draft";
 let editedVersions = [];
 let editedContent = {
   title: "Solicitud oficial", humanReviewRequired: true, submissionAllowed: false,
@@ -56,18 +57,38 @@ await context.route("**/api/**", async (route) => {
   if (path === "/api/draft-document-versions") {
     const method = route.request().method();
     const body = method === "GET" ? {} : route.request().postDataJSON();
-    if (method === "POST") {
+    if (method === "POST" && body.seedContent) {
+      currentRunId = "manual-run";
+      const refs = new Map(body.seedContent.documents.map((document, index) => [document.documentRef, `manual-document:${index + 1}`]));
+      const documentRef = refs.get(body.targetDocumentRef) || "manual-document:1";
+      editedContent = { ...body.seedContent,
+        documents: body.seedContent.documents.map((document) => ({ ...document, documentRef: refs.get(document.documentRef) })),
+        documentPlan: body.seedContent.documentPlan.map((item) => ({ ...item,
+          draftDocumentRefs: item.draftDocumentRefs.map((reference) => refs.get(reference)) })) };
+      data = { run: { id: currentRunId, status: "review_required", provider: "human_editor", model: "manual_template_v1",
+        input_manifest_json: { canonicalKey, mode: "manual_template", externalAiCalls: 0 }, output_json: editedContent,
+        usage_json: { total_tokens: 0, estimated_eur: 0 }, human_review: null }, documentRef };
+    } else if (method === "POST") {
       const section = body.edits[0].sections[0];
       editedContent = { ...editedContent, documents: editedContent.documents.map((document) => ({ ...document,
+        consolidation: undefined,
         sections: document.sections.map((current) => current.title === section.title ? { ...current, paragraphs: section.paragraphs } : current) })) };
-      editedVersions = [{ id: "version-1", version_number: 1, status: "editing", content_json: editedContent,
-        content_hash: "a".repeat(64), change_note: body.changeNote, created_at: "2026-07-22T12:00:00Z" }];
-      data = { version: editedVersions[0], review: { id: "review-1", status: "pending", validation_json: { draftVersionId: "version-1" } } };
+      if (body.consolidateDocumentRef) editedContent.documents = editedContent.documents.map((document) => document.documentRef === body.consolidateDocumentRef
+        ? { ...document, title: document.title.replace(/\s*-\s*(borrador|esqueleto).*$/i, ""),
+          consolidation: { status: "consolidated", reviewedBy: "user-1", reviewedAt: "2026-07-22T12:05:00Z", documentHash: "d".repeat(64) } } : document);
+      const versionNumber = editedVersions.length + 1;
+      const allDocumentsConsolidated = editedContent.documents.every((document) => document.consolidation?.status === "consolidated");
+      const version = { id: `version-${versionNumber}`, version_number: versionNumber, status: allDocumentsConsolidated ? "approved" : "editing", content_json: editedContent,
+        content_hash: "a".repeat(64), change_note: body.changeNote, created_at: "2026-07-22T12:00:00Z" };
+      editedVersions.unshift(version);
+      data = { version, review: { id: "review-1", status: allDocumentsConsolidated ? "approved" : "pending",
+        validation_json: { draftVersionId: version.id, allDocumentsConsolidated } },
+      consolidatedDocumentRef: body.consolidateDocumentRef || null, allDocumentsConsolidated };
     } else if (method === "PATCH") {
       editedVersions[0].status = body.action;
       data = { version: editedVersions[0], review: { id: "review-1", status: body.action,
         output_hash: "a".repeat(64), validation_json: { draftVersionId: "version-1" } } };
-    } else data = { runId: "old-public-draft", canonicalKey, currentContent: editedVersions[0]?.content_json || editedContent,
+    } else data = { runId: currentRunId, canonicalKey, currentContent: editedVersions[0]?.content_json || editedContent,
       currentVersionId: editedVersions[0]?.id || null, versions: editedVersions };
   }
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
@@ -96,14 +117,14 @@ try {
 
   await page.locator('.nav-item[data-screen="workspace"]').click();
   await page.locator(`#workspace .candidate-list [data-workspace-open="${canonicalKey}"]`).click();
-  await page.locator('[data-candidature-action="draft"]').click();
+  await page.locator('[data-candidature-action="documents"]').click();
 
   const draftPanel = page.locator('[data-candidature-panel-modal]');
   await draftPanel.locator('[data-draft-agent-start][data-approved-facts="true"]').waitFor({ state: "visible" });
   await page.waitForFunction(() => document.querySelector('[data-candidature-panel-modal]')?.textContent?.includes("Regenerar con conocimiento aprobado (11)"));
   await page.waitForTimeout(600);
   const text = await draftPanel.innerText();
-  for (const expected of ["Regenerar con conocimiento aprobado (11)", "11 hechos aprobados", "posterior a este borrador", "conserva la anterior"]) {
+  for (const expected of ["Regenerar con conocimiento aprobado (11)", "11 hechos aprobados", "posterior a este borrador", "sin alterar la anterior"]) {
     if (!text.includes(expected)) throw new Error(`Falta el estado versionado: ${expected}`);
   }
   const regenerate = draftPanel.locator('[data-draft-agent-start][data-approved-facts="true"]');
@@ -133,23 +154,41 @@ try {
   const documentText = await documentFrame.locator("article").innerText();
   if (!(await prefilledSections.count())) throw new Error(`El documento no pre-rellena ningún apartado con los datos disponibles: ${documentText.slice(0, 800)}`);
   if (!documentText.toLowerCase().includes("pre-rellenado con fuente verificable") || !documentText.includes("Convocatoria:")) throw new Error(`El documento sigue mostrando solo cajas genéricas: ${documentText.slice(0, 1200)}`);
-  const generatedTitle = await skeletonModal.locator("#constructed-doc-title").innerText();
-  const generatedSectionTitle = await documentFrame.locator("section h2").first().innerText();
-  await page.evaluate(({ id, title, section }) => window.dispatchEvent(new CustomEvent("draft-agent-run-updated", { detail: { canonicalKey: id, run: { id: "old-public-draft", status: "review_required", output_json: { title, humanReviewRequired: true, submissionAllowed: false, evidenceRefs: ["evidencia:prueba"], uncertainties: [], documentPlan: [], documents: [{ documentRef: "draft-document:1", title, documentType: title, role: "supporting_draft", requirementRefs: ["requirement:1"], missingInputs: [], evidenceRefs: ["evidencia:prueba"], sections: [{ title: section, paragraphs: ["Contenido generado de prueba con evidencia aprobada."], evidenceRefs: ["evidencia:prueba"] }] }] } } } })), { id: canonicalKey, title: generatedTitle, section: generatedSectionTitle });
-  await documentFrame.getByText("Contenido generado de prueba con evidencia aprobada.", { exact: true }).first().waitFor({ state: "visible" });
-  if (!(await documentFrame.getByText("Propuesto con evidencia · revisión humana pendiente", { exact: true }).first().isVisible())) throw new Error("El visor no sustituye el apartado por el borrador generado");
-  const editButton = skeletonModal.locator("[data-document-version-edit]");
-  await editButton.waitFor({ state: "visible" });
-  await editButton.click();
+  const manualStart = skeletonModal.locator("[data-document-version-create]");
+  await manualStart.waitFor({ state: "visible" });
+  await manualStart.click();
   const editor = page.locator("[data-document-version-modal]");
   await editor.getByText("Borrador editable y versionado", { exact: true }).waitFor();
   const firstField = editor.locator("[data-document-edit-section]").first();
+  if (!(await firstField.inputValue()).includes("Entidad solicitante")) throw new Error("La edición manual no parte de las cajas pre-rellenadas del visor");
   await firstField.fill("Contenido corregido por la entidad y sujeto a revisión.");
   await editor.locator("[data-save-document-version]").click();
   await editor.getByText("v1 · editing", { exact: true }).waitFor();
   await page.screenshot({ path: ".tmp/document-version-editor.png" });
-  await editor.locator("[data-approve-document-version]").click();
+  await editor.locator("[data-consolidate-document-version]").click();
   await editor.waitFor({ state: "detached" });
+  await documentFrame.getByText("DOCUMENTO CONSOLIDADO · REVISIÓN HUMANA COMPLETADA", { exact: true }).waitFor({ state: "visible" });
+  await documentFrame.getByText("Contenido corregido por la entidad y sujeto a revisión.", { exact: true }).waitFor({ state: "visible" });
+  if ((await skeletonModal.locator("#constructed-doc-title").innerText()).toLowerCase().includes("borrador")) throw new Error("El documento consolidado conserva el título de borrador");
+  if (!(await skeletonModal.innerText()).includes("Revisar documento consolidado")) throw new Error("El visor no muestra el cierre individual del documento");
+  const repeatedRun = { id: currentRunId, status: "review_required", output_json: editedContent,
+    human_review: { id: "review-1", status: "pending", validation_json: { draftVersionId: "version-2", allDocumentsConsolidated: false } } };
+  const scrollBeforeRefresh = await documentFrame.locator("body").evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return window.scrollY;
+  });
+  if (scrollBeforeRefresh <= 0) throw new Error("El documento de prueba no permite comprobar el scroll");
+  await page.evaluate(({ id, run }) => window.dispatchEvent(new CustomEvent("draft-agent-run-updated", { detail: { canonicalKey: id, run } })), { id: canonicalKey, run: repeatedRun });
+  await page.waitForTimeout(100);
+  const scrollAfterRefresh = await documentFrame.locator("body").evaluate(() => window.scrollY);
+  if (scrollAfterRefresh !== scrollBeforeRefresh) throw new Error("El sondeo periódico devuelve el visor al principio del documento");
+  await skeletonModal.locator("[data-document-version-edit]").click();
+  await editor.getByText("Documento consolidado", { exact: true }).waitFor();
+  await page.screenshot({ path: ".tmp/document-version-consolidated.png" });
+  await editor.locator("[data-reopen-document-version]").click();
+  if (!(await editor.locator("[data-document-edit-section]").first().isEnabled())) throw new Error("Un documento consolidado no puede reabrirse para corregir");
+  await editor.locator("[data-close-document-version]").first().click();
+  await documentFrame.getByText("DOCUMENTO CONSOLIDADO · REVISIÓN HUMANA COMPLETADA", { exact: true }).waitFor({ state: "visible" });
   await page.screenshot({ path: ".tmp/constructed-document-single-modal.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) throw new Error("El visor de plantilla provoca desbordamiento móvil");
@@ -157,6 +196,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await skeletonModal.locator(".constructed-doc-footer [data-return-constructed-doc]").click();
   if (!(await page.locator('[data-candidature-panel-modal]').isVisible())) throw new Error("Volver desde la plantilla no recupera Documentos");
+  await page.locator('[data-candidature-panel-modal] .constructed-doc-list').getByText("Consolidado", { exact: true }).first().waitFor({ state: "visible" });
   await page.evaluate((id) => {
     const catalogs = [window.RADAR_PLATFORM_OPPORTUNITIES, window.RADAR?.opportunities, window.MUNICIPAL_RADAR?.opportunities, window.MOCK?.opportunities, window.PRIVATE_OPEN_OPPORTUNITIES];
     for (const catalog of catalogs) {
@@ -178,7 +218,9 @@ try {
   const enabledDraft = page.locator('[data-candidature-panel-modal] [data-draft-agent-start][data-approved-facts="true"]');
   await enabledDraft.waitFor({ state: "visible" });
   if (!(await enabledDraft.isEnabled())) throw new Error("Validar las bases no habilita el redactor para el tenant");
-  console.log(JSON.stringify({ ok: true, approvedFacts: 11, action: "Regenerar con conocimiento aprobado", skeletonEntryPoint: true, documentPrefill: true, generatedDocumentOverlay: true, previousVersionPreserved: true, basesReview: "accepted_by_entity", platformApprovalRequired: false }, null, 2));
+  console.log(JSON.stringify({ ok: true, approvedFacts: 11, action: "Regenerar con conocimiento aprobado", skeletonEntryPoint: true,
+    documentPrefill: true, generatedDocumentOverlay: true, documentLifecycle: ["manual_seed", "draft", "consolidated", "reopened"],
+    previousVersionPreserved: true, basesReview: "accepted_by_entity", platformApprovalRequired: false }, null, 2));
 } finally {
   await browser.close();
 }

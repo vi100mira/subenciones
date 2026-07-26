@@ -10,7 +10,8 @@ const modulePath = path.resolve(".tmp/draft-document-version.mjs");
 await fs.mkdir(path.dirname(modulePath), { recursive: true });
 await fs.copyFile("src/canonicalJson.mjs", path.resolve(".tmp/canonicalJson.mjs"));
 await fs.writeFile(modulePath, compiled);
-const { applyDraftEdits, draftContentHash, isEditableDraft } = await import(`${pathToFileURL(modulePath).href}?v=${Date.now()}`);
+const { allDraftDocumentsConsolidated, applyDraftEdits, consolidateDraftDocument, consolidatedDocumentRefs,
+  draftContentHash, isEditableDraft } = await import(`${pathToFileURL(modulePath).href}?v=${Date.now()}`);
 
 const base = {
   title: "Memoria", humanReviewRequired: true, submissionAllowed: false,
@@ -28,6 +29,14 @@ assert.deepEqual(edited.documents[0].sections[0].evidenceRefs, ["bases:p7"]);
 assert.deepEqual(edited.documents[0].requirementRefs, ["requirement:1"]);
 assert.equal(edited.documents[0].sections[0].editProvenance.mode, "human_edit");
 assert.equal(edited.submissionAllowed, false);
+const consolidated = consolidateDraftDocument(edited, "document:1", "user-1", "2026-07-22T12:05:00Z");
+assert.equal(consolidated.documents[0].consolidation.status, "consolidated");
+assert.deepEqual(consolidatedDocumentRefs(consolidated), ["document:1"]);
+assert.equal(allDraftDocumentsConsolidated(consolidated), true);
+const reopened = applyDraftEdits(consolidated, [{ documentRef: "document:1", sections: [
+  { title: "Objetivos", paragraphs: ["Nueva corrección"] }
+] }], "user-1", "2026-07-22T12:10:00Z");
+assert.equal(reopened.documents[0].consolidation, undefined, "Editar un consolidado no lo mantiene cerrado");
 assert.match(draftContentHash(edited), /^[a-f0-9]{64}$/);
 assert.equal(draftContentHash({ b: { y: 2, x: 1 }, a: 0 }),
   draftContentHash({ a: 0, b: { x: 1, y: 2 } }), "El hash cambia por el orden no semántico de jsonb");
@@ -47,12 +56,17 @@ const [migration, api, exportApi, reviewApi, editor, viewer, index] = await Prom
 assert(migration.includes("tenant_draft_versions") && migration.includes("unique (tenant_id, agent_run_id, version_number)"), "El historial no es tenant-scoped o versionado");
 assert(!/tenant_draft_versions for (insert|update|delete|all)/.test(migration), "El cliente puede eludir la API de versiones");
 assert(migration.includes('drop policy if exists "admins can review tenant drafts"'), "La política heredada permite decidir una revisión sin versión ni auditoría");
-assert(api.includes("draft_document.version_created") && api.includes("draft_document.${action}"), "Crear y decidir versiones no queda auditado");
+assert(api.includes("draft_document.version_created") && api.includes("draft_document.document_consolidated") && api.includes("draft_document.${action}"), "Crear, consolidar y decidir versiones no queda auditado");
+assert(api.includes("draft_document.manual_seed_created") && api.includes('provider: "human_editor"')
+  && api.includes("external_ai_calls: 0"), "Empezar desde la plantilla no persiste el borrador manual o simula una llamada IA");
 assert(api.includes("content_hash") && api.includes("submission_allowed: false") && api.includes("docx_blob_path: null"), "La nueva versión no invalida exportaciones previas");
 assert(exportApi.includes("review.draft_version_id") && exportApi.includes("tenant_draft_versions") && exportApi.includes("version.data.content_hash !== draftContentHash"), "La exportación no usa o verifica la versión aprobada");
 assert(reviewApi.includes("Este borrador tiene versiones humanas"), "La aprobación antigua puede saltarse el editor versionado");
-assert(editor.includes("Guardar nueva versión") && editor.includes("Historial de versiones") && editor.includes("Aprobar esta versión"), "El editor no ofrece evolución y revisión humana");
+assert(editor.includes("Guardar como borrador") && editor.includes("Historial de versiones")
+  && editor.includes("Guardar y consolidar documento") && editor.includes("Reabrir para corregir")
+  && editor.includes("data-document-version-create"), "El editor no ofrece inicio manual, edición, cierre individual y reapertura");
 assert(viewer.includes("data-document-version-edit") && index.includes("document-version-editor.js"), "El visor no abre el editor versionado");
 
-console.log(JSON.stringify({ assertions: 19, editable: "paragraphs_only", immutableVersions: true,
-  provenancePreserved: true, approvalHash: "version_scoped", submissionAllowed: false, status: "passed" }, null, 2));
+console.log(JSON.stringify({ assertions: 27, editable: "paragraphs_only", immutableVersions: true,
+  documentLifecycle: ["manual_seed", "draft", "consolidated", "reopened"], provenancePreserved: true,
+  approvalHash: "version_scoped", submissionAllowed: false, status: "passed" }, null, 2));

@@ -47,6 +47,9 @@ assert(api.includes("MAX_ACTIVE_DOCUMENTS") && api.includes("assistant_recommend
   "La API no limita el subconjunto o confirma propuestas de IA automaticamente");
 assert(api.includes('.eq("selection_status", "proposed")') && api.includes("reviewed_by: actor.userId"),
   "La revision humana no queda ligada a una propuesta pendiente");
+assert(api.includes("selection_origin: updated.data.selection_origin")
+  && !api.includes("selection_origin: status"),
+  "La decision humana puede borrar o sustituir el origen de la propuesta");
 assert(api.includes("document_content_copied: false") && !api.includes("extracted_text"),
   "La API copia contenido privado a la candidatura o a auditoria");
 assert(api.includes('.eq("scope", "tenant_private")')

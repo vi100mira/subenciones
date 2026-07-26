@@ -35,6 +35,8 @@
     const decided = ["approved", "restricted", "rejected"].includes(meta.status);
     const approved = ["approved", "restricted"].includes(meta.status);
     const viewable = VIEWABLE.has(meta.mime);
+    const candidatureReady = meta.status === "approved" && meta.dataClass === "internal";
+    const documentAgent = (session()?.plan?.agentKeys || []).includes("draft_agent");
     document.body.insertAdjacentHTML("beforeend", `<div class="modal-backdrop annex-viewer-backdrop" data-annex-viewer>
       <article class="modal annex-viewer-modal" role="dialog" aria-modal="true" aria-labelledby="annex-viewer-title">
         <header class="annex-viewer-heading"><button class="ghost-action" data-annex-viewer-close type="button"><i data-lucide="arrow-left"></i>Base común</button>
@@ -52,6 +54,10 @@
             ${!decided ? `<button class="primary-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-document-source="${escapeHtml(meta.sourceId)}" data-review-status="${meta.restricted ? "restricted" : "approved"}" type="button">${meta.restricted ? "Aprobar como restringido" : "Aprobar para Base común"}</button><button class="ghost-action" data-document-candidate-review="${escapeHtml(meta.id)}" data-document-source="${escapeHtml(meta.sourceId)}" data-review-status="rejected" type="button">Descartar documento</button>` : ""}
             ${approved && !meta.stored ? `<input hidden type="file" data-annex-file="${escapeHtml(meta.id)}" data-annex-restricted="${meta.restricted}" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx"><button class="primary-action" data-annex-select type="button"><i data-lucide="lock-keyhole"></i>Guardar original privado</button>` : ""}
             ${meta.stored ? `<button class="ghost-action" data-annex-download="${escapeHtml(meta.id)}" type="button"><i data-lucide="download"></i>Descargar original</button>` : ""}
+            ${candidatureReady && documentAgent ? `<div class="annex-candidature-actions"><strong>Usar en una candidatura</strong><span>Elige el expediente; el original de Base común nunca se modifica.</span>
+              <button class="primary-action" data-common-candidature-action="assign" data-document-id="${escapeHtml(meta.id)}" data-document-title="${escapeHtml(meta.title)}" data-document-sha="${escapeHtml(meta.sha)}" type="button"><i data-lucide="folder-input"></i>Vincular original</button>
+              <button class="ghost-action" data-common-candidature-action="adapt" data-document-id="${escapeHtml(meta.id)}" data-document-title="${escapeHtml(meta.title)}" data-document-sha="${escapeHtml(meta.sha)}" type="button"><i data-lucide="file-pen-line"></i>Crear copia editable</button></div>` : ""}
+            ${candidatureReady && !documentAgent ? '<div class="plain-note is-warning"><strong>Vinculación en solo lectura</strong><span>Preparación documental no está incluida en el plan contratado.</span></div>' : ""}
           </aside>
         </div>
         <footer><span>Revisión humana obligatoria antes de reutilizar o presentar.</span><button class="ghost-action" data-annex-viewer-close type="button">Cerrar</button></footer>

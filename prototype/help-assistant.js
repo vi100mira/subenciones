@@ -22,13 +22,15 @@
   function rankedTopics(query) {
     const queryTokens = tokens(query);
     const screen = currentScreen();
-    return topics.map((topic) => {
-      const haystack = plain([topic.title, topic.summary, ...(topic.keywords || [])].join(" "));
+    const ranked = topics.map((topic) => {
+      const haystack = plain([topic.title, topic.summary, ...(topic.steps || []), topic.caution, ...(topic.keywords || [])].join(" "));
       const matches = queryTokens.filter((token) => haystack.includes(token)).length;
-      const exact = (topic.keywords || []).some((keyword) => plain(query).includes(plain(keyword))) ? 4 : 0;
+      const exact = (topic.keywords || []).filter((keyword) => plain(query).includes(plain(keyword))).length * 6;
       const contextual = topic.screens?.includes(screen) ? 1 : 0;
       return { topic, score: matches * 3 + exact + contextual };
-    }).filter((entry) => entry.score > 1).sort((a, b) => b.score - a.score).slice(0, 2);
+    }).filter((entry) => entry.score > 1).sort((a, b) => b.score - a.score);
+    if (ranked.length < 2 || ranked[0].score - ranked[1].score > 2) return ranked.slice(0, 1);
+    return ranked.slice(0, 2);
   }
 
   function topicAnswer(topic) {
@@ -36,7 +38,7 @@
   }
 
   function noAnswer() {
-    return `<div class="help-answer"><strong>No encuentro una respuesta suficientemente clara</strong><p>Prueba preguntando por alta, perfil, radar, encaje, bases, candidatura, documentos, estados, cambios, privacidad o auditoría.</p><p class="help-caution"><i data-lucide="user-check"></i>Si la duda afecta a elegibilidad o a una base concreta, debe revisarla una persona responsable.</p></div>`;
+    return `<div class="help-answer"><strong>No encuentro una respuesta suficientemente clara</strong><p>Prueba preguntando por alta, perfil, radar, encaje, Base común, candidatura, documentos, consolidación, carpeta de proyecto, visores, contratación, privacidad o auditoría.</p><p class="help-caution"><i data-lucide="user-check"></i>Si la duda afecta a elegibilidad o a una base concreta, debe revisarla una persona responsable.</p></div>`;
   }
 
   function answer(query) {
@@ -70,6 +72,12 @@
     state.messages.push({ role: "user", html: escapeHtml(text) }, { role: "assistant", html: answer(text) });
     renderMessages();
   }
+
+  window.INSERTIA_HELP_ASSISTANT = Object.freeze({
+    answer,
+    rankedTopicIds: (query) => rankedTopics(query).map(({ topic }) => topic.id),
+    contextTopicIds: () => contextTopics().map((topic) => topic.id)
+  });
 
   function setOpen(open) {
     const panel = document.querySelector("#help-assistant-panel");

@@ -14,8 +14,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const permission = req.method === "GET" ? "sources:read" : "sources:write";
     const actor = await requireSourcePermission(req.headers.authorization, permission, requestedTenant(req));
     const sourceId = String(req.query.sourceId || req.body?.sourceId || "");
-    if (!sourceId) return res.status(400).json(fail("Falta la fuente privada"));
     const supabase = getSupabaseAdmin();
+    const library = req.method === "GET" && req.query.library === "true";
+    if (library) {
+      const sources = await supabase.from("source_connections").select("id, config_json")
+        .eq("tenant_id", actor.tenantId).eq("scope", "tenant_private").neq("status", "deleted");
+      if (sources.error) throw sources.error;
+      const sourceIds = (sources.data || []).map((item) => item.id);
+      if (!sourceIds.length) return res.status(200).json(ok([]));
+      const documents = await supabase.from("source_documents")
+        .select("id, source_connection_id, title, mime_type, data_class, source_sha256, source_size_bytes, blob_path, extraction_status, metadata_json, updated_at")
+        .eq("tenant_id", actor.tenantId).in("source_connection_id", sourceIds)
+        .contains("metadata_json", { document_candidate: true }).order("title").limit(1000);
+      if (documents.error) throw documents.error;
+      const sourceById = new Map((sources.data || []).map((item) => [item.id, item.config_json || {}]));
+      const current = (documents.data || []).filter((document) => {
+        const config: any = sourceById.get(document.source_connection_id) || {};
+        if (config.systemPurpose === "candidature_reuse") return true;
+        const runId = config.lastInventory?.runId;
+        return !runId || document.metadata_json?.ingestion_run_id === runId;
+      });
+      return res.status(200).json(ok(current));
+    }
+    if (!sourceId) return res.status(400).json(fail("Falta la fuente privada"));
     const { data: source, error: sourceError } = await supabase.from("source_connections")
       .select("id, scope, config_json").eq("id", sourceId).eq("tenant_id", actor.tenantId).maybeSingle();
     if (sourceError) throw sourceError;

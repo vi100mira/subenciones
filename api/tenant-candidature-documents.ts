@@ -32,6 +32,26 @@ async function recommendation(supabase: ReturnType<typeof getSupabaseAdmin>, ten
   return result.data;
 }
 
+async function activeCandidatures(supabase: ReturnType<typeof getSupabaseAdmin>, tenantId: string) {
+  const recommendations = await supabase.from("tenant_opportunity_recommendations")
+    .select("id, candidacy_stage, opportunity_id, updated_at")
+    .eq("tenant_id", tenantId).eq("decision_status", "preselected")
+    .in("candidacy_stage", [...ACTIVE_STAGES]).order("updated_at", { ascending: false }).limit(100);
+  if (recommendations.error) throw recommendations.error;
+  const opportunityIds = [...new Set((recommendations.data || []).map((item) => item.opportunity_id))];
+  const opportunities = opportunityIds.length
+    ? await supabase.from("platform_opportunities").select("id, canonical_key, title, funder_name").in("id", opportunityIds)
+    : { data: [], error: null };
+  if (opportunities.error) throw opportunities.error;
+  const byId = new Map((opportunities.data || []).map((item) => [item.id, item]));
+  return (recommendations.data || []).map((item) => ({
+    recommendationId: item.id, candidacyStage: item.candidacy_stage, updatedAt: item.updated_at,
+    canonicalKey: byId.get(item.opportunity_id)?.canonical_key || "",
+    title: byId.get(item.opportunity_id)?.title || "Candidatura sin título",
+    funderName: byId.get(item.opportunity_id)?.funder_name || ""
+  }));
+}
+
 function reviewStatus(document: any) {
   return text(document?.metadata_json?.review_status, 30) || "pending";
 }
@@ -122,6 +142,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const permission = req.method === "GET" ? "sources:read" : "sources:write";
     const actor = await requireSourcePermission(req.headers.authorization, permission, requestedTenant(req));
     const supabase = getSupabaseAdmin();
+    if (req.method === "GET" && req.query.action === "candidatures") {
+      return res.status(200).json(ok(await activeCandidatures(supabase, actor.tenantId)));
+    }
     const recommendationId = text(req.query.recommendationId || req.body?.recommendationId, 100);
     if (!recommendationId) return res.status(400).json(fail("Falta recommendationId"));
     const candidate = await recommendation(supabase, actor.tenantId, recommendationId);
@@ -139,11 +162,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const documentIds = (selections.data || []).map((item) => item.source_document_id);
       const documents = documentIds.length
         ? await supabase.from("source_documents")
-          .select("id, title, mime_type, data_class, source_connection_id, source_sha256, updated_at")
+          .select("id, title, mime_type, data_class, source_connection_id, source_sha256, blob_path, updated_at")
           .eq("tenant_id", actor.tenantId).in("id", documentIds)
         : { data: [], error: null };
       if (documents.error) throw documents.error;
-      const byId = new Map((documents.data || []).map((item) => [item.id, item]));
+      const byId = new Map((documents.data || []).map(({ blob_path, ...item }) =>
+        [item.id, { ...item, stored: Boolean(blob_path) }] as const));
       const approved = corpus.filter((item) => item.data_class === "internal" && reviewStatus(item) === "approved");
       const blocked = corpus.filter((item) => ["blocked", "quarantined"].includes(reviewStatus(item))).length;
       const approvalCandidates = rankedDocuments(
@@ -235,6 +259,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const ids = [...new Set(normalized.map((item) => item.documentId))];
       if (ids.length !== normalized.length) return res.status(400).json(fail("Hay documentos duplicados"));
 
+      const existing = await supabase.from("tenant_candidature_documents")
+        .select("id, source_document_id, selection_origin, selection_status, reason_text, evidence_json, reviewed_at")
+        .eq("tenant_id", actor.tenantId).eq("recommendation_id", recommendationId).in("source_document_id", ids);
+      if (existing.error) throw existing.error;
+      if ((existing.data || []).length) {
+        if (ids.length === 1 && existing.data?.[0]?.selection_status === "confirmed") {
+          return res.status(200).json(ok(existing.data));
+        }
+        if (ids.length === 1 && origin === "human_added" && existing.data?.[0]?.selection_status === "proposed") {
+          const now = new Date().toISOString();
+          const confirmed = await supabase.from("tenant_candidature_documents").update({
+            selection_status: "confirmed", reason_text: normalized[0].reason, evidence_json: normalized[0].evidence,
+            reviewed_by: actor.userId, reviewed_at: now, updated_at: now
+          }).eq("id", existing.data[0].id).eq("tenant_id", actor.tenantId).eq("selection_status", "proposed")
+            .select("id, source_document_id, selection_origin, selection_status, reason_text, evidence_json, reviewed_at").single();
+          if (confirmed.error) throw confirmed.error;
+          await audit(supabase, actor, "candidature_documents.human_confirmed", recommendationId, {
+            selection_id: confirmed.data.id, document_id: confirmed.data.source_document_id,
+            selection_origin: confirmed.data.selection_origin, human_review_completed: true
+          });
+          return res.status(200).json(ok([confirmed.data]));
+        }
+        if (ids.length === 1 && existing.data?.[0]?.selection_status === "proposed") {
+          return res.status(200).json(ok(existing.data));
+        }
+        if (ids.length === 1 && origin === "human_added" && existing.data?.[0]?.selection_status === "excluded") {
+          const activeCount = await supabase.from("tenant_candidature_documents")
+            .select("id", { count: "exact", head: true }).eq("tenant_id", actor.tenantId)
+            .eq("recommendation_id", recommendationId).neq("selection_status", "excluded");
+          if (activeCount.error) throw activeCount.error;
+          if ((activeCount.count || 0) >= MAX_ACTIVE_DOCUMENTS) {
+            return res.status(409).json(fail(`La candidatura admite como máximo ${MAX_ACTIVE_DOCUMENTS} documentos activos`));
+          }
+          const now = new Date().toISOString();
+          const restored = await supabase.from("tenant_candidature_documents").update({
+            selection_origin: "human_added", selection_status: "confirmed",
+            reason_text: normalized[0].reason, evidence_json: normalized[0].evidence,
+            proposed_by: actor.userId, reviewed_by: actor.userId, reviewed_at: now, updated_at: now
+          }).eq("id", existing.data[0].id).eq("tenant_id", actor.tenantId)
+            .select("id, source_document_id, selection_origin, selection_status, reason_text, evidence_json, reviewed_at").single();
+          if (restored.error) throw restored.error;
+          await audit(supabase, actor, "candidature_documents.human_restored", recommendationId, {
+            selection_id: restored.data.id, document_id: restored.data.source_document_id, human_review_completed: true
+          });
+          return res.status(200).json(ok([restored.data]));
+        }
+        return res.status(409).json(fail("Alguno de los documentos ya pertenece a esta candidatura"));
+      }
+
       const [active, documents] = await Promise.all([
         supabase.from("tenant_candidature_documents")
           .select("source_document_id", { count: "exact", head: true })
@@ -295,6 +368,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await audit(supabase, actor, `candidature_documents.${status}`, selectionId, {
         recommendation_id: recommendationId,
         document_id: updated.data.source_document_id,
+        selection_origin: updated.data.selection_origin,
         human_review_completed: true
       });
       return res.status(200).json(ok(updated.data));

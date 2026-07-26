@@ -120,10 +120,11 @@
     return (doc?.sections || []).map((title) => {
       const family = familyFor(title);
       const key = normalize(title);
-      const generated = generatedSections.find((section) => {
+      const exactGenerated = generatedSections.find((section) => {
         const candidate = normalize(section.title);
-        return candidate === key || candidate.includes(key) || key.includes(candidate) || familyFor(section.title) === family;
+        return candidate === key || candidate.includes(key) || key.includes(candidate);
       });
+      const generated = exactGenerated || generatedSections.find((section) => familyFor(section.title) === family);
       if (generated?.paragraphs?.length) return {
         title, state: "proposed", label: "Propuesto con evidencia · revisión humana pendiente",
         paragraphs: values(generated.paragraphs), evidence: values(generated.evidenceRefs), questions: []

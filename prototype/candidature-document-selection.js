@@ -33,28 +33,39 @@
   }
 
   function status(selection) {
-    if (selection.selection_status === "confirmed") return ["Confirmado", "safe"];
-    if (selection.selection_status === "excluded") return ["Excluido", "neutral"];
-    return ["Revisión pendiente", "warning"];
+    if (selection.selection_status === "confirmed") return ["Decisión confirmada", "safe"];
+    if (selection.selection_status === "excluded") return ["Excluido de la candidatura", "neutral"];
+    return ["Decisión pendiente", "warning"];
   }
 
   function selectionRow(selection, recommendationId) {
     const [label, tone] = status(selection);
     const document = selection.document || {};
+    const origin = selection.selection_origin === "human_added"
+      ? "Origen · Añadido por una persona"
+      : "Origen · Propuesto por el asistente";
+    const canOpen = document.id && document.source_connection_id;
     return `<article class="candidature-document-row selection ${selection.selection_status}">
       <div class="candidature-document-copy">
         <div class="button-row">
           <span class="badge ${tone}">${label}</span>
-          <span class="badge neutral">${selection.selection_origin === "human_added" ? "Añadido por una persona" : "Propuesto por el asistente"}</span>
+          <span class="badge neutral">${origin}</span>
         </div>
         <strong>${escapeHtml(document.title || "Documento no disponible")}</strong>
         <span>${escapeHtml(selection.reason_text)}</span>
         <small>Clase ${escapeHtml(document.data_class || "interna")} · referencia ${escapeHtml(String(selection.source_document_id).slice(0, 8))}</small>
       </div>
-      ${selection.selection_status === "proposed" ? `<div class="button-row">
+      <div class="button-row">
+        ${canOpen ? `<button class="ghost-action" data-annex-open="${escapeHtml(document.id)}"
+          data-annex-source="${escapeHtml(document.source_connection_id)}"
+          data-annex-title="${escapeHtml(document.title)}" data-annex-mime="${escapeHtml(document.mime_type)}"
+          data-annex-class="${escapeHtml(document.data_class)}" data-annex-sha="${escapeHtml(document.source_sha256)}"
+          data-annex-status="approved" data-annex-recommendation="${escapeHtml(selection.reason_text)}"
+          data-annex-stored="${Boolean(document.stored)}" type="button"><i data-lucide="scan-search"></i>Ver documento</button>` : ""}
+        ${selection.selection_status === "proposed" ? `
         <button class="ghost-action" data-candidature-document-review="excluded" data-selection-id="${escapeHtml(selection.id)}" data-recommendation-id="${escapeHtml(recommendationId)}" type="button">Excluir</button>
-        <button class="primary-action" data-candidature-document-review="confirmed" data-selection-id="${escapeHtml(selection.id)}" data-recommendation-id="${escapeHtml(recommendationId)}" type="button">Confirmar</button>
-      </div>` : ""}
+        <button class="primary-action" data-candidature-document-review="confirmed" data-selection-id="${escapeHtml(selection.id)}" data-recommendation-id="${escapeHtml(recommendationId)}" type="button">Confirmar</button>` : ""}
+      </div>
     </article>`;
   }
 
@@ -189,6 +200,7 @@
       });
       states.delete(recommendationId);
       await load(recommendationId, true);
+      window.dispatchEvent(new CustomEvent("candidature-documents-updated", { detail: { recommendationId } }));
       window.showToast?.("Revisión documental guardada.");
     } catch (error) {
       button.disabled = false;
@@ -206,7 +218,13 @@
     });
     states.delete(recommendationId);
     await load(recommendationId, true);
+    window.dispatchEvent(new CustomEvent("candidature-documents-updated", { detail: { recommendationId } }));
     return result;
+  }
+
+  async function invalidate(recommendationId) {
+    states.delete(recommendationId); suggestionAttempts.delete(recommendationId);
+    return load(recommendationId, true);
   }
 
   document.addEventListener("click", (event) => {
@@ -228,5 +246,5 @@
     states.clear(); loads.clear(); suggestionAttempts.clear(); renderAll();
   });
   document.addEventListener("DOMContentLoaded", renderAll);
-  window.CandidatureDocuments = { refresh: renderAll, propose };
+  window.CandidatureDocuments = { refresh: renderAll, propose, invalidate };
 })();

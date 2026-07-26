@@ -25,6 +25,7 @@ export type ApprovedDraftDocument = {
   uncertainties: string[];
   reviewedAt: string;
   reviewerLabel?: string;
+  workingCopy?: boolean;
 };
 
 const INK = "10231F";
@@ -58,6 +59,10 @@ function bullet(value: string, reference: string) {
 export async function buildApprovedDraftDocx(input: ApprovedDraftDocument) {
   const reviewDate = new Date(input.reviewedAt);
   const reviewedAt = Number.isNaN(reviewDate.getTime()) ? text(input.reviewedAt, 80) : reviewDate.toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Madrid" });
+  const reviewLabel = input.workingCopy ? "Revisión para descarga de trabajo" : "Revisión humana";
+  const banner = input.workingCopy
+    ? `BORRADOR DE TRABAJO · NO PRESENTAR. ${reviewLabel}: ${reviewedAt}. No está aprobado ni conformado.`
+    : `BORRADOR APROBADO PARA EXPORTACION. ${reviewLabel}: ${reviewedAt}. No implica presentación ni elegibilidad.`;
   const children: Paragraph[] = [
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: text(input.tenantName || "Entidad solicitante", 200), bold: true, size: 22, color: MUTED })] }),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: text(input.title, 500), bold: true, size: 48, color: INK })] }),
@@ -65,7 +70,7 @@ export async function buildApprovedDraftDocx(input: ApprovedDraftDocument) {
     new Paragraph({
       spacing: { before: 80, after: 240 }, shading: { type: ShadingType.CLEAR, fill: "FFF8E6", color: "auto" },
       border: { top: { style: BorderStyle.SINGLE, size: 6, color: "D5A93D" }, bottom: { style: BorderStyle.SINGLE, size: 6, color: "D5A93D" }, left: { style: BorderStyle.SINGLE, size: 18, color: "D5A93D" }, right: { style: BorderStyle.SINGLE, size: 6, color: "D5A93D" } },
-      children: [new TextRun({ text: `BORRADOR APROBADO PARA EXPORTACION. Revisión humana: ${reviewedAt}. No implica presentación ni elegibilidad.`, bold: true, color: WARNING })]
+      children: [new TextRun({ text: banner, bold: true, color: WARNING })]
     }),
     new Paragraph({ spacing: { after: 240 }, children: [new TextRun({ text: `Organismo: ${text(input.funderName || "Pendiente", 300)}. Revisor: ${text(input.reviewerLabel || "Usuario autorizado", 160)}.`, color: MUTED, italics: true })] })
   ];
@@ -94,7 +99,7 @@ export async function buildApprovedDraftDocx(input: ApprovedDraftDocument) {
   for (const reference of input.evidenceRefs.slice(0, 40)) children.push(bullet(reference, "evidence"));
 
   const document = new Document({
-    creator: "INSERTIA", title: text(input.title, 500), description: "Borrador de candidatura sujeto a control humano",
+    creator: "INSERTIA", title: text(input.title, 500), description: input.workingCopy ? "Borrador de trabajo no presentable" : "Borrador de candidatura sujeto a control humano",
     styles: {
       default: { document: { run: { font: "Calibri", size: 22, color: INK }, paragraph: { spacing: { after: 120, line: 300, lineRule: "auto" } } } },
       paragraphStyles: [

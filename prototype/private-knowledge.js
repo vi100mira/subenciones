@@ -289,7 +289,7 @@
     try { governance = await request("/api/tenant-agent-governance"); } catch { governance = null; }
     try { libraryFacts = await request("/api/tenant-profile-review?scope=private"); } catch { libraryFacts = []; }
     const current = source();
-    try { libraryDocuments = current ? await request(`/api/private-document-candidates?sourceId=${encodeURIComponent(current.id)}`) : []; } catch { libraryDocuments = []; }
+    try { libraryDocuments = await request("/api/private-document-candidates?library=true"); } catch { libraryDocuments = []; }
     render();
   }
   async function submitSource(form) {
@@ -501,4 +501,5 @@
   window.addEventListener("role-session-applied", () => setTimeout(refresh, 0));
   window.PrivateKnowledge = { open: preparationModal, openPreparation: preparationModal, goToAssistants: goToKnowledgeAndOpen, goToKnowledge: goToKnowledgeAndOpen, render };
   document.addEventListener("DOMContentLoaded", refresh);
+  window.addEventListener("common-knowledge-updated", refresh);
 })();
