@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 
 const apply = process.argv.includes("--apply=true");
 const url = process.env.SUPABASE_URL;
@@ -12,7 +13,10 @@ const radars = [
   { campaign: "private-open-funders", kind: "private_funder", label: "Financiadores privados - catálogo público oficial", url: "https://subvenciones-rag.vercel.app/sources#private-open-funders", administrationType: "no_aplica", queries: ["convocatorias sociales privadas"] }
 ];
 
-const db = createClient(url, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
+const db = createClient(url, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+  realtime: { transport: WebSocket }
+});
 const campaigns = [];
 for (const radar of radars) {
   const { data: existing, error: sourceReadError } = await db.from("platform_sources").select("id").eq("kind", radar.kind).eq("url", radar.url).maybeSingle();
