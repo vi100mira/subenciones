@@ -12,8 +12,9 @@ function assert(condition, message) {
 }
 
 assert(workflow.includes("permissions:\n  contents: read"), "El workflow alojado tiene permisos excesivos");
-assert(workflow.includes('cron: "15 5 * * *"'), "Falta el consumo diario de radares");
-assert(workflow.includes('cron: "*/15 * * * *"'), "Falta el cron de recuperación del redactor");
+assert(workflow.includes("workflow_dispatch:"), "Falta el arranque manual controlado de workers");
+assert(!workflow.includes("schedule:"), "Los workers deben permanecer sin programación hasta su activación expresa");
+assert(!workflow.includes('cron: "15 5 * * *"') && !workflow.includes('cron: "*/15 * * * *"'), "El workflow conserva un cron activo");
 assert(workflow.includes("tesseract-ocr-spa"), "El runner no instala OCR en español");
 assert(workflow.includes("secrets.SUPABASE_SERVICE_ROLE_KEY"), "Supabase no se obtiene desde secretos");
 assert(workflow.includes("secrets.BLOB_READ_WRITE_TOKEN"), "Los artefactos de bases no pueden preservarse en Blob");
