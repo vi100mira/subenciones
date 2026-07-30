@@ -1,0 +1,80 @@
+{
+  "bootstrapId": "empty-project-schema-20260730",
+  "assumption": "El esquema public del proyecto remoto está vacío y se ha comprobado antes de ejecutar.",
+  "execution": "Emitir el SQL con scripts/emit-empty-project-bootstrap.mjs y ejecutarlo como una única transacción. El emisor no contacta con Supabase ni registra historia remota.",
+  "excludedMigrations": [
+    {
+      "file": "20260626132000_novaterra_demo_seed.sql",
+      "reason": "Inserta datos de demostración del tenant Novaterra y no pertenece a un bootstrap de producción vacío."
+    },
+    {
+      "file": "20260715210000_tenant_commercial_plan_seed.sql",
+      "reason": "Actualiza de forma específica el plan comercial del tenant demo Novaterra y no debe formar parte del bootstrap."
+    }
+  ],
+  "segments": [
+    {
+      "name": "foundation_and_tenant_isolation",
+      "files": [
+        "20260624190000_sources_rag_foundation.sql",
+        "20260624191000_sources_rag_rls.sql",
+        "20260624200000_tenant_config.sql",
+        "20260624201000_platform_sources.sql",
+        "20260626103000_secure_onboarding.sql"
+      ]
+    },
+    {
+      "name": "public_catalog_and_traceability",
+      "files": [
+        "20260629183000_opportunity_versions_alerts.sql",
+        "20260702110000_deadline_trace_fields.sql",
+        "20260713093000_platform_campaign_idempotency.sql",
+        "20260713115000_tenant_draft_agent_runs.sql",
+        "20260713121500_platform_source_identity.sql"
+      ]
+    },
+    {
+      "name": "tenant_workflow_schema_and_platform_catalog_metadata",
+      "files": [
+        "20260713173000_tenant_agent_registry.sql",
+        "20260713180000_tenant_suite_provisioning.sql",
+        "20260713190000_entity_research_evidence.sql",
+        "20260713200000_tenant_match_recommendations.sql",
+        "20260713210000_tenant_document_reviews.sql",
+        "20260713211000_fix_reconcile_ambiguous_columns.sql",
+        "20260713212000_fix_reconcile_conflict_target.sql",
+        "20260713213000_rename_draft_agent_document_manager.sql",
+        "20260714113000_tenant_match_human_workflow.sql",
+        "20260714170000_platform_bases_interpretations.sql",
+        "20260714180000_tenant_draft_human_review.sql",
+        "20260714190000_platform_supplementary_basis_sources.sql",
+        "20260714200000_platform_basis_source_discovery.sql",
+        "20260716122500_public_document_drafts_without_ai_consent.sql",
+        "20260716193000_draft_agent_progressive_tenant_knowledge.sql"
+      ]
+    },
+    {
+      "name": "tenant_candidature_and_radar_governance",
+      "files": [
+        "20260722190000_tenant_bases_acceptances.sql",
+        "20260722200000_tenant_draft_versions.sql",
+        "20260724200000_tenant_candidature_documents.sql",
+        "20260726120000_tenant_candidature_working_exports.sql",
+        "20260729193000_platform_private_source_candidates.sql",
+        "20260730130000_catalog_lifecycle_governance.sql"
+      ]
+    }
+  ],
+  "includedPlatformMetadata": [
+    {
+      "file": "20260713173000_tenant_agent_registry.sql",
+      "reason": "Crea el registro y carga seis definiciones globales de agentes. No inserta tenant, oportunidad, campaña, cola ni alerta."
+    }
+  ],
+  "requiredPrechecks": [
+    "public no contiene tablas de aplicación ni filas previas.",
+    "Las extensiones vector y pgcrypto están disponibles para el rol de migración.",
+    "No se ejecuta 20260626132000_novaterra_demo_seed.sql.",
+    "No se despliega Vercel ni se activan cron, workers, alertas o rastreos."
+  ]
+}

@@ -58,6 +58,8 @@
     "check:public-national-catalog": "node scripts/guardrails/check-public-national-source-catalog.mjs",
     "check:private-platform-coverage": "node scripts/guardrails/check-private-platform-coverage.mjs",
     "check:catalog-lifecycle": "node scripts/guardrails/check-catalog-lifecycle.mjs",
+    "supabase:check-empty-bootstrap": "node --preserve-symlinks-main scripts/guardrails/check-empty-project-bootstrap.mjs",
+    "supabase:emit-empty-bootstrap": "node --preserve-symlinks-main scripts/emit-empty-project-bootstrap.mjs",
     "platform:verify-source-evidence": "node scripts/platform/verify-source-evidence-contract.mjs",
     "platform:detect-open-funder-changes": "node scripts/platform/detect-open-funder-changes.mjs",
     "platform:generate-tenant-alerts": "node scripts/platform/generate-tenant-change-alerts.mjs",

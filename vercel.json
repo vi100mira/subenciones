@@ -10,12 +10,6 @@
       "destination": "/index.html"
     }
   ],
-  "crons": [
-    {
-      "path": "/api/platform-radar-schedule",
-      "schedule": "0 5 * * *"
-    }
-  ],
   "functions": {
     "api/source-blob-upload.ts": {
       "maxDuration": 60
