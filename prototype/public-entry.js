@@ -23,9 +23,9 @@
           <div class="public-entry__radar-list">
             <article><strong>Municipal y social</strong><span>Consulta convocatorias locales y sociales publicadas en BDNS.</span></article>
             <article><strong>Publico general</strong><span>Amplia la cobertura con convocatorias publicas de ambito general.</span></article>
-            <article><strong>Financiacion privada</strong><span>Descubre financiadores y conserva la evidencia antes de tratar una convocatoria como verificable.</span></article>
+            <article><strong>Financiacion privada</strong><span>Localiza fundaciones y programas corporativos, verifica su web y bases, y solo conserva candidatas con procedencia clara.</span></article>
           </div>
-          <p class="public-entry__radar-note">Las fuentes y sus bases se documentan primero; el encaje con cada entidad se analiza despues, con revision humana cuando corresponde.</p>
+          <p class="public-entry__radar-note">El radar privado amplía sus fuentes de forma continua, deduplica entidades y separa una candidata descubierta de una convocatoria verificable. Las fuentes y sus bases se documentan primero; el encaje con cada entidad se analiza después, con revisión humana cuando corresponde.</p>
         </section>
       </section>
       <section class="public-entry__access">
