@@ -54,6 +54,8 @@ jobs:
           python3 -m pip install --disable-pip-version-check pypdf pdfplumber pypdfium2 pytesseract pillow
       - name: Instalar dependencias Node
         run: npm ci
+      - name: Preparar campañas manuales iniciales
+        run: node scripts/workers/bootstrap-platform-radar-campaigns.mjs --apply=true
       - name: Consumir campañas encoladas
         run: |
           node scripts/workers/run-municipal-radar.mjs --campaign=municipal-social --apply=true

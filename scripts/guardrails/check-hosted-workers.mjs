@@ -16,6 +16,7 @@ assert(workflow.includes("workflow_dispatch:"), "Falta el arranque manual contro
 assert(!workflow.includes("schedule:"), "Los workers deben permanecer sin programación hasta su activación expresa");
 assert(!workflow.includes('cron: "15 5 * * *"') && !workflow.includes('cron: "*/15 * * * *"'), "El workflow conserva un cron activo");
 assert(workflow.includes("tesseract-ocr-spa"), "El runner no instala OCR en español");
+assert(workflow.includes("bootstrap-platform-radar-campaigns.mjs --apply=true"), "El primer arranque manual no prepara campanas idempotentes");
 assert(workflow.includes("secrets.SUPABASE_SERVICE_ROLE_KEY"), "Supabase no se obtiene desde secretos");
 assert(workflow.includes("secrets.BLOB_READ_WRITE_TOKEN"), "Los artefactos de bases no pueden preservarse en Blob");
 assert(!workflow.includes("Programador de Windows"), "El workflow conserva una dependencia de Windows");
