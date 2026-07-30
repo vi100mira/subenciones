@@ -16,6 +16,15 @@ function isCurrentConcreteOpportunity(item) {
   return years.includes(currentYear) || years.some((year) => year > currentYear);
 }
 
+function isRetainedReviewCandidate(item) {
+  return item.publication_state === "review_required" && item.discovery_state === "evidence_found";
+}
+
+function itemsToPersist(catalog) {
+  const candidates = catalog.review_candidates || [];
+  return [...catalog.sources.filter(isCurrentConcreteOpportunity), ...candidates.filter(isRetainedReviewCandidate)];
+}
+
 function loadEnvFile(content) {
   for (const line of content.split(/\r?\n/)) {
     const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
@@ -29,12 +38,14 @@ function hash(value) {
 }
 
 function statusFromSource(item) {
+  if (isRetainedReviewCandidate(item)) return "tracked";
   if (item.opportunity_status === "open" || item.opportunity_status === "open_by_territory") return "open";
   if (item.opportunity_status?.includes("closed")) return "closed";
   return "tracked";
 }
 
 function deadlineStatus(item) {
+  if (isRetainedReviewCandidate(item)) return "uncertain";
   if (item.opportunity_status === "open" || item.opportunity_status === "open_by_territory") return "open";
   if (item.opportunity_status?.includes("closed")) return "closed";
   return "uncertain";
@@ -90,7 +101,8 @@ async function getSource(supabase, item) {
           funder_type: item.funder_type,
           monitoring_cadence: item.monitoring_cadence,
           watch_fields: item.watch_fields,
-          evidence_quality: item.evidence_quality
+          evidence_quality: item.evidence_quality,
+          last_scan: { observed_at: item.scan_observed_at || null, status: item.scan_status || null, telemetry: item.scan_telemetry || null }
         },
         updated_at: new Date().toISOString()
       })
@@ -113,7 +125,8 @@ async function getSource(supabase, item) {
         funder_type: item.funder_type,
         monitoring_cadence: item.monitoring_cadence,
         watch_fields: item.watch_fields,
-        evidence_quality: item.evidence_quality
+        evidence_quality: item.evidence_quality,
+        last_scan: { observed_at: item.scan_observed_at || null, status: item.scan_status || null, telemetry: item.scan_telemetry || null }
       }
     })
     .select("id")
@@ -123,6 +136,8 @@ async function getSource(supabase, item) {
 }
 
 async function upsertOpportunity(supabase, sourceId, item) {
+  const evidenceUrl = String(item.url || "");
+  const technicalState = evidenceUrl.startsWith("https://") ? "automated_evidence_checked" : "operational_exception";
   const opportunity = {
     platform_source_id: sourceId,
     canonical_key: item.id,
@@ -137,9 +152,15 @@ async function upsertOpportunity(supabase, sourceId, item) {
     metadata_json: {
       initial_action: item.initial_action,
       opportunity_status: item.opportunity_status,
-      edition_current: true,
-      human_review_required: item.deadline_confidence !== "high"
+      edition_current: item.edition_current !== false,
+      publication_state: item.publication_state || "publicable",
+      publication_reason: item.publication_reason || null,
+      human_review_required: isRetainedReviewCandidate(item) || item.deadline_confidence !== "high"
     },
+    technical_state: technicalState,
+    technical_reason: evidenceUrl ? "official_https_evidence_detected" : "official_https_evidence_missing",
+    technical_evidence_json: { source_url: evidenceUrl || null, evidence_quality: item.evidence_quality || "unknown" },
+    technical_updated_at: new Date().toISOString(),
     last_seen_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -168,7 +189,10 @@ async function ensureVersion(supabase, opportunityId, item, observedAt) {
     themes: item.themes,
     territory: item.territory,
     deadline_text: item.deadline_text,
-    initial_action: item.initial_action
+    initial_action: item.initial_action,
+    publication_state: item.publication_state || "publicable",
+    publication_reason: item.publication_reason || null,
+    evidence_sha256: item.evidence_sha256 || null
   };
   const version = {
     opportunity_id: opportunityId,
@@ -190,11 +214,19 @@ async function ensureVersion(supabase, opportunityId, item, observedAt) {
       watch_fields: item.watch_fields,
       proposal_constraints: item.proposal_constraints || null,
       scan_status: item.scan_status || null,
-      basis_url: item.basis_url || null
+      basis_url: item.basis_url || null,
+      evidence_url: item.evidence_url || item.url,
+      navigation_path: item.navigation_path || [],
+      evidence_excerpt: item.evidence_excerpt || null,
+      evidence_sha256: item.evidence_sha256 || null
     },
     metadata_json: {
       monitoring_cadence: item.monitoring_cadence,
       catalogue_import: "platform-open-funders-v1",
+      discovery_state: item.discovery_state || "not_recorded",
+      publication_state: item.publication_state || "publicable",
+      publication_reason: item.publication_reason || null,
+      scan_telemetry: item.scan_telemetry || null,
       proposal_constraints_status: item.proposal_constraints?.status || "not_found_requires_review",
       drafting_gate: item.proposal_constraints?.draftingGate || "blocked_pending_constraint_review"
     }
@@ -208,12 +240,16 @@ async function ensureVersion(supabase, opportunityId, item, observedAt) {
 async function main() {
   const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
   const observedAt = catalog.catalog?.observed_at || null;
+  const retained = (catalog.review_candidates || []).filter(isRetainedReviewCandidate);
+  const persistable = itemsToPersist(catalog);
   const summary = {
     apply,
     sources: catalog.sources.length,
     currentConcreteOpportunities: catalog.sources.filter(isCurrentConcreteOpportunity).length,
+    retainedReviewCandidates: retained.length,
+    opportunitiesToPersist: persistable.length,
     openOrActive: catalog.sources.filter((item) => item.opportunity_status === "open" || item.opportunity_status === "open_by_territory").length,
-    tenantPrivateSources: catalog.vuelta_1_metrics.tenant_private_sources_used
+    tenantPrivateSources: catalog.vuelta_1_metrics?.tenant_private_sources_used || 0
   };
 
   if (!apply) {
@@ -230,9 +266,11 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
     realtime: { transport: WebSocket }
   });
-  for (const item of catalog.sources) {
-    const sourceId = await getSource(supabase, item);
-    if (!isCurrentConcreteOpportunity(item)) continue;
+  const sourceIds = new Map();
+  for (const item of catalog.sources) sourceIds.set(item.id, await getSource(supabase, item));
+  for (const item of persistable) {
+    const sourceId = sourceIds.get(item.id);
+    if (!sourceId) continue;
     const opportunityId = await upsertOpportunity(supabase, sourceId, item);
     await ensureVersion(supabase, opportunityId, item, observedAt);
   }

@@ -150,6 +150,7 @@
 
   function applyAgentReadiness() {
     addReadinessNote();
+    if (!window.INSERTIA_FIXTURE_MODE) return;
     addStatusLegend();
     enhanceAgentCards();
     enhanceChannels();

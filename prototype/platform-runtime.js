@@ -1,5 +1,5 @@
 (function () {
-  const state = { data: null, bases: [], basesError: "", loading: false, error: "" };
+  const state = { data: null, bases: [], basesError: "", candidates: [], candidatesError: "", opportunities: [], opportunitiesMeta: null, opportunitiesError: "", loading: false, error: "" };
   const activeRunStates = new Set(["queued", "preparing_context", "awaiting_provider", "generating", "running"]);
 
   function session() {
@@ -26,23 +26,61 @@
     return payload.data;
   }
   function renderDashboard(data) {
-    const activeTenants = data.tenantConfigs.filter((item) => item.status === "active").length;
-    const readyAgents = data.tenantAgents.filter((item) => item.enabled && item.status === "ready").length;
-    const values = [
-      ["Oportunidades públicas", data.counts.opportunities, "Corpus común de plataforma"],
-      ["Tenants activos", activeTenants, `${data.organizations.length} entidades registradas`],
-      ["Asistentes operativos", readyAgents, "Activaciones aisladas por tenant"],
-      ["Revisiones pendientes", data.counts.pendingPlatformReviews, "Cambios públicos que requieren decisión humana"]
+    const map = data.nationalOpportunityMap;
+    if (map) {
+      const rows = map.territories || [];
+      const total = (field) => rows.reduce((sum, row) => sum + (Number(row[field]) || 0), 0) + (Number(map.nationalScope?.[field]) || 0);
+      const values = [
+        ["Presencias territoriales BDNS", total("indexed"), "Una convocatoria multi-territorio aparece en cada comunidad declarada"],
+        ["Abiertas verificadas por ámbito", total("openVerified"), "Plazo vigente, confianza alta/media y URL HTTPS"],
+        ["Pendientes de revisión", total("pendingReview"), "Eventos persistidos de revisión humana"],
+        ["Actualización del mapa", date(map.generatedAt), "Ámbito estatal separado; no se duplica por comunidad"]
+      ];
+      document.querySelectorAll("#dashboard .metric").forEach((metric, index) => {
+        metric.querySelector("span").textContent = values[index][0]; metric.querySelector("strong").textContent = values[index][1]; metric.querySelector("small").textContent = values[index][2];
+      });
+      document.querySelector("#alerts-list").innerHTML = [
+        { title: "Índice canónico", detail: map.rules?.canonicalSource || "Sin lectura persistida de oportunidades." },
+        { title: "Regla territorial", detail: map.rules?.territory || "Sin datos territoriales para clasificar." },
+        { title: "Evidencia y revisión", detail: map.rules?.openVerified || "No se verifican oportunidades sin evidencia persistida." }
+      ].map((item) => `<div class="stack-item"><strong>${item.title}</strong><span>${item.detail}</span></div>`).join("");
+      renderSourceMap(map); renderPrivateCoverage();
+      return;
+    }
+    const unavailableValues = [
+      ["Presencias territoriales BDNS", "—", "Lectura persistida no disponible"],
+      ["Abiertas verificadas por ámbito", "—", "No se infieren datos desde el catálogo de fuentes"],
+      ["Pendientes de revisión", "—", "Sin estado persistido de revisión humana"],
+      ["Actualización del mapa", "Sin datos", "La API de plataforma no ha respondido"]
     ];
     document.querySelectorAll("#dashboard .metric").forEach((metric, index) => {
-      metric.querySelector("span").textContent = values[index][0]; metric.querySelector("strong").textContent = values[index][1]; metric.querySelector("small").textContent = values[index][2];
+      metric.querySelector("span").textContent = unavailableValues[index][0]; metric.querySelector("strong").textContent = unavailableValues[index][1]; metric.querySelector("small").textContent = unavailableValues[index][2];
     });
-    const degraded = data.platformSources.filter((item) => ["degraded", "error"].includes(item.health_status));
-    document.querySelector("#alerts-list").innerHTML = [
-      { title: "Revisiones públicas pendientes", detail: `${data.counts.pendingPlatformReviews} cambios esperan revisión humana.` },
-      { title: "Alertas tenant abiertas", detail: `${data.counts.pendingTenantAlerts} alertas requieren atención dentro de sus entidades.` },
-      { title: "Salud de fuentes", detail: degraded.length ? `${degraded.length} fuentes degradadas o con error.` : "Todas las fuentes registradas sin incidencias declaradas." }
-    ].map((item) => `<div class="stack-item"><strong>${item.title}</strong><span>${item.detail}</span></div>`).join("");
+    document.querySelector("#alerts-list").innerHTML = '<div class="stack-item"><strong>Mapa nacional sin datos</strong><span>No se muestran conteos de catálogo ni oportunidades de ejemplo mientras la lectura persistida no esté disponible.</span></div>';
+    renderSourceMap(null, "Lectura persistida no disponible"); renderPrivateCoverage();
+  }
+  function renderSourceMap(readModel, error = "") {
+    const target = document.querySelector("#source-map"); if (!target) return;
+    if (error) { target.innerHTML = `<div class="plain-note"><strong>Estado de fuentes no disponible</strong><span>${escapeHtml(error)}. No se muestran cifras de ejemplo.</span></div>`; return; }
+    if (window.NationalSourceCatalogUI) { window.NationalSourceCatalogUI.renderSourceMap(target, readModel || {}); return; }
+    target.innerHTML = '<div class="empty-state">No hay lectura nacional persistida.</div>';
+  }
+  function renderPrivateCoverage() {
+    const target = document.querySelector("#private-coverage"); if (!target) return;
+    if (state.loading && !state.opportunitiesMeta) { target.innerHTML = '<div class="empty-state">Cargando inventario privado persistido.</div>'; return; }
+    if (state.opportunitiesError) { target.innerHTML = `<div class="empty-state"><strong>Sin datos privados disponibles</strong><span>${escapeHtml(state.opportunitiesError)}. La lectura no usa cifras de ejemplo.</span></div>`; return; }
+    if (!state.opportunitiesMeta) { target.innerHTML = '<div class="empty-state"><strong>Sin datos privados disponibles</strong><span>La lectura global todavía no ha respondido.</span></div>'; return; }
+    if (state.opportunitiesMeta.privateCandidatesState !== "available") { target.innerHTML = '<div class="empty-state"><strong>Sin datos privados disponibles</strong><span>La tabla de candidatas privadas no está activa en este entorno.</span></div>'; return; }
+    const candidates = state.opportunities.filter((item) => item.recordKind === "private_source_candidate");
+    const privateOpportunities = state.opportunities.filter((item) => item.recordKind === "opportunity" && String(item.sourceScope || "").startsWith("Privada"));
+    const groups = [
+      ["Fuentes privadas verificadas", candidates.filter((item) => item.sourceScope === "Privada verificada / no publicable"), "Verificadas técnicamente; sin recomendación ni publicación a clientes."],
+      ["Candidatas privadas tracked / pendientes", candidates.filter((item) => String(item.sourceScope).includes("tracked")), "Pendientes de bases, vigencia o revisión objetiva."],
+      ["Fuentes/candidatas privadas publicables", candidates.filter((item) => String(item.sourceScope).includes("publicable")), "Publicables en inventario técnico; aún requieren vigencia y matching tenant."],
+      ["Oportunidades privadas indexadas", privateOpportunities, "Inventario de plataforma, nunca una recomendación automática a clientes."]
+    ];
+    const preview = (items) => items.slice(0, 3).map((item) => `<li>${escapeHtml(item.title)}<small>${escapeHtml(item.evidenceQuality || "Evidencia pendiente")} · ${escapeHtml(item.provenance?.updatedAt ? date(item.provenance.updatedAt) : "Sin fecha")}</small></li>`).join("") || "<li>Sin registros persistidos.</li>";
+    target.innerHTML = `<div class="plain-note"><strong>Inventario privado de plataforma</strong><span>Procedencia y estado técnico globales; no se devuelven datos de tenants ni se publica una oportunidad como recomendación.</span></div><div class="source-preview-list">${groups.map(([title, items, note]) => `<article class="source-preview-item"><strong>${escapeHtml(title)}</strong><b>${items.length}</b><span>${escapeHtml(note)}</span><ul>${preview(items)}</ul></article>`).join("")}</div>`;
   }
   function renderAgents(data) {
     const orgs = organizationMap(data);
@@ -74,19 +112,42 @@
     return ["https://www.infosubvenciones.es/bdnstrans/api#municipal-social", "https://www.infosubvenciones.es/bdnstrans/api#general-social", "https://subvenciones-rag.vercel.app/sources#private-open-funders"].includes(source.url);
   }
   function renderReviews(data) {
-    document.querySelector("[data-platform-pane='reviews'] .panel-heading h2").textContent = "Revisiones operativas";
+    document.querySelector("[data-platform-pane='reviews'] .panel-heading h2").textContent = "Estado operativo del radar";
     document.querySelector("#platform-campaigns").innerHTML = data.platformSources.filter(runnableSource).map((source) => {
-      const campaign = latestCampaign(data, source.id); const running = campaign && activeRunStates.has(campaign.status);
-      return `<div class="stack-item"><div class="opportunity-topline"><div><strong>${escapeHtml(source.label)}</strong><span>${escapeHtml(source.kind)} · última sincronización: ${date(source.last_synced_at)}</span></div>${badge(source.health_status, tone(source.health_status))}</div><div class="source-state-line"><span>Última revisión: ${campaign ? `${escapeHtml(campaign.status)} · ${date(campaign.created_at)}` : "sin campañas"} · worker diario 05:15</span><button class="primary-action" data-platform-source-run="${source.id}" type="button" ${source.status !== "active" || running ? "disabled" : ""}>${running ? "En cola" : "Encolar revisión"}</button></div></div>`;
+      const campaign = latestCampaign(data, source.id);
+      const status = campaign?.status || "sin cola técnica";
+      const cause = campaign?.error ? `Causa operativa: ${campaign.error}` : campaign ? "Causa operativa: revisión técnica persistida de esta fuente" : "No hay excepción ni revisión técnica en cola para esta fuente.";
+      const nextOwner = campaign && activeRunStates.has(campaign.status) ? "Siguiente responsable: worker técnico del radar." : campaign?.status === "failed" ? "Siguiente responsable: operación técnica del radar." : "Siguiente responsable: monitorización automática.";
+      return `<div class="stack-item"><div class="opportunity-topline"><div><strong>${escapeHtml(source.label)}</strong><span>Origen: ${escapeHtml(source.kind)} · última sincronización: ${date(source.last_synced_at)}</span></div>${badge(campaign && activeRunStates.has(campaign.status) ? "Excepción técnica en curso" : source.health_status, tone(campaign?.status || source.health_status))}</div><div class="source-state-line"><span>Estado: ${escapeHtml(status)} · Fecha: ${campaign ? date(campaign.created_at) : "sin registro"} · ${escapeHtml(cause)} · ${nextOwner}</span></div></div>`;
     }).join("") || '<div class="empty-state">No hay fuentes de plataforma registradas.</div>';
-    renderBasesReviews();
+    renderPrivateCandidates();
+  }
+  function evidenceSummary(candidate) {
+    const fields = Object.values(candidate.convocation_evidence_json || {});
+    const evidenced = fields.filter((item) => item?.state === "evidenced").length;
+    const uncertain = fields.filter((item) => item?.state === "uncertain").length;
+    return `${evidenced} campos con evidencia${uncertain ? ` · ${uncertain} inciertos` : ""}`;
+  }
+  function candidateActions(candidate) {
+    return "";
+  }
+  function renderPrivateCandidates() {
+    const target = document.querySelector("#platform-private-source-candidates"); if (!target) return;
+    if (state.candidatesError) { target.innerHTML = `<div class="plain-note"><strong>Cola no disponible</strong><span>${escapeHtml(state.candidatesError)}. No se habilita rastreo ni publicación.</span></div>`; return; }
+    target.innerHTML = state.candidates.length ? state.candidates.map((candidate) => {
+      const reasons = candidate.auto_validation_json?.reasons || [];
+      const cause = reasons.length ? reasons.join(", ") : candidate.review_note || "validación automática incompleta";
+      const origin = candidate.provenance_json?.source_url || candidate.official_url;
+      return `<article class="stack-item"><div class="opportunity-topline"><div><strong>${escapeHtml(candidate.organization_name)}</strong><span>Origen: ${escapeHtml(origin)} · ${escapeHtml(candidate.funder_type)} · ${escapeHtml(candidate.territory || "Territorio pendiente")}</span></div>${badge("Excepción técnica", "warning")}</div><span>Estado: pendiente de comprobación objetiva · Fecha: ${date(candidate.updated_at)} · Causa operativa: ${escapeHtml(cause)}</span><span><a href="${escapeHtml(safeLink(candidate.official_url))}" target="_blank" rel="noopener">Web oficial</a> · ${escapeHtml(evidenceSummary(candidate))} · Siguiente responsable: operación técnica del radar.</span><span>Sin publicación, alertas, recomendación a clientes ni decisión sobre elegibilidad.</span></article>`;
+    }).join("") : '<div class="empty-state">Sin excepciones técnicas persistidas de fuentes privadas. No se muestra una cola simulada.</div>';
   }
   const basisLabels = { beneficiaries: "Quien puede solicitar", eligibilityRequirements: "Requisitos", eligibleActivities: "Actuaciones financiables", requiredDocuments: "Documentos obligatorios", evaluationCriteria: "Criterios", budgetRules: "Presupuesto", submission: "Presentacion", obligations: "Obligaciones", exclusions: "Exclusiones" };
   const essentialBasisKeys = ["beneficiaries", "eligibleActivities", "requiredDocuments", "submission"];
   function renderBasesReviews() {
     const target = document.querySelector("#platform-bases-reviews"); if (!target) return;
     if (state.basesError) { target.innerHTML = `<div class="plain-note"><strong>Revision de bases no disponible</strong><span>${escapeHtml(state.basesError)}</span></div>`; return; }
-    target.innerHTML = state.bases.map((item) => {
+    const exceptions = state.bases.filter((item) => !item.citations_verified || item.error);
+    target.innerHTML = exceptions.map((item) => {
       const version = Array.isArray(item.platform_opportunity_versions) ? item.platform_opportunity_versions[0] : item.platform_opportunity_versions;
       const opportunity = Array.isArray(version?.platform_opportunities) ? version.platform_opportunities[0] : version?.platform_opportunities;
       const artifact = Array.isArray(item.platform_source_artifacts) ? item.platform_source_artifacts[0] : item.platform_source_artifacts;
@@ -98,7 +159,7 @@
       const constraintEvidence = [...(constraints.limits || []), ...(constraints.formatRules || [])].map((clause) => `<li><strong>Limite o formato</strong><span>${escapeHtml(clause.documentType ? `${clause.documentType}: ${clause.value} ${clause.unit}` : `${clause.kind}: ${clause.value}`)}</span><small>Pagina ${escapeHtml(clause.sourcePage ?? "HTML")} · ${escapeHtml(clause.evidenceExcerpt || "Cita pendiente")}</small></li>`);
       const evidence = [...requirementEvidence, ...constraintEvidence].slice(0, 12).join("");
       return `<article class="stack-item bases-review-card"><div class="opportunity-topline"><div><strong>${escapeHtml(opportunity?.title || "Convocatoria sin titulo")}</strong><span>${escapeHtml(opportunity?.funder_name || "Organismo pendiente")} · ${essentialCovered.length}/4 esenciales · ${covered.length}/9 apartados · ${(constraints.limits || []).length} limites de redaccion</span></div>${badge(item.citations_verified ? "Citas verificadas" : "Citas pendientes", item.citations_verified ? "safe" : "warning")}</div><ul class="basis-evidence-list">${evidence || "<li>Sin requisitos extraidos.</li>"}</ul><div class="source-state-line"><a href="${escapeHtml(safeLink(artifact?.source_url || version?.bases_url || version?.source_url))}" target="_blank" rel="noopener">Abrir bases oficiales</a><div class="button-row"><button class="ghost-action" data-bases-review-action="reject" data-bases-interpretation="${item.id}" type="button">Descartar lectura</button><button class="primary-action" data-bases-review-action="approve" data-bases-interpretation="${item.id}" type="button" ${item.citations_verified ? "" : "disabled"}>Aprobar interpretacion</button></div></div></article>`;
-    }).join("") || '<div class="empty-state">No hay interpretaciones de bases pendientes de validacion.</div>';
+    }).join("") || '<div class="empty-state">No hay excepciones de evidencia pendientes. Las extracciones con citas completas se conservan para el flujo de revisión de aplicabilidad del tenant.</div>';
   }
   function renderOperations(data) {
     const queued = [...data.agentRuns, ...data.ingestionCampaigns].filter((item) => activeRunStates.has(item.status)).length;
@@ -123,14 +184,32 @@
     window.lucide?.createIcons();
   }
   async function refresh() {
-    if (!session() || state.loading) return; state.loading = true;
+    if (!session() || state.loading) return; state.loading = true; renderSourceMap(null, "Cargando estado persistido");
     try {
       state.data = await request("/api/admin-platform-overview"); state.error = "";
-      try { state.bases = await request("/api/admin-bases-interpretations?status=review_required"); state.basesError = ""; }
-      catch (error) { state.bases = []; state.basesError = error.message; }
+      window.dispatchEvent(new Event("platform-overview-loaded"));
+      try {
+        const result = await request("/api/admin-platform-opportunities");
+        state.opportunities = result.items || []; state.opportunitiesMeta = result; state.opportunitiesError = "";
+        window.PLATFORM_GLOBAL_OPPORTUNITIES = state.opportunities;
+      } catch (error) {
+        state.opportunities = []; state.opportunitiesMeta = null; state.opportunitiesError = error.message;
+        window.PLATFORM_GLOBAL_OPPORTUNITIES = [];
+      }
+      window.dispatchEvent(new Event("platform-global-opportunities-loaded"));
+      try { const result = await request("/api/admin-private-source-candidates?status=pending_review"); state.candidates = result.candidates || []; state.candidatesError = ""; }
+      catch (error) { state.candidates = []; state.candidatesError = error.message; }
       render();
     }
-    catch (error) { state.error = error.message; window.showToast?.(`Estado global no disponible: ${error.message}`); }
+    catch (error) {
+      state.error = error.message; state.candidates = []; state.candidatesError = error.message; state.opportunitiesMeta = null; state.opportunitiesError = error.message; window.PLATFORM_GLOBAL_OPPORTUNITIES = [];
+      window.dispatchEvent(new Event("platform-global-opportunities-loaded"));
+      renderDashboard({});
+      renderSourceMap(null, error.message); renderPrivateCandidates();
+      const campaigns = document.querySelector("#platform-campaigns");
+      if (campaigns) campaigns.innerHTML = '<div class="empty-state">Revisiones no disponibles: no se muestran campañas de ejemplo.</div>';
+      window.showToast?.(`Estado global no disponible: ${error.message}`);
+    }
     state.loading = false;
   }
   async function runSource(button) {
@@ -145,12 +224,17 @@
       window.showToast?.(result.message); await refresh();
     } catch (error) { window.showToast?.(error.message); button.disabled = false; }
   }
+  async function reviewPrivateCandidate(button) {
+    button.disabled = true;
+    try { const result = await request("/api/admin-private-source-candidates", { method: "PATCH", body: JSON.stringify({ candidateId: button.dataset.privateSourceId, action: button.dataset.privateSourceAction }) }); window.showToast?.(result.message); await refresh(); }
+    catch (error) { window.showToast?.(error.message); button.disabled = false; }
+  }
   function exportAudit() {
     if (!state.data?.auditEvents.length) return;
     const orgs = organizationMap(state.data); const rows = [["Fecha", "Tenant", "Actor", "Acción", "Recurso"], ...state.data.auditEvents.map((item) => [item.created_at, orgs.get(item.tenant_id)?.name || item.tenant_id, item.actor_label, item.action, item.target_type])];
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(";")).join("\r\n"); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" })); link.download = `auditoria-plataforma-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
   }
-  document.addEventListener("click", (event) => { const run = event.target.closest?.("[data-platform-source-run]"); if (run) runSource(run); const bases = event.target.closest?.("[data-bases-review-action]"); if (bases) reviewBases(bases); if (event.target.closest?.("[data-platform-audit-export]")) exportAudit(); });
+  document.addEventListener("click", (event) => { const run = event.target.closest?.("[data-platform-source-run]"); if (run) runSource(run); const candidate = event.target.closest?.("[data-private-source-action]"); if (candidate) reviewPrivateCandidate(candidate); if (event.target.closest?.("[data-platform-audit-export]")) exportAudit(); });
   window.PlatformRuntime = { refresh };
   window.addEventListener("role-session-applied", () => setTimeout(refresh, 0)); window.addEventListener("hashchange", () => { if (session()) setTimeout(render, 0); }); setTimeout(refresh, 0);
 })();

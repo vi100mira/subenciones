@@ -179,6 +179,8 @@ async function ensureSource(supabase, dataset) {
 }
 
 async function upsertOpportunity(supabase, sourceId, item) {
+  const evidenceUrl = String(item.officialUrl || item.basesUrl || "");
+  const technicalState = evidenceUrl.startsWith("https://") ? "automated_evidence_checked" : "operational_exception";
   const row = {
     platform_source_id: sourceId,
     canonical_key: item.id,
@@ -191,6 +193,10 @@ async function upsertOpportunity(supabase, sourceId, item) {
     status: status(item.deadlineStatus) === "uncertain" ? "tracked" : status(item.deadlineStatus),
     priority: item.score || 50,
     metadata_json: { bdns_source_id: item.sourceId, amount: item.amount },
+    technical_state: technicalState,
+    technical_reason: evidenceUrl ? "official_https_evidence_detected" : "official_https_evidence_missing",
+    technical_evidence_json: { source_url: evidenceUrl || null, source_id: item.sourceId || null },
+    technical_updated_at: new Date().toISOString(),
     last_seen_at: item.deadlineReadAt || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

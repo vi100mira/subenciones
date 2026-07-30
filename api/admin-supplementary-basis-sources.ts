@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         proposal_note: String(note || "").trim().slice(0, 2000)
       }).select("id, opportunity_id, source_url, document_role, source_authority, status, created_at").single();
       if (error) throw error;
-      return res.status(201).json(ok({ source: data, message: "Fuente propuesta. No se usara hasta que un administrador la apruebe." }));
+      return res.status(201).json(ok({ source: data, message: "Fuente propuesta. No se capturará hasta registrar un permiso técnico." }));
     }
 
     if (req.method === "PATCH") {
@@ -76,8 +76,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error) throw error;
       if (!data) return res.status(404).json(fail("Fuente suplementaria no encontrada"));
       return res.status(200).json(ok({ source: data, message: status === "approved"
-        ? "Fuente aprobada. El siguiente radar intentara capturarla y verificara su contenido."
-        : "Fuente rechazada. El radar no la utilizara." }));
+        ? "Permiso técnico de captura registrado. No aprueba interpretación, elegibilidad ni decisión de aplicar."
+        : "Captura técnica bloqueada. El radar no utilizará esta URL." }));
     }
 
     return res.status(405).json(fail("Method Not Allowed"));

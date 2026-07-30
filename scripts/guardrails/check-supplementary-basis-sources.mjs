@@ -16,7 +16,7 @@ assert(migration.includes("status in ('proposed', 'approved', 'rejected')"));
 assert(migration.includes("reviewed_by uuid") && migration.includes("reviewed_at timestamptz"));
 assert(api.includes('status: "proposed"'), "Una URL nueva nunca puede entrar aprobada");
 assert(api.includes('.in("status", ["proposed", "approved", "rejected"])'));
-assert(api.includes('status === "approved"') && api.includes("siguiente radar"));
+assert(api.includes('status === "approved"') && api.includes("Permiso t") && api.includes("No aprueba interpretaci"));
 assert(api.includes("https:") && api.includes("url.username") && api.includes("url.password"));
 assert(discoveryMigration.includes("official_link_discovery") && discoveryMigration.includes("discovery_path jsonb"));
 
@@ -34,7 +34,7 @@ const queue = fs.readFileSync("scripts/platform/queue-bases-interpretations.mjs"
 assert(worker.indexOf("apply-approved-basis-sources.mjs") < worker.indexOf("prepare-bdns-bases-scan.mjs"));
 assert(queue.includes("last_verification_error") && queue.includes('.eq("status", "approved")'));
 assert(html.includes('id="platform-supplementary-bases"') && html.includes("supplementary-basis-sources.js"));
-assert(ui.includes("Doble validación") && ui.includes("Aprobar una URL permite"));
+assert(ui.includes("Doble validación") && ui.includes("Permitir una URL solo habilita la captura"));
 assert(ui.includes('data-supplementary-source-action="approve"') && ui.includes('data-supplementary-source-action="reject"'));
 
 const discoveryDataset = { opportunities: [{ id: "bdns-2026", title: "Ayudas de material escolar curso 2026/2027", supplementaryBasesUrls: ["https://ayuntamiento.example/ayudas"], basisDocuments: [], requirementsContract: { documentRecovery: { requiresAdditionalOfficialSource: true } } }] };

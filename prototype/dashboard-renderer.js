@@ -37,9 +37,9 @@ function sourceCoverage(source) {
   }
   return { rows, note };
 }
-function renderSourceNode(source) {
+function renderSourceNode(source, verifiedRows = null) {
   const status = source.health === "blocked" ? " blocked" : source.health === "degraded" ? " warning" : source.health === "unknown" ? " pending" : " active";
-  const coverage = sourceCoverage(source);
+  const coverage = verifiedRows ? { rows: verifiedRows, note: `${verifiedRows.length} recomendaciones persistidas y autorizadas para esta entidad.` } : sourceCoverage(source);
   const count = source.name === "Documentos de la entidad"
     ? Number(window.TENANT_DOCUMENT_SUMMARY?.documentCount || 0)
     : coverage.rows.length;
@@ -95,7 +95,11 @@ function metricPreview(metric) {
 }
 function renderDashboard() {
   const isPlatform = document.body.dataset.role === "superadmin";
+  const privateCoveragePanel = document.querySelector("#private-coverage")?.closest(".panel");
+  if (privateCoveragePanel) privateCoveragePanel.hidden = !isPlatform;
+  const nationalCatalog = window.NationalSourceCatalogUI;
   const hasTenantMatch = Boolean(window.TENANT_RECOMMENDATIONS_APPLIED && window.RADAR?.quality?.entityFitRule);
+  const verifiedTenantData = isPlatform || hasTenantMatch;
   const summary = window.OpportunityScope?.summary() || { total: 0, open: 0, highPriority: 0, uncertain: 0 };
   const currentRows = opportunities();
   const openRows = currentRows.filter((item) => item.deadlineStatus === "open");
@@ -120,12 +124,17 @@ function renderDashboard() {
   const metrics = document.querySelectorAll("#dashboard .metric");
   const values = isPlatform
     ? [
-        { label: "Oportunidades publicas", value: "—", detail: "Cargando corpus comun de plataforma", rows: [], note: "El recuento global se obtiene del estado de plataforma." },
-        { label: "Tenants activos", value: "—", detail: "Cargando entidades registradas", rows: [], note: "El detalle se mantiene aislado por tenant." },
-        { label: "Asistentes operativos", value: "—", detail: "Cargando activaciones por tenant", rows: [], note: "Estado agregado sin exponer datos privados." },
-        { label: "Revisiones pendientes", value: "—", detail: "Cargando decisiones humanas pendientes", rows: [], note: "Solo se contabilizan revisiones persistidas." }
+        { label: "Fuentes declaradas", value: nationalCatalog?.summary.sourceCount ?? "—", detail: "BDNS, BOE y diarios autonomicos", rows: [], note: "Catalogo global; no equivale a fuentes rastreadas." },
+        { label: "Diarios autonomicos", value: nationalCatalog?.summary.autonomousGazettes ?? "—", detail: "Pendientes de revision y permisos", rows: [], note: "Cada territorio conserva su diario oficial como evidencia." },
+        { label: "Rastreo habilitado", value: nationalCatalog?.summary.scanEligible ?? "—", detail: "No hay conectores activados", rows: [], note: "No se planifican peticiones hasta aprobar permisos y limites." },
+        { label: "Convocatorias del catalogo", value: "—", detail: "El registro no crea oportunidades", rows: [], note: "El matching de tenants no usa este catalogo como resultado." }
       ]
-    : [
+    : !verifiedTenantData ? [
+        { label: "Oportunidades disponibles", value: "—", detail: "Sin datos verificados", rows: [], note: "El radar mostrará solo recomendaciones persistidas y autorizadas para esta entidad." },
+        { label: "Con plazo abierto", value: "—", detail: "Sin datos verificados", rows: [], note: "No se usan convocatorias de ejemplo." },
+        { label: "Último cálculo de encaje", value: matchState.value, detail: matchState.detail, rows: [], note: matchState.note },
+        { label: "Plazo por confirmar", value: "—", detail: "Sin datos verificados", rows: [], note: "No hay plazos de ejemplo que revisar." }
+      ] : [
         { label: hasTenantMatch ? "Oportunidades en seguimiento" : "Oportunidades disponibles", value: summary.total, detail: hasTenantMatch ? "Coincide con la vista Oportunidades" : "Corpus general mientras se recupera el encaje", rows: currentRows, note: `${summary.total} oportunidades visibles en el estado actual.` },
         { label: "Con plazo abierto", value: summary.open, detail: "Solicitud abierta confirmada", rows: openRows, note: `${openRows.length} oportunidades con plazo abierto confirmado.` },
         { label: "Ultimo calculo de encaje", value: matchState.value, detail: matchState.detail, rows: matchRows, note: matchState.note },
@@ -137,24 +146,20 @@ function renderDashboard() {
     metric.querySelector("summary > small").textContent = values[index].detail;
     metric.querySelector(".metric-preview").innerHTML = metricPreview(values[index]);
   });
-  document.querySelector("#alerts-list").innerHTML = (isPlatform ? window.MOCK.platformAlerts : window.MOCK.alerts).map(renderStackItem).join("");
+  document.querySelector("#alerts-list").innerHTML = '<div class="plain-note"><strong>Sin datos verificados</strong><span>Consultando alertas y estados persistidos autorizados.</span></div>';
   document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
   const sourceAction = document.querySelector("#dashboard .source-map-panel [data-jump]");
   sourceAction.textContent = isPlatform ? "Ver estado de fuentes" : "Gestionar"; sourceAction.dataset.jump = isPlatform ? "operations" : "governance";
   if (isPlatform) sourceAction.dataset.focusTarget = "operations-source-health"; else delete sourceAction.dataset.focusTarget;
-  document.querySelector("#source-map").innerHTML = `
-    <div class="source-legend">
-      <span><i class="legend-dot active"></i>Operativa</span>
-      <span><i class="legend-dot warning"></i>Con avisos</span>
-      <span><i class="legend-dot pending"></i>No conectada</span>
-      <span><i class="legend-dot blocked"></i>Bloqueada</span>
-    </div>
-  ` + window.MOCK.sources
-    .filter((source) => !isPlatform || !source.scope.toLowerCase().includes("tenant"))
-    .map((source) => source.name === "Documentos de la entidad" && window.TENANT_DOCUMENT_SUMMARY?.documentCount
-      ? { ...source, status: `${window.TENANT_DOCUMENT_SUMMARY.documentCount} inventariados`, health: "healthy" }
-      : source)
-    .map(renderSourceNode).join("");
+  const sourceMap = document.querySelector("#source-map");
+  if (isPlatform && nationalCatalog) nationalCatalog.renderSourceMap(sourceMap);
+  else if (isPlatform) sourceMap.innerHTML = '<div class="plain-note"><strong>Catalogo nacional no disponible</strong><span>No se muestran conteos de ejemplo.</span></div>';
+  else if (!verifiedTenantData) sourceMap.innerHTML = '<div class="empty-state">Sin fuentes verificadas para esta entidad.</div>';
+  else {
+    const bySource = new Map();
+    currentRows.forEach((row) => { const key = row.source || "Fuente oficial"; bySource.set(key, [...(bySource.get(key) || []), row]); });
+    sourceMap.innerHTML = [...bySource.entries()].map(([name, rows]) => renderSourceNode({ name, kind: "Recomendaciones autorizadas", scope: "Tenant", status: "Verificada", health: "healthy" }, rows)).join("") || '<div class="empty-state">Sin fuentes verificadas para esta entidad.</div>';
+  }
   window.lucide?.createIcons();
 }
 

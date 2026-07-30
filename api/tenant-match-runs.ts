@@ -83,11 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const version = Array.isArray(row.platform_opportunity_versions) ? row.platform_opportunity_versions[0] : row.platform_opportunity_versions;
         return version?.id;
       }).filter(Boolean))];
-      const interpretations = versionIds.length
-        ? await supabase.from("platform_bases_interpretations")
-          .select("id, opportunity_version_id, status, citations_verified, contract_json, reviewed_at")
-          .in("opportunity_version_id", versionIds).eq("status", "approved")
-        : { data: [], error: null };
+      const interpretations = { data: [], error: null };
       if (interpretations.error && !isMissingBasesSchema(interpretations.error)) throw interpretations.error;
       const basesByVersion = new Map(versionIds.map((versionId) => [versionId, combineApprovedBasesRows(
         (interpretations.data || []).filter((item: any) => item.opportunity_version_id === versionId)

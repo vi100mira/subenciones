@@ -3,6 +3,8 @@
   const candidateKey = "workspace-candidates-v1";
 
   function opportunities() {
+    const entitySession = window.CredentialsAuth?.getSession?.()?.role === "entity";
+    if (entitySession) return window.OpportunityScope?.rows?.() || [];
     const privateRows = [...(window.MOCK?.opportunities || []), ...(window.PRIVATE_OPEN_OPPORTUNITIES || [])].filter((item) => item.sourceScope && item.sourceScope !== "Publica oficial" && !item.sourceScope.toLowerCase().includes("tenant"));
     const publicRows = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length ? window.RADAR_PLATFORM_OPPORTUNITIES : window.RADAR?.opportunities || [];
     return publicRows.length ? [...publicRows, ...privateRows] : [];

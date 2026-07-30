@@ -1,4 +1,4 @@
-const state = { selectedOpportunityId: (window.OpportunityScope?.rows() || window.RADAR?.opportunities || window.MOCK.opportunities)[0].id };
+const state = { selectedOpportunityId: (window.OpportunityScope?.rows() || window.RADAR?.opportunities || window.MOCK.opportunities)[0]?.id || "" };
 function opportunities() {
   return window.OpportunityScope?.rows() || [];
 }
@@ -11,7 +11,7 @@ const titles = {
   agents: "Asistentes y servicios",
   workspace: "Candidatura",
   audit: "Auditoria",
-  platform: "Consola plataforma",
+  platform: "Operación del radar",
   operations: "Operaciones", plan: "Plan y monetizacion"
 };
 function badge(text, tone = "review") {
@@ -29,7 +29,15 @@ function renderDashboard() {
 }
 function renderOpportunities() {
   const list = document.querySelector("#opportunity-list");
-  list.innerHTML = opportunities().map((item) => {
+  const rows = opportunities();
+  if (!rows.length) {
+    list.innerHTML = document.body.dataset.role === "superadmin"
+      ? '<div class="empty-state"><strong>Inventario global sin datos</strong><span>La lectura de plataforma no ha devuelto oportunidades ni candidatas privadas. No se usan fixtures.</span></div>'
+      : '<div class="empty-state"><strong>Sin oportunidades verificadas</strong><span>Se mostrarán únicamente recomendaciones persistidas y autorizadas para esta entidad.</span></div>';
+    document.querySelector("#opportunity-detail").innerHTML = '<div class="empty-state"><strong>Sin detalle disponible</strong><span>No hay una convocatoria autorizada para mostrar.</span></div>';
+    return;
+  }
+  list.innerHTML = rows.map((item) => {
     const selected = item.id === state.selectedOpportunityId ? " is-selected" : "";
     const tone = item.deadlineStatus === "closed" ? "danger" : item.deadlineStatus === "uncertain" ? "warning" : "safe";
     return `
@@ -67,7 +75,7 @@ function renderOpportunities() {
     });
   });
 
-  const item = opportunities().find((opportunity) => opportunity.id === state.selectedOpportunityId) || opportunities()[0];
+  const item = rows.find((opportunity) => opportunity.id === state.selectedOpportunityId) || rows[0];
   const documents = [...(item.documents || []), ...(item.announcements || [])].slice(0, 4);
   const sourceLinks = [
     item.officialUrl ? `<a href="${item.officialUrl}" target="_blank" rel="noreferrer">Abrir ficha oficial de la convocatoria</a>` : "",
@@ -97,7 +105,7 @@ function renderOpportunities() {
       <div><span>Financiador</span><strong>${item.funderType || "Administracion publica"}</strong></div><div><span>Evidencia</span><strong>${item.evidenceQuality || "Fuente oficial"}</strong></div>
     </div>
     <div class="detail-section">
-      <h2>Por que puede encajar</h2>
+      <h2>${document.body.dataset.role === "superadmin" ? "Estado de plataforma" : "Por que puede encajar"}</h2>
       <ul>${item.fit.map((reason) => `<li>${reason}</li>`).join("")}</ul>
     </div>
     <div class="detail-section">
@@ -114,7 +122,7 @@ function renderOpportunities() {
       <div class="evidence-row">${item.internalFacts.map((fact) => badge(fact, "review")).join("")}</div>
     </div>
     <div class="button-row">
-      <button class="primary-action" data-jump="workspace" data-watch-opportunity="${item.id}" data-watch-reason="candidate_workspace">Crear candidatura</button>
+      ${document.body.dataset.role === "superadmin" ? '<span class="badge review">Sin recomendación ni candidatura de cliente</span>' : `<button class="primary-action" data-jump="workspace" data-watch-opportunity="${item.id}" data-watch-reason="candidate_workspace">Crear candidatura</button>`}
       <button class="ghost-action" data-policy-modal>Ver politicas de datos</button>
     </div>
   `;
@@ -122,6 +130,7 @@ function renderOpportunities() {
 }
 
 function renderEntity() {
+  if (document.body.dataset.role === "entity" && !window.INSERTIA_FIXTURE_MODE) { document.querySelector("#facts-list").innerHTML = '<div class="empty-state">Sin hechos verificados. Los datos del perfil aparecen tras la revisión autorizada de esta entidad.</div>'; return; }
   document.querySelector("#facts-list").innerHTML = window.MOCK.facts.map((fact) => {
     const tone = fact.class === "Bloqueado" ? "danger" : fact.class === "Publico" ? "safe" : "review";
     return `
@@ -135,6 +144,7 @@ function renderEntity() {
 }
 
 function renderGovernance() {
+  if (document.body.dataset.role === "entity" && !window.INSERTIA_FIXTURE_MODE) { document.querySelector("#source-control-list").innerHTML = '<div class="empty-state">Sin fuentes privadas verificadas para esta entidad.</div>'; document.querySelector("#governance-table").innerHTML = '<div class="empty-state">La política se cargará desde la configuración autorizada.</div>'; document.querySelector("#review-queue").innerHTML = '<div class="empty-state">Sin revisiones persistidas para esta entidad.</div>'; return; }
   document.querySelector("#source-control-list").innerHTML = window.MOCK.sources.map((source) => {
     const tone = source.status === "Bloqueada" ? "danger" : source.status === "Pendiente" ? "warning" : source.health === "degraded" ? "warning" : "safe";
     return `
@@ -172,6 +182,11 @@ function renderGovernance() {
 
 function renderAgents() {
   const isPlatform = document.body.dataset.role === "superadmin";
+  if (!isPlatform && !window.INSERTIA_FIXTURE_MODE) {
+    const catalog = ["Búsqueda de convocatorias", "Investigador de entidad", "Asistente de encaje", "Revisión documental", "Preparación documental", "Avisos y recordatorios"];
+    document.querySelector("#agent-grid").innerHTML = catalog.map((name) => `<article class="agent-card"><div class="opportunity-topline"><strong>${name}</strong>${badge("Cargando", "review")}</div><p class="agent-readiness">Comprobando el estado autorizado de esta entidad.</p></article>`).join(""); document.querySelector("#agent-runs").innerHTML = '<div class="empty-state">Sin ejecuciones verificadas todavía.</div>';
+    return;
+  }
   document.querySelector("#agent-grid").innerHTML = (isPlatform ? window.MOCK.platformAgents : window.MOCK.agents).map((agent) => `
     <article class="agent-card">
       <div class="agent-icon"><i data-lucide="${agent.icon}"></i></div>
@@ -188,6 +203,7 @@ function renderAgents() {
 }
 
 function renderWorkspace() {
+  if (document.body.dataset.role === "entity" && !window.INSERTIA_FIXTURE_MODE) { document.querySelector("#checklist").innerHTML = '<div class="empty-state">Selecciona una recomendación persistida para preparar la candidatura.</div>'; const proposal = document.querySelector("#proposal-outline"); if (proposal) proposal.innerHTML = '<div class="empty-state">Sin borrador verificado.</div>'; return; }
   document.querySelector("#checklist").innerHTML = window.MOCK.checklist.map((entry) => {
     const tone = entry.state === "done" ? "safe" : entry.state === "review" ? "warning" : "review";
     const label = entry.state === "done" ? "Hecho" : entry.state === "review" ? "Revisar" : "Pendiente";
@@ -209,6 +225,10 @@ function renderAudit() {
 }
 
 function renderPlatform() {
+  if (document.body.dataset.role === "superadmin" && !window.INSERTIA_FIXTURE_MODE) {
+    document.querySelector("#platform-campaigns").innerHTML = '<div class="empty-state">Esperando revisiones persistidas de plataforma.</div>';
+    return;
+  }
   const row = (item) => {
     const tone = item.state === "Activa" ? "safe" : item.state === "Atencion" ? "warning" : "review";
     return `
@@ -230,10 +250,15 @@ function renderPlatform() {
     <div data-tenant-grid-host></div>
   `;
   window.TenantGrid?.render(window.MOCK.tenants);
-  document.querySelector("#platform-campaigns").innerHTML = `<div class="source-control-row"><div><strong>Detectar cambios</strong><span>Hash/etag sin IA antes de modelos.</span></div><div><strong>Programar cron</strong><span>Cadencia y presupuesto por campana.</span></div><div><strong>Ejecutar ahora</strong><span>Manual con motivo y auditoria.</span></div></div><div class="plain-note"><strong>Flujo del agente</strong><span>Abre cada revision para editar cron, presupuesto y ejecucion manual.</span></div>${window.MOCK.platformCampaigns.map(row).join("")}`;
+  document.querySelector("#platform-campaigns").innerHTML = `<div class="source-control-row"><div><strong>Detectar cambios</strong><span>Hash/etag sin IA antes de modelos.</span></div><div><strong>Programar cron</strong><span>Cadencia y presupuesto por campaña.</span></div><div><strong>Ejecutar ahora</strong><span>Manual con motivo y auditoría.</span></div></div><div class="plain-note"><strong>Flujo técnico</strong><span>Abre cada configuración para revisar cron, presupuesto y ejecución manual de fuentes.</span></div>${window.MOCK.platformCampaigns.map(row).join("")}`;
 }
 
 function renderOperations() {
+  if (document.body.dataset.role !== "superadmin" && !window.INSERTIA_FIXTURE_MODE) {
+    document.querySelector("#operations-jobs").innerHTML = '<div class="empty-state">Esta vista no presenta métricas globales a tenants.</div>';
+    document.querySelector("#operations-health").innerHTML = '<div class="empty-state">Sin estado global disponible.</div>';
+    return;
+  }
   const row = (item) => {
     const tone = item.state === "Atencion" ? "warning" : item.state === "Pendiente" ? "review" : item.state === "OK" || item.state === "Completado" ? "safe" : "review";
     return `
@@ -258,7 +283,7 @@ function showScreen(screenId) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.screen === screenId);
   });
-  const platformTitles = { dashboard: "Panel de plataforma", opportunities: "Oportunidades de la plataforma", agents: "Asistentes de la plataforma", audit: "Auditoria global" };
+  const platformTitles = { dashboard: "Panel de operación del radar", opportunities: "Inventario global del radar", agents: "Servicios del radar", audit: "Auditoría del sistema", platform: "Operación del radar" };
   document.querySelector("#screen-title").textContent = document.body.dataset.role === "superadmin" && platformTitles[screenId] ? platformTitles[screenId] : titles[screenId];
   const primaryAction = document.querySelector(".top-actions .primary-action");
   const refreshAction = document.querySelector("#refresh-button");
@@ -266,10 +291,7 @@ function showScreen(screenId) {
   const refreshScreens = ["opportunities", "agents", "audit", "operations"];
   primaryAction.style.display = !isPlatformAdmin && screenId === "opportunities" ? "" : "none";
   refreshAction.style.display = refreshScreens.includes(screenId) ? "" : "none";
-  if (screenId === "dashboard") {
-    renderDashboard();
-    window.refreshTenantMatchState?.();
-  }
+  if (screenId === "dashboard") { renderDashboard(); window.refreshTenantMatchState?.(); }
   primaryAction.innerHTML = '<i data-lucide="plus"></i>Nueva busqueda'; window.lucide?.createIcons();
   history.replaceState(null, "", `#view-${screenId}`);
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -315,6 +337,7 @@ function init() {
   renderOperations();
   window.refreshRoleViews = () => { renderDashboard(); renderOpportunities(); renderAgents(); renderAudit(); renderOperations(); window.renderPlatformOperations?.(); };
   window.addEventListener("tenant-recommendations-applied", () => { renderDashboard(); renderOpportunities(); });
+  window.addEventListener("platform-global-opportunities-loaded", () => { if (document.body.dataset.role === "superadmin") { renderDashboard(); renderOpportunities(); } });
   ["tenant-match-load-state", "tenant-match-state", "role-session-applied"].forEach((eventName) => window.addEventListener(eventName, renderDashboard));
   bindNavigation();
   bindJumps(); window.showScreen = showScreen; window.addEventListener("hashchange", () => { const id = location.hash.replace("#view-", "").replace("#", ""); if (titles[id]) showScreen(id); });
@@ -328,9 +351,7 @@ function init() {
   const initialScreen = hash.startsWith("view-") ? hash.replace("view-", "") : hash || "dashboard";
   showScreen(titles[initialScreen] ? initialScreen : "dashboard");
 
-  if (window.lucide) {
-    window.lucide.createIcons();
-  }
+  if (window.lucide) window.lucide.createIcons();
 }
 
 init();

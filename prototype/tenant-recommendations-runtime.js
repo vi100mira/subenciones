@@ -61,6 +61,10 @@
       officialUrl: version?.official_url || version?.source_url || "",
       actionable: false,
       entityFit: { status: "sync_pending", reason: "No se ha encontrado una correspondencia unica en el corpus actual." },
+      fit: ["Recomendación persistida para esta entidad; falta conciliar su ficha completa."],
+      risks: ["La evidencia local no está disponible todavía. Revisa la fuente oficial antes de decidir."],
+      evidence: ["La recomendación y la versión de oportunidad se recuperaron de registros autorizados del tenant."],
+      internalFacts: [],
       matchRecommendation: recommendation,
       syncIssue: { recommendationId: recommendation.id, canonicalKey: opportunity?.canonical_key || "", versionId: version?.id || "" }
     };
@@ -111,8 +115,8 @@
     window.RADAR_ENTITY_DISCARDED = discarded;
     window.RADAR_DEADLINE_ARCHIVED = archived;
     window.RADAR_SYNC_PENDING = syncPending;
-    window.RADAR.opportunities = active;
-    window.RADAR.count = active.length;
+    window.RADAR.opportunities = [...active, ...syncPending];
+    window.RADAR.count = active.length + syncPending.length;
     window.RADAR.quality = {
       ...(window.RADAR.quality || {}),
       entityCandidateCount: active.length,

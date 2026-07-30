@@ -30,8 +30,8 @@ function assert(condition, message) {
 assert(!flows.includes("Como leer una oportunidad"), "Sigue presente la guia ambigua de oportunidades");
 assert(!ui.includes("data-grid-page"), "La tabla conserva controles de paginacion");
 assert(!ui.includes('["candidate", "Candidatura"]'), "Candidatura sigue siendo una columna independiente");
-assert(ui.includes('["actions", "Acciones"]'), "Acciones no ofrece el filtro de candidatura");
-assert(ui.includes("${candidateCell(item)}"), "Preseleccionar no esta integrado en Acciones");
+assert(ui.includes('["actions", "Operaciones disponibles"]'), "Operaciones disponibles no ofrece el filtro de candidatura");
+assert(ui.includes("${candidateCell(item)}"), "Preseleccionar no esta integrado en Operaciones disponibles");
 assert(!ui.includes(">Preseleccionar</button>"), "Preseleccionar sigue siendo un boton de texto");
 assert(["bookmark-plus", "folder-plus", "folder-open"].every((icon) => ui.includes(icon)), "Faltan iconos para las acciones de candidatura");
 assert(ui.includes('data-action-info="bases"') && ui.includes('data-action-info="source"'), "Bases y fuente oficial no abren informacion contextual");
@@ -68,7 +68,7 @@ assert(ui.indexOf("if (item.syncIssue)") < ui.indexOf("const persisted = window.
 assert(tenantMatchReview.includes('data-match-decision="dismissed"') && tenantMatchReviewApi.includes("await audit") && tenantMatchReviewApi.includes("match_agent.${decisionStatus}"), "El descarte de una incidencia no reutiliza la decision humana auditada");
 assert(ui.includes("Fuera de vigencia") && ui.includes("conservan para trazabilidad") && ui.includes("function notCurrentRows"), "Las oportunidades no vigentes siguen ocultas o sin explicacion");
 assert(index.includes("recommendation-reconciliation.js") && tenantRecommendations.includes("entityAutoReconciledByUrlCount") && tenantRecommendations.includes("RADAR_SYNC_PENDING"), "La conciliacion automatica por fuente oficial no esta conectada al runtime");
-assert(index.includes("Estos contadores no se suman entre si"), "El mapa de fuentes no advierte que sus coberturas se solapan");
+assert(index.includes("Las cifras de oportunidades proceden de BDNS") && index.includes("no altera datos BDNS ni programa rastreos"), "El mapa no separa datos BDNS del conector territorial inactivo");
 assert(opportunityActions.includes("sourceTextBody") && opportunityActions.includes("source-text-truncation"), "El texto original sigue renderizado como un bloque continuo o se recorta sin aviso");
 assert(opportunityActions.includes("escapeModalText(paragraph)") && modalStyles.includes("max-width: 74ch") && modalStyles.includes("line-height: 1.78"), "El visor de texto no conserva una columna legible y segura");
 assert(opportunityActions.includes('event.target === target'), "Interactuar con el texto puede cerrar accidentalmente el modal");
@@ -103,7 +103,7 @@ assert(app.includes('const refreshScreens = ["opportunities", "agents", "audit",
 console.log(JSON.stringify({
   ok: true,
   guide: "retirada",
-  candidate: "integrada en Acciones",
+  candidate: "integrada en Operaciones disponibles",
   pagination: "sustituida por carga continua",
   header: "adhesiva dentro de la tabla",
   secondaryGrids: "continuos con cabecera adhesiva en escritorio",

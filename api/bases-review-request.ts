@@ -26,7 +26,6 @@ function reviewItems(rows: any[]) {
 }
 
 function stateMessage(state: string, hasRequest: boolean) {
-  if (state === "approved") return "Las bases ya están publicadas por plataforma y la redacción puede continuar.";
   if (state === "accepted_by_entity") return "Tu equipo validó estas bases para esta candidatura. La decisión queda auditada y no afecta a otras entidades.";
   if (state === "discrepancy_reported") return "Tu equipo señaló una discrepancia. La redacción queda bloqueada para esta entidad hasta resolverla.";
   if (state === "ready_for_entity_review") return "Las citas están verificadas. Tu equipo debe revisar las cláusulas y validarlas o señalar una discrepancia.";
@@ -37,11 +36,10 @@ function stateMessage(state: string, hasRequest: boolean) {
     : "Todavía no existe una lectura verificable de las bases oficiales.";
 }
 
-function reviewState(rows: any[], platformGate: string, effectiveGate: string, acceptance: any, acceptanceValid: boolean) {
+function reviewState(rows: any[], _platformGate: string, effectiveGate: string, acceptance: any, acceptanceValid: boolean) {
   if (acceptance?.status === "discrepancy_reported") return "discrepancy_reported";
-  if (platformGate === "requirements_approved") return "approved";
   if (acceptanceValid && effectiveGate === "requirements_approved") return "accepted_by_entity";
-  if (rows.some((row) => row.status === "review_required" && row.citations_verified)) return "ready_for_entity_review";
+  if (rows.some((row) => ["review_required", "approved"].includes(row.status) && row.citations_verified)) return "ready_for_entity_review";
   if (rows.some((row) => row.status === "review_required")) return "citations_pending";
   if (rows.some((row) => ["queued", "extracting", "interpreting", "generating"].includes(row.status))) return "processing";
   if (rows.some((row) => row.status === "failed")) return "failed";
@@ -134,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       state, message: stateMessage(state, Boolean(request)), reviewItems: reviewItems(rows),
       requestId: request?.id, requestedAt: request?.created_at,
       alreadyRequested: Boolean(previousRequest.data),
-      canRequestAgain: !["approved", "accepted_by_entity", "ready_for_entity_review"].includes(state)
+      canRequestAgain: !["accepted_by_entity", "ready_for_entity_review"].includes(state)
         && req.method !== "POST" && canRequestAgain,
       canAccept: state === "ready_for_entity_review", canReportDiscrepancy: reviewableIds.length > 0,
       draftingAllowed: effective.requirementsContract.documentaryGate === "requirements_approved",

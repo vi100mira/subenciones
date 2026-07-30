@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fail, ok } from "../src/apiResponse.js";
+import { buildNationalOpportunityMap, type OpportunityVersionReadRow, type PlatformOpportunityReadRow, type PlatformSourceReadRow } from "../src/nationalOpportunityMap.js";
 import { getSupabaseAdmin, requirePlatformAdmin } from "../src/supabaseAdmin.js";
 
 type QueryResult = { data: unknown; error: { message?: string } | null; count?: number | null };
@@ -25,15 +26,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       supabase.from("platform_sources").select("id, label, kind, url, status, health_status, priority, last_synced_at, updated_at").order("priority", { ascending: false }),
       supabase.from("platform_ingestion_campaigns").select("id, platform_source_id, campaign_key, status, scanned, changed, vectorized, skipped, failed, error, requested_by, started_at, finished_at, created_at").order("created_at", { ascending: false }).limit(100),
       supabase.from("platform_opportunities").select("id", { count: "exact", head: true }),
-      supabase.from("platform_opportunity_change_events").select("id", { count: "exact", head: true }).eq("human_review_status", "pending"),
-      supabase.from("tenant_change_alerts").select("id", { count: "exact", head: true }).in("status", ["new", "reviewing"])
+      supabase.from("platform_opportunity_change_events").select("id, opportunity_id", { count: "exact" }).eq("human_review_status", "pending"),
+      supabase.from("tenant_change_alerts").select("id", { count: "exact", head: true }).in("status", ["new", "reviewing"]),
+      supabase.from("platform_opportunities").select("id, platform_source_id, source_scope, territory, status, last_seen_at, updated_at").eq("source_scope", "platform_public"),
+      supabase.from("platform_opportunity_versions").select("opportunity_id, deadline_status, deadline_confidence, source_url, official_url, detected_at").eq("version_status", "current")
     ]) as QueryResult[];
 
     assertQueries(results);
-    const [organizations, configs, definitions, agentConfigs, runs, audit, sources, campaigns, opportunities, reviews, alerts] = results;
+    const [organizations, configs, definitions, agentConfigs, runs, audit, sources, campaigns, opportunities, reviews, alerts, publicOpportunities, currentVersions] = results;
+    const generatedAt = new Date().toISOString();
+    const nationalOpportunityMap = buildNationalOpportunityMap({
+      generatedAt,
+      sources: (sources.data || []) as PlatformSourceReadRow[],
+      opportunities: (publicOpportunities.data || []) as PlatformOpportunityReadRow[],
+      versions: (currentVersions.data || []) as OpportunityVersionReadRow[],
+      pendingReviewOpportunityIds: ((reviews.data || []) as Array<{ opportunity_id: string }>).map((review) => review.opportunity_id)
+    });
 
     return res.status(200).json(ok({
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       organizations: organizations.data || [],
       tenantConfigs: configs.data || [],
       agentDefinitions: definitions.data || [],
@@ -42,6 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auditEvents: audit.data || [],
       platformSources: sources.data || [],
       ingestionCampaigns: campaigns.data || [],
+      nationalOpportunityMap,
       counts: {
         opportunities: opportunities.count || 0,
         pendingPlatformReviews: reviews.count || 0,

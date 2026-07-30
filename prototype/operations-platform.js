@@ -8,6 +8,14 @@
   }
 
   function renderPlatformOperations() {
+    if (!window.INSERTIA_FIXTURE_MODE) {
+      const metrics = document.querySelectorAll("#operations .metric");
+      metrics.forEach((metric) => { metric.querySelector("strong").textContent = "—"; metric.querySelector("small").textContent = "Sin datos verificados"; });
+      document.querySelector("#operations-jobs").innerHTML = '<div class="empty-state">Esperando el estado persistido de plataforma.</div>';
+      document.querySelector("#operations-health").innerHTML = '<div class="empty-state">No se muestran métricas de ejemplo.</div>';
+      document.querySelector("#operations .capacity-grid").innerHTML = '<div><span>Estado de capacidad</span><strong>Sin datos verificados</strong></div>';
+      return;
+    }
     const coverage = window.PLATFORM_COVERAGE || {};
     const publicRadar = coverage.public || {};
     const privateOpen = coverage.privateOpen || {};

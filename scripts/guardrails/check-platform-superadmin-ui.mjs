@@ -45,7 +45,7 @@ try {
     return { status: response.status, ok: payload?.ok, error: payload?.error || "" };
   });
   assert(apiCheck.status === 200 && apiCheck.ok, `API global ${apiCheck.status}: ${apiCheck.error}`);
-  await page.locator("#platform-campaigns [data-platform-source-run]").first().waitFor({ state: "attached" });
+  await page.locator("#platform-campaigns .source-state-line").first().waitFor({ state: "attached" });
   const dashboardTitle = await page.evaluate(() => { window.showScreen("dashboard"); return document.querySelector("#screen-title")?.textContent; });
 
   const evidence = await page.evaluate(() => ({
@@ -56,6 +56,7 @@ try {
     realRunsTitle: document.querySelector("#agent-runs")?.closest(".panel")?.querySelector("h2")?.textContent,
     auditTitle: document.querySelector("#audit .panel-heading h2")?.textContent,
     sourceReviewButtons: document.querySelectorAll("#platform-campaigns [data-platform-source-run]").length,
+    sourceOperationMetadata: document.querySelectorAll("#platform-campaigns .source-state-line").length,
     fakeReviewGuideVisible: document.querySelector("#platform-campaigns .plain-note") !== null,
     fakeProgramButtonVisible: document.querySelector('[data-review-action="create"]') !== null,
     fakeGlobalActionVisible: getComputedStyle(document.querySelector(".top-actions .primary-action")).display !== "none",
@@ -72,7 +73,7 @@ try {
   assert(evidence.dashboardLabels.includes("Tenants activos"), "El Panel sigue mostrando métricas tenant");
   assert(evidence.agentCards > 0 && evidence.realRunsTitle === "Últimas ejecuciones reales", "Asistentes no usa estado persistido");
   assert(evidence.auditTitle === "Auditoría global por tenant", "Auditoría no usa alcance global");
-  assert(evidence.sourceReviewButtons === 3 && !evidence.fakeReviewGuideVisible && !evidence.fakeProgramButtonVisible, "Revisiones conserva controles o contenido simulado");
+  assert(evidence.sourceReviewButtons === 0 && evidence.sourceOperationMetadata > 0 && !evidence.fakeReviewGuideVisible && !evidence.fakeProgramButtonVisible, "Operación del radar conserva controles de cola o contenido simulado");
   assert(!evidence.fakeGlobalActionVisible, "La acción global simulada sigue visible para superadmin");
   assert(evidence.sourceNodeTextAlign === "center", "Los textos del mapa de fuentes no están centrados");
   assert(evidence.operationsLabels.includes("Trabajos en cola"), "Operaciones no usa métricas globales");
@@ -116,9 +117,7 @@ try {
   assert(!unavailable.globalActionVisible, "El estado sin API muestra la acción global simulada");
   assert(!unavailable.programButtonVisible, "El fallback conserva Programar revisión sin funcionalidad real");
   await errorPage.evaluate(() => window.showScreen("platform"));
-  const firstConfiguration = errorPage.locator("#platform-campaigns details").first();
-  await firstConfiguration.locator("summary").click();
-  assert(await firstConfiguration.evaluate((item) => item.open), "La configuración de fuente no se despliega tras el repintado de sesión");
+  assert(await errorPage.locator("#platform-campaigns .empty-state").count() === 1, "El fallo de la API no muestra un estado vacío honesto");
   await errorPage.close();
 
   await page.setViewportSize({ width: 390, height: 844 });

@@ -253,6 +253,7 @@
   }
 
   function install() {
+    if (!window.INSERTIA_FIXTURE_MODE) return;
     const tabs = document.querySelector("#platform .segmented");
     if (!tabs || document.querySelector('[data-platform-tab="sources"]')) return;
     installNormalizationStyles();

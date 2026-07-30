@@ -52,7 +52,7 @@
             <i data-lucide="history"></i><span>Auditoria</span>
           </button>
           <button class="nav-item" data-screen="platform">
-            <i data-lucide="sliders-horizontal"></i><span>Plataforma</span>
+            <i data-lucide="radar"></i><span>Operación del radar</span>
           </button>
           <button class="nav-item" data-screen="operations">
             <i data-lucide="activity"></i><span>Operaciones</span>
@@ -101,7 +101,7 @@
                 </div>
                 <button class="text-action" data-jump="governance">Gestionar</button>
               </div>
-              <p class="source-map-accounting-note">Cobertura por fuente: una misma oportunidad puede aparecer en BDNS y tambien en DOGV/BOP. Estos contadores no se suman entre si ni representan el calculo de encaje.</p>
+              <p class="source-map-accounting-note">Las cifras de oportunidades proceden de BDNS. El conector territorial se muestra aparte: su evaluación de permisos no altera datos BDNS ni programa rastreos.</p>
               <div class="source-map" id="source-map" aria-label="Mapa visual de fuentes conectadas"></div>
             </article>
 
@@ -113,6 +113,17 @@
               <div id="alerts-list" class="stack-list"></div>
             </article>
           </div>
+
+          <article class="panel" aria-labelledby="private-coverage-title">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Financiacion privada</p>
+                <h2 id="private-coverage-title">Cobertura privada</h2>
+              </div>
+              <span class="badge review">Solo superadmin</span>
+            </div>
+            <div id="private-coverage" class="stack-list"><div class="empty-state">Cargando inventario privado persistido.</div></div>
+          </article>
         </section>
 
         <section class="screen" id="opportunities" aria-labelledby="screen-title">
@@ -261,23 +272,21 @@
         </section>
 
         <section class="screen" id="platform" aria-labelledby="screen-title">
-          <div class="segmented" aria-label="Submenu plataforma"><button class="is-selected" data-platform-tab="reviews">Revisiones</button><button data-platform-tab="entities">Entidades</button></div>
+          <div class="segmented" aria-label="Submenu de operación del radar"><button class="is-selected" data-platform-tab="reviews">Fuentes y excepciones</button><button data-platform-tab="entities">Entidades</button></div>
           <article class="panel" data-platform-pane="reviews">
             <div class="panel-heading">
-              <div><p class="eyebrow">Lectura de fuentes</p><h2>Revisiones de plataforma</h2></div>
+              <div><p class="eyebrow">Operación técnica</p><h2>Salud y cobertura de fuentes</h2></div>
             </div>
             <div id="platform-campaigns" class="stack-list"></div>
           </article>
           <article class="panel" data-platform-pane="reviews">
-            <div class="panel-heading">
-              <div><p class="eyebrow">Bases oficiales</p><h2>Interpretaciones pendientes de validacion</h2></div>
-            </div>
-            <div id="platform-bases-reviews" class="stack-list"></div>
+            <div class="panel-heading"><div><p class="eyebrow">Fuentes privadas</p><h2>Excepciones operativas de fuentes</h2></div><span class="badge review">Solo superadmin</span></div>
+            <div id="platform-private-source-candidates" class="stack-list"><div class="empty-state">Cargando excepciones técnicas de fuentes privadas.</div></div>
           </article>
           <article class="panel" data-platform-pane="reviews">
             <div class="panel-heading">
-              <div><p class="eyebrow">Evidencia que falta</p><h2>Fuentes oficiales suplementarias</h2></div>
-              <span class="badge review">Requiere aprobación</span>
+              <div><p class="eyebrow">Procedencia técnica</p><h2>Fuentes oficiales suplementarias</h2></div>
+              <span class="badge review">Permiso de captura</span>
             </div>
             <div id="platform-supplementary-bases"></div>
           </article>
@@ -367,8 +376,10 @@
     <script src="./private-radar-data.js?v=20260706-bancaja-bases"></script>
     <script src="./radar-data.js?v=20260701-platform-raw-corpus"></script>
     <script src="./municipal-radar-data.js?v=20260713-proposal-constraints"></script>
+    <script src="./fixture-data-gate.js?v=20260730-verified-data"></script>
     <script src="./deadline-trace.js?v=20260702-date-trace"></script>
     <script src="./platform-coverage-data.js?v=20260713-private-coverage"></script>
+    <script src="./public-national-source-catalog-ui.js?v=20260730-national-source-catalog"></script>
     <script src="./opportunity-scope.js?v=20260713-consistent-counts-2"></script>
     <script src="./match-accounting.js?v=20260715-match-accounting-fallback"></script>
     <script src="./dashboard-renderer.js?v=20260724-tenant-connection"></script><script src="./app.js?v=20260715-line-budget"></script><script src="./audit-runtime.js?v=20260724-tenant-connection"></script><script src="./operations-platform.js?v=20260713-plain-language"></script>
@@ -390,6 +401,6 @@
     <script src="./recommendation-reconciliation.js?v=20260715-sync-review"></script><script src="./tenant-recommendations-runtime.js?v=20260724-tenant-connection"></script>
     <script src="./tenant-match-review.js?v=20260715-preselection-gate"></script>
     <script src="./tenant-admin-runtime.js?v=20260713-recovery-controls"></script>
-    <script src="./platform-runtime.js?v=20260714-bases-clarity"></script><script src="./supplementary-basis-sources.js?v=20260714-source-review-1"></script>
+    <script src="./platform-runtime.js?v=20260714-bases-clarity"></script><script src="./platform-audit-runtime.js?v=20260730-audit-read-controls"></script><script src="./supplementary-basis-sources.js?v=20260714-source-review-1"></script>
   </body>
 </html>

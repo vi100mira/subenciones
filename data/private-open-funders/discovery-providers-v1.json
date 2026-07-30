@@ -1,0 +1,75 @@
+{
+  "schema": "private_funder_discovery_providers_v1",
+  "purpose": "Read-only, bounded discovery of public Spanish private-funder candidates. Candidates require human review before any source scan.",
+  "privacy_scope": "platform_public_only",
+  "auto_scan_validation": {
+    "rules_version": "private_source_auto_scan_v1",
+    "audit_sample_rate_percent": 20,
+    "requires": ["https", "organization_domain_coherence", "public_provenance", "robots_allowed", "terms_reference", "direct_official_page", "page_identity_coherence", "no_risk_signal"]
+  },
+  "providers": [
+    {
+      "id": "aef_foundations_directory",
+      "mode": "aef_foundations_directory",
+      "label": "Asociacion Espanola de Fundaciones - directorio publico",
+      "country": "ES",
+      "directory_url": "https://fundaciones.org/buscador-fundaciones/",
+      "api_url": "https://fundaciones.org/wp-json/aef/v1/foundations",
+      "robots_url": "https://fundaciones.org/robots.txt",
+      "terms_url": "https://fundaciones.org/aviso-legal/",
+      "request_budget": { "max_pages": 5, "page_size": 50, "max_candidates": 150 }
+    },
+    {
+      "id": "fundacion_unicaja_projects",
+      "mode": "official_program_page",
+      "auto_scan_allowed": true,
+      "label": "Fundacion Unicaja - presenta tu proyecto",
+      "country": "ES",
+      "directory_url": "https://www.fundacionunicaja.com/convocatorias/",
+      "robots_url": "https://www.fundacionunicaja.com/robots.txt",
+      "terms_url": "https://www.fundacionunicaja.com/aviso-legal/",
+      "candidate": {
+        "organization_name": "Fundacion Unicaja",
+        "official_url": "https://www.fundacionunicaja.com/convocatorias/",
+        "funder_type": "banking_foundation",
+        "territory": "Espana",
+        "themes_hint": "Accion social, medio ambiente y proyectos de entidades sociales."
+      }
+    },
+    {
+      "id": "fundacion_caja_navarra_innova",
+      "mode": "official_program_page",
+      "auto_scan_allowed": true,
+      "label": "Fundacion Caja Navarra - Innova Social Lab",
+      "country": "ES",
+      "directory_url": "https://www.fundacioncajanavarra.es/retos-sociales/innova-social-lab",
+      "robots_url": "https://www.fundacioncajanavarra.es/robots.txt",
+      "terms_url": "https://www.fundacioncajanavarra.es/aviso-legal",
+      "candidate": {
+        "organization_name": "Fundacion Caja Navarra",
+        "official_url": "https://www.fundacioncajanavarra.es/retos-sociales/innova-social-lab",
+        "funder_type": "banking_foundation",
+        "territory": "Navarra",
+        "themes_hint": "Innovacion social, cultural y rural mediante proyectos colaborativos."
+      }
+    },
+    {
+      "id": "fundacion_cajasol_active_calls",
+      "mode": "official_program_page",
+      "auto_scan_allowed": false,
+      "risk_note": "mixed_audiences_and_call_types",
+      "label": "Fundacion Cajasol - convocatorias activas",
+      "country": "ES",
+      "directory_url": "https://fundacioncajasol.com/convocatorias-activas/",
+      "robots_url": "https://fundacioncajasol.com/robots.txt",
+      "terms_url": "https://fundacioncajasol.com/aviso-legal/",
+      "candidate": {
+        "organization_name": "Fundacion Cajasol",
+        "official_url": "https://fundacioncajasol.com/convocatorias-activas/",
+        "funder_type": "banking_foundation",
+        "territory": "Andalucia",
+        "themes_hint": "Convocatorias, premios y ayudas de una fundacion privada; requiere separar destinatarios antes de rastrear."
+      }
+    }
+  ]
+}

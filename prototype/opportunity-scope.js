@@ -1,6 +1,7 @@
 (function () {
   function isCurrent(item) {
     const today = new Date().toISOString().slice(0, 10);
+    if (item.entityFit?.status === "sync_pending") return true;
     if (item.actionable === false || item.deadlineStatus === "closed") return false;
     if (item.actionable === true) return true;
     if (item.deadlineEnd) return item.deadlineEnd >= today;
@@ -9,6 +10,10 @@
   }
 
   function rows() {
+    const entitySession = window.CredentialsAuth?.getSession?.()?.role === "entity";
+    if (entitySession && !window.TENANT_RECOMMENDATIONS_APPLIED) return [];
+    const platformRows = window.PLATFORM_GLOBAL_OPPORTUNITIES;
+    if (document.body.dataset.role === "superadmin" && Array.isArray(platformRows)) return platformRows;
     const publicBase = document.body.dataset.role === "superadmin" && window.RADAR_PLATFORM_OPPORTUNITIES?.length
       ? window.RADAR_PLATFORM_OPPORTUNITIES
       : window.RADAR?.opportunities || [];

@@ -73,7 +73,7 @@
     ["deadline", "Plazo"],
     ["theme", "Ambito"],
     ["status", "Estado"],
-    ["actions", "Acciones"]
+    ["actions", "Operaciones disponibles"]
   ];
   const candidateKey = "workspace-candidates-v1";
   const documentBlobKey = "tenant-document-blob-demo-v1";
@@ -319,6 +319,13 @@
 
   function statusLabel(item) {
     const isPlatform = document.body.dataset.role === "superadmin";
+    if (isPlatform && item.globalStatus === "private_verified") return "Privada verificada";
+    if (isPlatform && item.globalStatus === "private_pending_review") return "Privada pendiente de revisión";
+    if (isPlatform && item.globalStatus === "pending_review") return "Pendiente de evidencia/revisión";
+    if (isPlatform && item.globalStatus === "archived") return "Archivada";
+    if (isPlatform && item.globalStatus === "rolling") return "Rolling";
+    if (isPlatform && item.globalStatus === "closed") return "Cerrada";
+    if (isPlatform && item.globalStatus === "open") return "Abierta";
     if (!isPlatform && gridState.scope === "archived") return item.deadlineStatus === "closed" ? "Cerrada (archivo)" : "Fuera de vigencia";
     if (!isPlatform && item.entityFit?.status === "discarded") return item.matchRecommendation?.decision_status === "dismissed" ? "Descartada" : "Bajo encaje";
     if (!isPlatform && item.entityFit?.status === "archived") return "Cerrada (archivo)";
@@ -329,32 +336,37 @@
   }
 
   function statusDetail(item) {
-    if (document.body.dataset.role === "superadmin") return item.amount || item.evidenceQuality || "Sin importe";
+    if (document.body.dataset.role === "superadmin") return item.recordKind === "private_source_candidate" ? `${item.sourceScope} · ${item.evidenceQuality || "Evidencia pendiente"}` : item.evidenceQuality || item.amount || "Sin importe";
     return item.entityFit?.reason || item.amount || "Sin importe";
   }
 
   function statusSortValue(item) {
     const order = {
       "Abierta": "0",
-      "Plazo incierto": "1",
-      "Cerrada": "2",
-      "Bajo encaje": "3",
-      "Descartada": "4",
-      "Cerrada (archivo)": "5",
-      "Incidencia de datos": "6"
+      "Rolling": "1",
+      "Pendiente de evidencia/revisión": "2",
+      "Privada verificada": "3",
+      "Privada pendiente de revisión": "4",
+      "Plazo incierto": "5",
+      "Cerrada": "6",
+      "Archivada": "7",
+      "Bajo encaje": "8",
+      "Descartada": "9",
+      "Cerrada (archivo)": "10",
+      "Incidencia de datos": "11"
     };
     const label = statusLabel(item);
     return `${order[label] || "9"}-${compactText(statusDetail(item)).toLowerCase()}`;
   }
 
   function candidateCell(item) {
-    if (document.body.dataset.role === "superadmin") return `<span class="badge review">No aplica</span>`;
-    if (item.syncIssue) return `<div class="candidate-state"><span class="badge warning">Conciliar</span><button class="icon-action" data-sync-issue="${escapeAttr(item.id)}" type="button" title="Revisar incidencia de sincronizacion" aria-label="Revisar incidencia de sincronizacion"><i data-lucide="git-compare-arrows"></i><span class="sr-only">Revisar incidencia de sincronizacion</span></button></div>`;
+    if (document.body.dataset.role === "superadmin") return "";
+    if (item.syncIssue) return `<div class="candidate-state"><span class="operation-label">Conciliación</span><span class="badge warning">Conciliar</span><button class="icon-action" data-sync-issue="${escapeAttr(item.id)}" type="button" title="Revisar incidencia de sincronizacion" aria-label="Revisar incidencia de sincronizacion"><i data-lucide="git-compare-arrows"></i><span class="sr-only">Revisar incidencia de sincronizacion</span></button></div>`;
     if (gridState.scope === "archived") return `<span class="badge review">No vigente</span>`;
     const persisted = window.TenantMatchReview?.candidateCell(item);
     if (persisted) return persisted;
     if (document.body.dataset.role) {
-      return `<div class="candidate-state"><button class="icon-action" data-action-info="unavailable" data-opportunity-id="${escapeAttr(item.id)}" type="button" title="Preseleccion no disponible" aria-label="Preseleccion no disponible"><i data-lucide="bookmark-x"></i><span class="sr-only">Preseleccion no disponible</span></button></div>`;
+      return `<div class="candidate-state"><span class="operation-label">Decisión de encaje</span><button class="icon-action" data-action-info="unavailable" data-opportunity-id="${escapeAttr(item.id)}" type="button" title="Preseleccion no disponible" aria-label="Preseleccion no disponible"><i data-lucide="bookmark-x"></i><span class="sr-only">Preseleccion no disponible</span></button></div>`;
     }
     if (gridState.scope === "discarded") return `<span class="badge danger">No candidata</span>`;
     const selection = candidateSelection();
@@ -364,10 +376,10 @@
       const docs = documentState(item.id);
       const label = docs?.projectState === "active" ? "Proyecto" : docs ? "Docs listas" : "Docs pendientes";
       const tone = docs?.projectState === "active" ? "safe" : "warning";
-      return `<div class="candidate-state"><span class="badge ${tone}">${label}</span><button class="icon-action" data-candidate-detail="${item.id}" type="button" title="Ver candidatura" aria-label="Ver candidatura"><i data-lucide="folder-open"></i><span class="sr-only">Ver candidatura</span></button></div>`;
+      return `<div class="candidate-state"><span class="operation-label">Decisión de encaje</span><span class="badge ${tone}">${label}</span><button class="icon-action" data-candidate-detail="${item.id}" type="button" title="Ver candidatura" aria-label="Ver candidatura"><i data-lucide="folder-open"></i><span class="sr-only">Ver candidatura</span></button></div>`;
     }
-    if (selected) return `<div class="candidate-state"><span class="badge review">Preseleccionada</span><button class="icon-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button" title="Preparar candidatura" aria-label="Preparar candidatura"><i data-lucide="folder-plus"></i><span class="sr-only">Preparar candidatura</span></button></div>`;
-    return `<div class="candidate-state"><button class="icon-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button" title="Preseleccionar" aria-label="Preseleccionar"><i data-lucide="bookmark-plus"></i><span class="sr-only">Preseleccionar</span></button></div>`;
+    if (selected) return `<div class="candidate-state"><span class="operation-label">Decisión de encaje</span><span class="badge review">Preseleccionada</span><button class="icon-action" data-candidate-action="activate" data-candidate-id="${item.id}" type="button" title="Preparar candidatura" aria-label="Preparar candidatura"><i data-lucide="folder-plus"></i><span class="sr-only">Preparar candidatura</span></button></div>`;
+    return `<div class="candidate-state"><span class="operation-label">Decisión de encaje</span><button class="icon-action" data-candidate-action="select" data-candidate-id="${item.id}" type="button" title="Preseleccionar" aria-label="Preseleccionar"><i data-lucide="bookmark-plus"></i><span class="sr-only">Preseleccionar</span></button></div>`;
   }
 
   function renderFilterHeaders(optionRows) {
@@ -388,6 +400,7 @@
   }
 
   function gridActions(item) {
+    const isPlatform = document.body.dataset.role === "superadmin";
     const isPublicOfficial = (item.sourceScope || "").includes("Publica oficial") || item.source === "BDNS/SNPSAP";
     const basesLabel = isPublicOfficial ? "Bases reguladoras" : "Bases/convocatoria privada";
     const textLabel = item.sourceTextLabel || (isPublicOfficial ? "Texto original usado" : "Texto fuente privada usado");
@@ -398,11 +411,13 @@
     </div>`;
     return `
       <div class="opportunity-toolbar grid-actions">
+        <span class="operation-label">${isPlatform ? "Consulta técnica" : "Consulta"}</span>
         ${candidateCell(item)}
-        <button class="icon-action" data-grid-opportunity="${item.id}" type="button" title="Ver analisis de encaje" aria-label="Ver analisis de encaje"><i data-lucide="eye"></i><span class="sr-only">Ver analisis de encaje</span></button>
+        <button class="icon-action" data-grid-opportunity="${item.id}" type="button" title="${isPlatform ? "Ver ficha técnica" : "Ver análisis de encaje"}" aria-label="${isPlatform ? "Ver ficha técnica" : "Ver análisis de encaje"}"><i data-lucide="eye"></i><span class="sr-only">${isPlatform ? "Ver ficha técnica" : "Ver análisis de encaje"}</span></button>
         ${item.basesUrl ? `<button class="icon-action" data-action-info="bases" data-opportunity-id="${escapeAttr(item.id)}" type="button" title="${basesLabel}" aria-label="${basesLabel}"><i data-lucide="scale"></i><span class="sr-only">${basesLabel}</span></button>` : ""}
         ${item.extractedText ? `<button class="icon-action" data-grid-text="${item.id}" type="button" title="${textLabel}" aria-label="${textLabel}"><i data-lucide="file-text"></i><span class="sr-only">${textLabel}</span></button>` : ""}
         ${item.officialUrl ? `<button class="icon-action" data-action-info="source" data-opportunity-id="${escapeAttr(item.id)}" type="button" title="${officialLabel}" aria-label="${officialLabel}"><i data-lucide="external-link"></i><span class="sr-only">${officialLabel}</span></button>` : ""}
+        ${isPlatform ? `<button class="icon-action" data-open-audit-reference="${escapeAttr(item.id)}" type="button" title="Ver historial técnico en Auditoría" aria-label="Ver historial técnico en Auditoría"><i data-lucide="history"></i><span class="sr-only">Ver historial técnico en Auditoría</span></button>` : ""}
       </div>`;
     const reviewHtml = window.TenantMatchReview?.summaryHtml();
     if (reviewHtml) {
@@ -559,7 +574,7 @@
           <th aria-sort="${sortAria("score")}"><button data-grid-sort="score">Prioridad ${sortMark("score")}</button></th>
           <th aria-sort="${sortAria("deadline")}"><button data-grid-sort="deadline">Plazo ${sortMark("deadline")}</button></th>
           <th aria-sort="${sortAria("theme")}"><button data-grid-sort="theme">Ambito ${sortMark("theme")}</button></th>
-          <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Acciones</th>
+          <th aria-sort="${sortAria("status")}"><button data-grid-sort="status">Estado ${sortMark("status")}</button></th><th>Operaciones disponibles</th>
         </tr>${renderFilterHeaders(baseRows)}</thead>
         <tbody>${body}</tbody>
       </table>`;
@@ -582,6 +597,10 @@
     };
     const isPlatform = document.body.dataset.role === "superadmin";
     panel.classList.toggle("is-platform-corpus", isPlatform);
+    if (isPlatform && !window.INSERTIA_FIXTURE_MODE) {
+      panel.innerHTML = '<div class="fit-copy"><strong>Cobertura pendiente de inventario</strong><span>Los recuentos de fuentes y convocatorias se muestran solo desde el estado persistido de plataforma.</span></div>';
+      return;
+    }
     if (isPlatform) {
       const coverage = window.PLATFORM_COVERAGE;
       const privateSources = Math.max(0, Number(coverage?.privateOpen?.sourcesReviewed || 1) - 1);
@@ -723,6 +742,11 @@
       if (actionInfo) {
         openActionInfo(actionOpportunity(actionInfo.dataset.opportunityId), actionInfo.dataset.actionInfo);
       }
+      const auditReference = event.target.closest?.("[data-open-audit-reference]");
+      if (auditReference) {
+        window.dispatchEvent(new CustomEvent("platform-audit-reference", { detail: auditReference.dataset.openAuditReference }));
+        window.showScreen?.("audit");
+      }
       if (syncIssue) openSyncIssue(actionOpportunity(syncIssue.dataset.syncIssue));
       if (syncRetry) {
         syncRetry.disabled = true;
@@ -776,6 +800,7 @@
     document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { gridState.visibleRows = gridState.loadStep; setTimeout(renderOpportunityGrid, 0); }));
     window.addEventListener("workspace-candidates-changed", () => { applyOpportunityCandidateState(); renderOpportunityGrid(); });
     window.addEventListener("role-session-applied", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
+    window.addEventListener("platform-global-opportunities-loaded", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
     window.addEventListener("tenant-recommendations-applied", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
     window.addEventListener("tenant-match-load-state", () => { renderEntityFitDashboard(); renderOpportunityGrid(); });
     renderEntityFitDashboard();

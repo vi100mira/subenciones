@@ -54,6 +54,19 @@ function isPublicDocument(url) {
   return /\.(pdf|docx?)(?:$|[?#])/i.test(url);
 }
 
+function boundedNumber(value, fallback, minimum, maximum) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(minimum, Math.min(maximum, parsed)) : fallback;
+}
+
+function scanLimits(source) {
+  const active = ["open", "open_by_territory"].includes(source.opportunity_status);
+  return {
+    pageBudget: boundedNumber(source.scan_page_budget, active ? Math.min(pageBudget + 2, 16) : pageBudget, 1, 20),
+    maxDepth: boundedNumber(source.scan_max_depth, 2, 0, 3)
+  };
+}
+
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -170,6 +183,31 @@ async function fetchText(url) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function sitemapSeeds(source, origin) {
+  const telemetry = { attempted: false, sitemap_documents: 0, seed_candidates: 0, skipped: "not_available" };
+  if (source.sitemap_discovery === false) return { seeds: [], telemetry: { ...telemetry, skipped: "disabled_by_source" } };
+  telemetry.attempted = true;
+  const robots = await fetchText(new URL("/robots.txt", origin).href);
+  if (!robots.ok) return { seeds: [], telemetry: { ...telemetry, skipped: "robots_unavailable" } };
+  const sitemapUrls = [...robots.text.matchAll(/^\s*sitemap:\s*(\S+)/gim)]
+    .map((match) => normalizeUrl(match[1], origin)).filter((url) => sameOrigin(url, origin)).slice(0, 2);
+  if (!sitemapUrls.length) return { seeds: [], telemetry: { ...telemetry, skipped: "no_same_origin_sitemap" } };
+  const links = [];
+  for (const sitemapUrl of sitemapUrls) {
+    const sitemap = await fetchText(sitemapUrl);
+    if (!sitemap.ok) continue;
+    telemetry.sitemap_documents += 1;
+    for (const match of sitemap.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
+      const href = normalizeUrl(match[1], sitemapUrl);
+      if (sameOrigin(href, origin) && (scoreUrl(href) > 0 || isPublicDocument(href))) links.push({ href, label: "Sitemap", score: scoreUrl(href, "Sitemap") + 2 });
+    }
+  }
+  const seeds = [...new Map(links.sort((a, b) => b.score - a.score).map((item) => [item.href, item])).values()].slice(0, 6);
+  telemetry.seed_candidates = seeds.length;
+  telemetry.skipped = seeds.length ? null : "no_relevant_sitemap_entries";
+  return { seeds, telemetry };
 }
 
 async function extractPdf(bytes, url) {
@@ -316,13 +354,26 @@ function sourceEditionIsCurrent(source) {
   return years.includes(currentYear) || years.some((year) => year > currentYear);
 }
 
+function reviewReason({ status, best, confidence, currentEdition, documentReady }) {
+  if (status === "fetch_blocked") return "fetch_blocked";
+  if (!best) return "no_official_evidence_reached";
+  if (best.score < 6) return "weak_evidence";
+  if (["low", "none"].includes(confidence.level)) return "low_evidence_confidence";
+  if (!currentEdition) return "edition_not_current";
+  if (!documentReady) return "document_extraction_unready";
+  return "missing_publishable_deadline_or_status";
+}
+
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
+  const limits = scanLimits(source);
+  const sitemap = await sitemapSeeds(source, origin);
   const curatedBasis = source.basis_url ? normalizeUrl(source.basis_url, start) : "";
   const curatedStart = curatedBasis === start;
   const queue = [{ href: start, depth: 0, label: source.name, score: 99, path: [{ url: start, label: source.name }],
     curated_basis: curatedStart, curated_basis_origin: curatedStart ? curatedBasis : "" }];
+  if (limits.maxDepth >= 1) for (const seed of sitemap.seeds) queue.push({ ...seed, depth: 1, path: [{ url: start, label: source.name }, { url: seed.href, label: seed.label }], curated_basis: false, curated_basis_origin: "" });
   if (curatedBasis && !curatedStart && (sameOrigin(curatedBasis, origin) || trustedCuratedAuthorities.has(source.source_authority))) {
     queue.push({
       href: curatedBasis,
@@ -337,8 +388,9 @@ async function scanSource(source) {
   const seen = new Set();
   const pages = [];
   const failures = [];
+  let renderedFallbacks = 0;
 
-  while (queue.length && pages.length < pageBudget) {
+  while (queue.length && pages.length < limits.pageBudget) {
     const next = queue.shift();
     if (!next?.href || seen.has(next.href)) continue;
     seen.add(next.href);
@@ -349,6 +401,7 @@ async function scanSource(source) {
         failures.push({ url: next.href, status: fetched.status, reason: fetched.text.slice(0, 120) });
         continue;
       }
+      renderedFallbacks += 1;
       fetched.ok = true;
       fetched.text = rendered.html;
       fetched.contentType = "text/html; rendered=browser";
@@ -375,6 +428,7 @@ async function scanSource(source) {
     if (sessionProcedure) {
       const rendered = await renderPublicPage(next.href, next.label);
       if (rendered?.html) {
+        renderedFallbacks += 1;
         fetched.text = rendered.html;
         fetched.contentType = "text/html; rendered=browser";
       }
@@ -383,6 +437,7 @@ async function scanSource(source) {
     if (page.score < 6 && next.depth === 0 && !fetched.contentType.includes("rendered=browser")) {
       const rendered = await renderPublicPage(next.href, next.label);
       if (rendered?.html) {
+        renderedFallbacks += 1;
         page = classifyPage(rendered.rendered_url || next.href, rendered.html);
         page.signals.push("browser_rendered");
       }
@@ -394,7 +449,7 @@ async function scanSource(source) {
     if (next.href === start) page.score += 3;
     page.navigation_path = next.path;
     pages.push(page);
-    if (next.depth >= 2) continue;
+    if (next.depth >= limits.maxDepth) continue;
     const rankedLinks = linksFrom(fetched.text, next.href, origin)
       .map((item) => ({ ...item, score: item.score + Math.min(60, evidenceTokenMatches(source, { url: item.href, title: item.label }).length * 8) }))
       .filter((item) => item.score > 0 || isPublicDocument(item.href)).sort((a, b) => b.score - a.score).slice(0, 18);
@@ -424,6 +479,16 @@ async function scanSource(source) {
   const documentReady = !best?.document || best.document.extraction_status === "ready";
   const usableEvidence = best?.score >= 6 && confidence.level !== "low" && (currentEdition || closed) && (closed || documentReady);
   const status = blocked ? "fetch_blocked" : usableEvidence && closed ? "closed_archive_candidate" : usableEvidence ? "evidence_candidate" : homepageOnly ? "homepage_only" : "needs_human_review";
+  const telemetry = {
+    page_budget: limits.pageBudget,
+    max_depth: limits.maxDepth,
+    pages_visited: pages.length,
+    documents_extracted: pages.filter((page) => page.document).length,
+    rendered_fallbacks: renderedFallbacks,
+    queue_remaining: queue.length,
+    sitemap: sitemap.telemetry,
+    failures: failures.length
+  };
   return {
     id: source.id,
     source_authority: source.source_authority,
@@ -431,8 +496,8 @@ async function scanSource(source) {
     name: source.name,
     start_url: source.url,
     pages_visited: pages.length,
-    page_budget: pageBudget,
-    depth_policy: `same-origin BFS, max depth 2, grant/bases/link keywords first; browser fallback ${browserFallback ? "enabled" : "disabled"}`,
+    page_budget: limits.pageBudget,
+    depth_policy: `same-origin BFS, max depth ${limits.maxDepth}, grant/bases/link keywords first; sitemap seeds capped at 6; browser fallback ${browserFallback ? "enabled" : "disabled"}`,
     status,
     recommendation: recommendationFor(status),
     verification_url: best?.url || source.url,
@@ -442,6 +507,9 @@ async function scanSource(source) {
     status_facts: statusFacts,
     edition_current: currentEdition,
     evidence_complete: Boolean(usableEvidence && documentReady),
+    discovery_state: best ? "evidence_found" : "no_evidence",
+    review_reason: reviewReason({ status, best, confidence, currentEdition, documentReady }),
+    telemetry,
     evidence_documents: pages.filter((page) => page.document).map((page) => page.document),
     manual_fallback: manualFallbackFor(source, status, failures),
     failures
