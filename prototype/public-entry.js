@@ -17,6 +17,16 @@
           <span><i data-lucide="shield-check"></i><span><strong>Cumplimiento normativo</strong>Arquitectura alineada con RGPD y soberania del dato.</span></span>
           <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Cada uso de datos privados requiere un permiso explícito y queda registrado.</span></span>
         </div>
+        <section class="public-entry__radars" aria-labelledby="public-radars-title">
+          <p class="eyebrow">Como funciona la busqueda</p>
+          <h2 id="public-radars-title">Tres radares, una busqueda explicable</h2>
+          <div class="public-entry__radar-list">
+            <article><strong>Municipal y social</strong><span>Consulta convocatorias locales y sociales publicadas en BDNS.</span></article>
+            <article><strong>Publico general</strong><span>Amplia la cobertura con convocatorias publicas de ambito general.</span></article>
+            <article><strong>Financiacion privada</strong><span>Descubre financiadores y conserva la evidencia antes de tratar una convocatoria como verificable.</span></article>
+          </div>
+          <p class="public-entry__radar-note">Las fuentes y sus bases se documentan primero; el encaje con cada entidad se analiza despues, con revision humana cuando corresponde.</p>
+        </section>
       </section>
       <section class="public-entry__access">
         <figure class="public-entry__access-visual" aria-hidden="true"><img src="./assets/stitch-ngo-grant-hero.png" alt="" /></figure>

@@ -257,6 +257,62 @@
   margin-bottom: 2px;
 }
 
+.public-entry__radars {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  margin-top: 20px;
+}
+
+.public-entry__radars .eyebrow {
+  margin: 0 0 5px;
+}
+
+.public-entry__radars h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(18px, 2vw, 23px);
+}
+
+.public-entry__radar-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.public-entry__radar-list article {
+  padding: 10px;
+  border: 1px solid rgba(156, 215, 178, 0.38);
+  border-radius: 8px;
+  background: rgba(15, 24, 73, 0.28);
+}
+
+.public-entry__radar-list strong,
+.public-entry__radar-list span {
+  display: block;
+}
+
+.public-entry__radar-list strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.public-entry__radar-list span,
+.public-entry__radar-note {
+  color: #e2e2ef;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.public-entry__radar-list span {
+  margin-top: 4px;
+}
+
+.public-entry__radar-note {
+  margin: 10px 0 0;
+}
+
 .public-entry__tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -448,6 +504,10 @@ body[data-role="entity"] .role-chip--entity {
 }
 
 @media (max-width: 560px) {
+  .public-entry__radar-list {
+    grid-template-columns: 1fr;
+  }
+
   .public-entry__tabs {
     grid-template-columns: 1fr;
   }
