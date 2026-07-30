@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import { isKnownOfficialJournal, officialJournalSeedsFor } from "./official-journal-source-map.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -216,7 +217,10 @@ async function persistCandidates(candidates) {
   const url = process.env.APP_SUPABASE_URL || process.env.SUPABASE_URL;
   const key = process.env.APP_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY son obligatorias para --apply.");
-  const supabase = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const supabase = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    realtime: { transport: WebSocket }
+  });
   const keys = [...new Set(candidates.map((item) => item.canonicalKey))];
   if (keys.length === 0) return { inserted: 0, existing: 0 };
   const { data: opportunities, error } = await supabase.from("platform_opportunities").select("id, canonical_key").in("canonical_key", keys);

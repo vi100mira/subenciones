@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 
 const apply = process.argv.includes("--apply=true");
+const retryFailed = process.argv.includes("--retry-failed=true");
 const url = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !serviceRoleKey) throw new Error("SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY son obligatorias.");
@@ -34,7 +35,17 @@ for (const radar of radars) {
   if (!source) { campaigns.push({ campaign: radar.campaign, source: "would_create", status: "would_queue" }); continue; }
   const { data: existingCampaign, error: campaignReadError } = await db.from("platform_ingestion_campaigns").select("status").eq("campaign_key", campaignKey).maybeSingle();
   if (campaignReadError) throw campaignReadError;
-  if (existingCampaign) { campaigns.push({ campaign: radar.campaign, source: existing ? "existing" : "created", status: existingCampaign.status }); continue; }
+  if (existingCampaign) {
+    if (apply && retryFailed && existingCampaign.status === "failed") {
+      const { error } = await db.from("platform_ingestion_campaigns").update({
+        status: "queued", started_at: null, finished_at: null, error: null, failed: 0
+      }).eq("campaign_key", campaignKey).eq("status", "failed");
+      if (error) throw error;
+      campaigns.push({ campaign: radar.campaign, source: "existing", status: "requeued" });
+      continue;
+    }
+    campaigns.push({ campaign: radar.campaign, source: existing ? "existing" : "created", status: existingCampaign.status }); continue;
+  }
   if (apply) {
     const { error } = await db.from("platform_ingestion_campaigns").insert({ platform_source_id: source.id, campaign_key: campaignKey, status: "queued" });
     if (error) throw error;
@@ -42,4 +53,4 @@ for (const radar of radars) {
   campaigns.push({ campaign: radar.campaign, source: existing ? "existing" : "created", status: apply ? "queued" : "would_queue" });
 }
 
-console.log(JSON.stringify({ mode: apply ? "applied" : "dry-run", day, campaigns }, null, 2));
+console.log(JSON.stringify({ mode: apply ? "applied" : "dry-run", retryFailed, day, campaigns }, null, 2));
