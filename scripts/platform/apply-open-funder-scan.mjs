@@ -91,10 +91,32 @@ function reviewCandidate(source, result) {
   };
 }
 
+function concreteCalls(source, result) {
+  return (result?.calls || []).map((call) => ({
+    ...source,
+    id: `${source.id}:call:${call.id}`,
+    name: call.title,
+    url: call.source_url,
+    basis_url: call.source_url,
+    deadline_text: call.deadline_text,
+    deadline_confidence: "high",
+    opportunity_status: "open",
+    status_facts: call.status_facts,
+    live_evidence_gate: "passed",
+    scan_status: "evidence_candidate",
+    discovery_state: "evidence_found",
+    publication_state: "publicable",
+    publication_reason: null,
+    evidence_excerpt: call.evidence_excerpt,
+    parent_source_id: source.id,
+    parent_source_name: source.name
+  }));
+}
+
 const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
 const scan = JSON.parse(await fs.readFile(scanPath, "utf8"));
 const results = new Map((scan.results || []).map((item) => [item.id, { ...item, scanned_at: scan.scanned_at }]));
-const sources = catalog.sources.map((source) => mergeSource(source, results.get(source.id)));
+const sources = catalog.sources.flatMap((source) => [mergeSource(source, results.get(source.id)), ...concreteCalls(source, results.get(source.id))]);
 const reviewCandidates = catalog.sources.map((source) => reviewCandidate(source, results.get(source.id))).filter(Boolean);
 const scannedSources = sources.filter((item) => item.scan_status !== "not_scanned");
 const payload = {

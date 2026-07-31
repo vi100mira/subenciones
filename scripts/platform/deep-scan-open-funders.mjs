@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { extractPrivateCallCandidates } from "./extract-private-call-candidates.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -489,6 +490,7 @@ async function scanSource(source) {
     sitemap: sitemap.telemetry,
     failures: failures.length
   };
+  const calls = pages.flatMap((page) => extractPrivateCallCandidates(page, source));
   return {
     id: source.id,
     source_authority: source.source_authority,
@@ -512,6 +514,7 @@ async function scanSource(source) {
     telemetry,
     evidence_documents: pages.filter((page) => page.document).map((page) => page.document),
     manual_fallback: manualFallbackFor(source, status, failures),
+    calls,
     failures
   };
 }
