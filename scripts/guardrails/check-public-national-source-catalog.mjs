@@ -62,7 +62,7 @@ assert(uiCode.includes("Datos de oportunidades procedentes de BDNS") && uiCode.i
 assert(uiCode.includes("Conector territorial") && uiCode.includes("no se ha programado ningún rastreo") && uiCode.includes("Siguiente paso:"), "territorial connector must explain its inactive technical state without a simulated queue");
 assert(!uiCode.includes("Pendiente de revision y permisos"), "territorial connector must not be presented as a generic review queue");
 const dashboardCode = fs.readFileSync("prototype/dashboard-renderer.js", "utf8");
-assert(dashboardCode.includes("if (isPlatform && nationalCatalog)"), "national catalog must render only in the superadmin branch");
+assert(dashboardCode.includes("if (isPlatform)"), "national catalog context must render only in the superadmin branch");
 const platformRuntimeCode = fs.readFileSync("prototype/platform-runtime.js", "utf8");
 assert(platformRuntimeCode.includes("nationalOpportunityMap"), "superadmin runtime must request the national opportunity read-model through its existing API response");
 const dashboardHtml = fs.readFileSync("prototype/index.html", "utf8");

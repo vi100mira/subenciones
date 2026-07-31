@@ -98,6 +98,7 @@ function renderDashboard() {
   const privateCoveragePanel = document.querySelector("#private-coverage")?.closest(".panel");
   if (privateCoveragePanel) privateCoveragePanel.hidden = !isPlatform;
   const nationalCatalog = window.NationalSourceCatalogUI;
+  const platformRows = Array.isArray(window.PLATFORM_GLOBAL_OPPORTUNITIES) ? window.PLATFORM_GLOBAL_OPPORTUNITIES : [];
   const hasTenantMatch = Boolean(window.TENANT_RECOMMENDATIONS_APPLIED && window.RADAR?.quality?.entityFitRule);
   const verifiedTenantData = isPlatform || hasTenantMatch;
   const summary = window.OpportunityScope?.summary() || { total: 0, open: 0, highPriority: 0, uncertain: 0 };
@@ -123,12 +124,18 @@ function renderDashboard() {
   const matchState = matchDashboardState(hasTenantMatch, accounting);
   const metrics = document.querySelectorAll("#dashboard .metric");
   const values = isPlatform
-    ? [
-        { label: "Fuentes declaradas", value: nationalCatalog?.summary.sourceCount ?? "—", detail: "BDNS, BOE y diarios autonomicos", rows: [], note: "Catalogo global; no equivale a fuentes rastreadas." },
-        { label: "Diarios autonomicos", value: nationalCatalog?.summary.autonomousGazettes ?? "—", detail: "Pendientes de revision y permisos", rows: [], note: "Cada territorio conserva su diario oficial como evidencia." },
-        { label: "Rastreo habilitado", value: nationalCatalog?.summary.scanEligible ?? "—", detail: "No hay conectores activados", rows: [], note: "No se planifican peticiones hasta aprobar permisos y limites." },
-        { label: "Convocatorias del catalogo", value: "—", detail: "El registro no crea oportunidades", rows: [], note: "El matching de tenants no usa este catalogo como resultado." }
-      ]
+    ? (() => {
+        const indexed = platformRows.filter((item) => item.recordKind === "opportunity");
+        const publicOpen = indexed.filter((item) => item.sourceScope === "Pública indexada" && item.globalStatus === "open");
+        const privateEntities = indexed.filter((item) => String(item.sourceScope || "").startsWith("Privada"));
+        const loading = !window.PLATFORM_GLOBAL_OPPORTUNITIES;
+        return [
+          { label: "Oportunidades indexadas", value: loading ? "—" : indexed.length, detail: loading ? "Cargando inventario persistido" : "Inventario global actual", rows: indexed, note: "Incluye oportunidades públicas y entidades privadas detectadas, sin encaje tenant." },
+          { label: "Públicas abiertas verificadas", value: loading ? "—" : publicOpen.length, detail: loading ? "Cargando vigencia y evidencia" : "Plazo vigente con evidencia", rows: publicOpen, note: "Solo se cuentan oportunidades públicas con estado abierto y evidencia persistida." },
+          { label: "Entidades privadas detectadas", value: loading ? "—" : privateEntities.length, detail: loading ? "Cargando descubrimiento privado" : "Aún no son convocatorias", rows: privateEntities, note: "Son posibles financiadores localizados; una convocatoria privada exige bases y vigencia verificadas." },
+          { label: "Catálogo canónico", value: nationalCatalog ? "BDNS + 17" : "—", detail: nationalCatalog ? `${nationalCatalog.summary.sourceCount} fuentes de procedencia, no de cobertura` : "Catálogo técnico no disponible", rows: [], note: "El catálogo técnico aporta procedencia y evidencia. No mide oportunidades descubiertas ni fuentes privadas." }
+        ];
+      })()
     : !verifiedTenantData ? [
         { label: "Oportunidades disponibles", value: "—", detail: "Sin datos verificados", rows: [], note: "El radar mostrará solo recomendaciones persistidas y autorizadas para esta entidad." },
         { label: "Con plazo abierto", value: "—", detail: "Sin datos verificados", rows: [], note: "No se usan convocatorias de ejemplo." },
@@ -152,8 +159,9 @@ function renderDashboard() {
   sourceAction.textContent = isPlatform ? "Ver estado de fuentes" : "Gestionar"; sourceAction.dataset.jump = isPlatform ? "operations" : "governance";
   if (isPlatform) sourceAction.dataset.focusTarget = "operations-source-health"; else delete sourceAction.dataset.focusTarget;
   const sourceMap = document.querySelector("#source-map");
-  if (isPlatform && nationalCatalog) nationalCatalog.renderSourceMap(sourceMap);
-  else if (isPlatform) sourceMap.innerHTML = '<div class="plain-note"><strong>Catalogo nacional no disponible</strong><span>No se muestran conteos de ejemplo.</span></div>';
+  if (isPlatform) {
+    if (!sourceMap.childElementCount) sourceMap.innerHTML = '<div class="plain-note"><strong>Cargando cobertura pública real</strong><span>El mapa territorial se completa desde el índice BDNS persistido.</span></div>';
+  }
   else if (!verifiedTenantData) sourceMap.innerHTML = '<div class="empty-state">Sin fuentes verificadas para esta entidad.</div>';
   else {
     const bySource = new Map();
