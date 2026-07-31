@@ -130,7 +130,7 @@
 
   function invitationTokens() {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    if (params.get("type") !== "invite") return null;
+    if (!["invite", "recovery"].includes(params.get("type") || "")) return null;
     const accessToken = params.get("access_token") || "";
     const refreshToken = params.get("refresh_token") || "";
     return accessToken && refreshToken ? { accessToken, refreshToken } : null;
