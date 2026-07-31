@@ -1,6 +1,9 @@
 name: Workers alojados de radares y redactor
 
 on:
+  schedule:
+    # 05:15 UTC: solo ingesta pública y descubrimiento privado; no agentes tenant.
+    - cron: "15 5 * * *"
   workflow_dispatch:
     inputs:
       proceso:
@@ -23,7 +26,7 @@ permissions:
 jobs:
   radares-publicos:
     if: >-
-      github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'radares')
+      github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (inputs.proceso == 'todo' || inputs.proceso == 'radares'))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     concurrency:

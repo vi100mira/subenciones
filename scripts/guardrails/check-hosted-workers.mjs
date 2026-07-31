@@ -13,8 +13,9 @@ function assert(condition, message) {
 
 assert(workflow.includes("permissions:\n  contents: read"), "El workflow alojado tiene permisos excesivos");
 assert(workflow.includes("workflow_dispatch:"), "Falta el arranque manual controlado de workers");
-assert(!workflow.includes("schedule:"), "Los workers deben permanecer sin programación hasta su activación expresa");
-assert(!workflow.includes('cron: "15 5 * * *"') && !workflow.includes('cron: "*/15 * * * *"'), "El workflow conserva un cron activo");
+assert(workflow.includes("schedule:") && workflow.includes('cron: "15 5 * * *"'), "Falta el cron diario autorizado para radares");
+assert(workflow.includes("github.event_name == 'schedule'"), "El cron diario no puede reclamar los radares");
+assert(!/agentes-bajo-demanda:[\s\S]*github\.event_name == 'schedule'/.test(workflow), "El cron no puede ejecutar agentes de tenant");
 assert(workflow.includes("tesseract-ocr-spa"), "El runner no instala OCR en español");
 assert(workflow.includes("bootstrap-platform-radar-campaigns.mjs --apply=true"), "El primer arranque manual no prepara campanas idempotentes");
 assert(workflow.includes("secrets.SUPABASE_SERVICE_ROLE_KEY"), "Supabase no se obtiene desde secretos");
