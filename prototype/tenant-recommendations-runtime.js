@@ -87,7 +87,8 @@
       theme: Array.isArray(opportunity?.themes) ? opportunity.themes.join(", ") : opportunity?.themes || "Temática por comprobar",
       territory: opportunity?.territory || "Territorio por comprobar",
       officialUrl: version?.official_url || version?.source_url || "",
-      basesUrl: version?.official_url || version?.source_url || "",
+      basesUrl: version?.bases_url || "",
+      documents: Array.isArray(version?.evidence_json?.documents) ? version.evidence_json.documents : [],
       actionable: ["open", "rolling"].includes(opportunity?.status),
       globalStatus: opportunity?.status || "pending_review",
       recordKind: "platform_opportunity"

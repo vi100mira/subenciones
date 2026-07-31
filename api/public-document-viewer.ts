@@ -21,18 +21,26 @@ function safeFileName(value: unknown) {
   return clean.toLowerCase().endsWith(".pdf") ? clean : `${clean}.pdf`;
 }
 
+function viewerFailure(req: VercelRequest, res: VercelResponse, status: number, message: string) {
+  if (req.query.download === "1") return res.status(status).json(fail(message));
+  res.status(status);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  return res.send(`<!doctype html><html lang="es"><meta charset="utf-8"><title>Documento no disponible</title><body><main><h1>Documento no disponible en el visor</h1><p>${message}</p><p>Utiliza «Abrir fuente oficial» para contrastar el documento en su portal de origen.</p></main></body></html>`);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json(fail("Method Not Allowed"));
   try {
     const source = publicDocumentUrl(req.query.url);
     const upstream = await fetch(source, { headers: { Accept: "application/pdf,application/octet-stream;q=0.9", "User-Agent": "INSERTIA-Public-Document-Viewer/1.0" }, redirect: "follow" });
-    if (!upstream.ok) return res.status(502).json(fail(`La fuente oficial ha respondido HTTP ${upstream.status}`));
+    if (!upstream.ok) return viewerFailure(req, res, 502, "La fuente oficial no ha podido entregar el documento ahora mismo.");
     publicDocumentUrl(upstream.url);
     const announcedSize = Number(upstream.headers.get("content-length") || 0);
-    if (announcedSize > MAX_DOCUMENT_BYTES) return res.status(413).json(fail("El documento supera el limite del visor"));
+    if (announcedSize > MAX_DOCUMENT_BYTES) return viewerFailure(req, res, 413, "El documento supera el límite de tamaño del visor.");
     const buffer = Buffer.from(await upstream.arrayBuffer());
-    if (buffer.length > MAX_DOCUMENT_BYTES) return res.status(413).json(fail("El documento supera el limite del visor"));
-    if (buffer.subarray(0, 5).toString("ascii") !== "%PDF-") return res.status(415).json(fail("La fuente no ha devuelto un PDF valido"));
+    if (buffer.length > MAX_DOCUMENT_BYTES) return viewerFailure(req, res, 413, "El documento supera el límite de tamaño del visor.");
+    if (buffer.subarray(0, 5).toString("ascii") !== "%PDF-") return viewerFailure(req, res, 415, "La fuente oficial no ha devuelto un PDF que pueda visualizarse aquí.");
     const disposition = req.query.download === "1" ? "attachment" : "inline";
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `${disposition}; filename="${safeFileName(req.query.name)}"`);
@@ -40,6 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader("X-Content-Type-Options", "nosniff");
     return res.status(200).send(buffer);
   } catch (error) {
-    return res.status(400).json(fail(error instanceof Error ? error.message : "Documento no valido"));
+    const message = error instanceof Error && error.message === "La fuente documental debe usar HTTPS"
+      ? "La fuente documental no usa una conexión segura."
+      : "Este enlace no está autorizado para mostrarse dentro de Insertia.";
+    return viewerFailure(req, res, 400, message);
   }
 }

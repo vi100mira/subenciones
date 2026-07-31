@@ -4,6 +4,7 @@
   let workspacePackageVisible = false;
   let workspaceTargetTab = "summary";
   let workspacePanelTarget = null;
+  let pendingWorkspaceOpen = null;
   const basesReviewStates = new Map();
   const basesReviewLoads = new Map();
   const latestDraftRuns = new Map();
@@ -826,6 +827,12 @@
   }
 
   function openWorkspaceAnalysis(id, initialTab = "analysis") {
+    if (document.body.dataset.role === "entity" && !window.TENANT_RECOMMENDATIONS_APPLIED) {
+      pendingWorkspaceOpen = { id, initialTab };
+      window.refreshTenantMatchState?.();
+      if (typeof showToast === "function") showToast("Cargando el expediente guardado de la entidad…");
+      return true;
+    }
     const item = allRows().find((entry) => entry.id === id) || currentOpportunity();
     if (!item) return false;
     const informationIds = ["summary", "project", "analysis", "dates", "requirements", "steps"];
@@ -986,6 +993,12 @@
     renderWorkspacePackageSoon();
   });
   window.addEventListener("workspace-candidates-changed", renderWorkspacePackageSoon);
+  window.addEventListener("tenant-recommendations-applied", () => {
+    if (!pendingWorkspaceOpen) return;
+    const next = pendingWorkspaceOpen;
+    pendingWorkspaceOpen = null;
+    openWorkspaceAnalysis(next.id, next.initialTab);
+  });
   window.addEventListener("draft-agent-hosts-rendered", refreshVisibleBasesReviewStates);
   window.addEventListener("draft-agent-run-updated", (event) => {
     const canonicalKey = event.detail?.canonicalKey;
