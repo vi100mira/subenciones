@@ -58,6 +58,7 @@ assert(!/\bGVA\b|\bLABORA\b/.test(uiCode), "superadmin catalog must not revive i
 assert(!uiCode.includes("fetch("), "superadmin catalog view must not add network calls");
 assert(uiCode.includes("readModel?.territories?.length"), "superadmin catalog must render the persisted national opportunity read-model");
 assert(uiCode.includes("abiertas verificadas"), "superadmin catalog must distinguish verified open opportunities");
+assert(uiCode.includes("Ámbito estatal") && uiCode.includes("no repartidas por comunidad"), "superadmin map must expose national opportunities separately from territorial counts");
 assert(uiCode.includes("Datos de oportunidades procedentes de BDNS") && uiCode.includes("Estas cifras no dependen del conector territorial"), "BDNS opportunity data must remain separate from connector status");
 assert(uiCode.includes("Conector territorial") && uiCode.includes("no se ha programado ningún rastreo") && uiCode.includes("Siguiente paso:"), "territorial connector must explain its inactive technical state without a simulated queue");
 assert(!uiCode.includes("Pendiente de revision y permisos"), "territorial connector must not be presented as a generic review queue");
