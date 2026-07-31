@@ -70,6 +70,30 @@
     };
   }
 
+  function persistedRecommendationRow(recommendation, opportunity, version) {
+    let source = "Fuente oficial";
+    try { source = new URL(version?.official_url || version?.source_url).hostname; } catch { /* La URL se mostrará como no disponible. */ }
+    return {
+      id: opportunity?.id || `persisted-${recommendation.id}`,
+      title: opportunity?.title || "Convocatoria pendiente de identificar",
+      organism: opportunity?.funder_name || source,
+      source,
+      sourceScope: "Pública oficial",
+      sourceId: opportunity?.canonical_key || recommendation.id,
+      score: Number(recommendation.score || 0),
+      deadline: version?.deadline_text || "Plazo pendiente de comprobar",
+      deadlineStatus: version?.deadline_status || "uncertain",
+      deadlineConfidence: version?.deadline_confidence || "Baja",
+      theme: Array.isArray(opportunity?.themes) ? opportunity.themes.join(", ") : opportunity?.themes || "Temática por comprobar",
+      territory: opportunity?.territory || "Territorio por comprobar",
+      officialUrl: version?.official_url || version?.source_url || "",
+      basesUrl: version?.official_url || version?.source_url || "",
+      actionable: ["open", "rolling"].includes(opportunity?.status),
+      globalStatus: opportunity?.status || "pending_review",
+      recordKind: "platform_opportunity"
+    };
+  }
+
   function apply(items) {
     if (!items.length || !window.RADAR) return false;
     if (!window.RADAR_PLATFORM_OPPORTUNITIES) window.RADAR_PLATFORM_OPPORTUNITIES = [...(window.RADAR.opportunities || [])];
@@ -82,7 +106,8 @@
       const opportunity = resolved?.opportunity;
       const version = resolved?.version;
       const local = resolved?.row;
-      if (!local) {
+      const row = local || persistedRecommendationRow(recommendation, opportunity, version);
+      if (!row) {
         syncPending.push(syncPendingRow(recommendation, opportunity, version));
         return null;
       }
@@ -90,9 +115,9 @@
       const approvedBases = recommendation.bases_interpretation;
       const candidate = recommendation.decision_status === "preselected" || (recommendation.recommendation_status !== "low_fit" && recommendation.decision_status !== "dismissed");
       return {
-        ...local,
-        proposalConstraints: approvedBases?.proposalConstraints?.draftingGate === "constraints_verified" ? approvedBases.proposalConstraints : version?.evidence_json?.proposal_constraints || local.proposalConstraints,
-        requirementsContract: approvedBases?.requirementsContract || version?.evidence_json?.requirements_contract || local.requirementsContract || null,
+        ...row,
+        proposalConstraints: approvedBases?.proposalConstraints?.draftingGate === "constraints_verified" ? approvedBases.proposalConstraints : version?.evidence_json?.proposal_constraints || row.proposalConstraints,
+        requirementsContract: approvedBases?.requirementsContract || version?.evidence_json?.requirements_contract || row.requirementsContract || null,
         basesInterpretation: approvedBases || null,
         officialRequirements: {
           eligibility: version?.eligibility_text || "",

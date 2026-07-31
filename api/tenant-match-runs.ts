@@ -65,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           evidence_json, internal_fact_refs_json, profile_snapshot_hash, human_review_status,
           decision_status, decision_reason, decision_note, candidacy_stage, stage_updated_at,
           reviewed_at, created_at, updated_at,
-          platform_opportunities(id, canonical_key, title, funder_name, territory, status),
+          platform_opportunities(id, canonical_key, title, funder_name, territory, themes, status),
           platform_opportunity_versions!inner(id, source_url, official_url, deadline_text, deadline_status, deadline_confidence,
             eligibility_text, criteria_text, required_documents_text, submission_channel_text, evidence_json, version_status)
         `).eq("tenant_id", actor.tenantId)
