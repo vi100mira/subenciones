@@ -5,6 +5,7 @@
   let workspaceTargetTab = "summary";
   let workspacePanelTarget = null;
   let pendingWorkspaceOpen = null;
+  let workspacePackageMemory = null;
   const basesReviewStates = new Map();
   const basesReviewLoads = new Map();
   const latestDraftRuns = new Map();
@@ -663,24 +664,25 @@
   }
 
   function saveWorkspacePackage(item) {
+    const pack = { ...packageFor(item), preparedAt: new Date().toISOString() };
+    workspacePackageMemory = pack;
     try {
-      const pack = { ...packageFor(item), preparedAt: new Date().toISOString() };
       sessionStorage.setItem(packageKey, JSON.stringify(pack));
       const current = JSON.parse(localStorage.getItem(candidateKey) || "{}");
       const selectedIds = [pack.id, ...(current.selectedIds || []).filter((id) => id !== pack.id)].slice(0, 4);
       localStorage.setItem(candidateKey, JSON.stringify({ ...current, activeId: pack.id, selectedIds }));
       window.dispatchEvent(new CustomEvent("workspace-candidates-changed"));
     } catch {
-      return false;
+      // La sesión mantiene el expediente abierto aunque el navegador rechace almacenamiento temporal.
     }
     return true;
   }
 
   function readWorkspacePackage() {
     try {
-      return JSON.parse(sessionStorage.getItem(packageKey) || "null");
+      return JSON.parse(sessionStorage.getItem(packageKey) || "null") || workspacePackageMemory;
     } catch {
-      return null;
+      return workspacePackageMemory;
     }
   }
 
@@ -737,7 +739,9 @@
 
   function renderWorkspacePackage() {
     const screen = document.querySelector("#workspace");
-    if (!screen || !screen.dataset.flowReady) return;
+    if (!screen) return;
+    if (!screen.dataset.flowReady) window.renderWorkspaceFlow?.();
+    if (!screen.dataset.flowReady) return;
     screen.querySelector("#documentary-agent-package")?.remove();
     if (!workspacePackageVisible) {
       screen.classList.remove("has-documentary-package");
@@ -1023,6 +1027,7 @@
     updateSolicitudPhases(canonicalKey);
   });
   window.addEventListener("role-session-applied", () => {
+    workspacePackageMemory = null;
     latestDraftRuns.clear();
     basesReviewStates.clear();
     basesReviewLoads.clear();
