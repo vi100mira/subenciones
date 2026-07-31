@@ -102,6 +102,7 @@ async function getSource(supabase, item) {
           monitoring_cadence: item.monitoring_cadence,
           watch_fields: item.watch_fields,
           evidence_quality: item.evidence_quality,
+          source_admission: item.source_admission || null,
           last_scan: { observed_at: item.scan_observed_at || null, status: item.scan_status || null, telemetry: item.scan_telemetry || null }
         },
         updated_at: new Date().toISOString()
@@ -126,6 +127,7 @@ async function getSource(supabase, item) {
         monitoring_cadence: item.monitoring_cadence,
         watch_fields: item.watch_fields,
         evidence_quality: item.evidence_quality,
+        source_admission: item.source_admission || null,
         last_scan: { observed_at: item.scan_observed_at || null, status: item.scan_status || null, telemetry: item.scan_telemetry || null }
       }
     })

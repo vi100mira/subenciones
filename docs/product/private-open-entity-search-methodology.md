@@ -10,7 +10,7 @@ This method applies to foundations, banking social programmes, obra social, corp
 
 - Start from official or funder-controlled evidence.
 - Separate funder identity from call identity. A funder page is not yet an opportunity.
-- Do not create a live tenant alert from low-confidence evidence.
+- Do not create a tenant proposal from low-confidence evidence.
 - Prefer precise child opportunities over broad parent indexes.
 - Preserve the path a human would follow to verify the result.
 - Keep tenant-private information out of public/private-open source discovery.
@@ -53,7 +53,7 @@ Classify each found page:
 - `result_or_archive`: selected projects, resolved calls, old edition.
 - `news_or_beneficiary`: useful signal, but not enough for live opportunity.
 
-Only `child_call` plus basis or application evidence can become a review candidate.
+Only `child_call` with a basis or official application route can become a verified platform opportunity. The opportunity is then proposed to each tenant in isolation.
 
 ### 4. Follow the navigation to bases
 
@@ -71,7 +71,7 @@ If several PDFs on the same domain match generic words like "bases", prefer the 
 
 Use these statuses:
 
-- `viva`: clear bases or official current evidence and not closed.
+- `viva`: clear bases or official current evidence, a verifiable current period and not closed; it enters the global inventory automatically as a verified opportunity.
 - `revision_humana`: evidence exists but bases, deadline, eligibility, amount or channel are uncertain.
 - `archivada`: evidence-backed call that is closed, resolved, expired or useful for traceability.
 - `descartada`: irrelevant, duplicate, non-funding line, blocked without manual support or insufficient evidence after review.
@@ -119,11 +119,19 @@ Stop and discard when:
 - official source cannot be identified after manual review;
 - evidence is duplicate of an already tracked call.
 
+## Automation and tenant decision
+
+The platform automatically admits a private call when it has sufficient evidence: official domain, a concrete call, verifiable current period, and official bases or application route. This technical admission creates a global opportunity with provenance; it does not decide which entity should pursue it.
+
+Each tenant receives the opportunity as a fit proposal. Its specialist can preselect it or mark it as not relevant to that tenant. The decision is private, auditable, and does not alter the global opportunity or another tenant's decision. Platform administration supervises coverage, evidence quality, and technical incidents; it does not approve content fit.
+
+Platform human review remains for blocked sources, ambiguous evidence, conflicting dates, or terms that prevent a safe automatic admission.
+
 ## Data Contract
 
 Every accepted source or review candidate should use the intake template in `data/private-open-funders/source-intake-template-v1.json`.
 
-Required before tenant alert:
+Required before a tenant proposal:
 
 - `id`;
 - `name`;
@@ -139,14 +147,14 @@ Required before tenant alert:
 - `navigation_path`;
 - either `basis_url` or `manual_fallback`.
 
-Required before live/recommended status:
+Required before verified platform status:
 
 - exact call title;
 - official current status or deadline;
 - basis URL or official page with rules;
 - applicant eligibility evidence;
 - application channel;
-- human review decision.
+- automated evidence threshold passed, or a documented technical exception.
 
 ## Human Review Questions
 
@@ -154,8 +162,8 @@ Required before live/recommended status:
 - Does the final document actually correspond to this title, territory and year?
 - Is the opportunity still open as of the review date?
 - Can a tenant understand where the evidence came from?
-- Would recommending this require tenant-private facts or sensitive data?
-- Should the row be live, review, archived, discarded or monitor-only?
+- Does the evidence allow a verified global opportunity?
+- For each tenant, should its specialist preselect it or ignore it?
 
 ## Examples
 
@@ -167,7 +175,7 @@ Required before live/recommended status:
 
 The method is working when a new private funder can be processed into one of these outcomes without special-case code:
 
-- high-confidence live/review candidate;
+- high-confidence verified platform opportunity;
 - archived evidence-backed call;
 - monitor-only parent source;
 - manual fallback request;

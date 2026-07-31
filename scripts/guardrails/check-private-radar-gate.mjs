@@ -15,10 +15,12 @@ const reviewSource = { id: "review", name: "FundaciÃ³n En RevisiÃ³n 2026", u
 await fs.writeFile(catalogPath, JSON.stringify({ catalog: {}, sources: [source, reviewSource] }));
 await fs.writeFile(scanPath, JSON.stringify({ scanned_at: "2026-07-13T00:00:00Z", sources_scanned: 1, results: [{
   id: "demo", status: "evidence_candidate", evidence_complete: true, basis_confidence: { level: "high" },
+  source_admission: { state: "admitted", reason: "official_https_and_robots_permit" },
   status_facts: { status: "Abierta", closing: "31 de julio de 2026" }, verification_url: "https://demo.invalid/bases.pdf",
   best_evidence: { document: { sha256: "abc", extracted_text: "La memoria tendrá una extensión máxima de cuatro (4) páginas.", page_evidence: [{ page: 3, text: "La memoria tendrá una extensión máxima de cuatro (4) páginas." }] } }
 }, {
   id: "review", status: "evidence_candidate", evidence_complete: true, basis_confidence: { level: "medium" },
+  source_admission: { state: "admitted", reason: "official_https_and_robots_permit" },
   status_facts: { status: "Abierta" }, verification_url: "https://review.invalid/bases.pdf", review_reason: "missing_publishable_deadline_or_status",
   best_evidence: { content_sha256: "def", evidence_excerpt: "Bases oficiales sin cierre estructurado." }
 }] }));

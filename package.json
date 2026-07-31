@@ -34,6 +34,7 @@
     "check:private-knowledge-bridge": "python scripts/guardrails/check-private-knowledge-bridge.py",
     "check:private-quarantine-query": "python scripts/guardrails/check-private-quarantine-query.py",
     "check:local-private-inventory": "node scripts/guardrails/check-local-private-inventory-worker.mjs",
+    "check:local-bridge-installer": "node scripts/guardrails/check-local-bridge-installer.mjs",
     "check:private-fact-retrieval": "node scripts/guardrails/check-private-fact-retrieval.mjs",
     "check:draft-version-ui": "node scripts/guardrails/check-draft-version-ui.mjs",
     "check:agent-execution-controls": "node scripts/guardrails/check-agent-execution-controls.mjs",

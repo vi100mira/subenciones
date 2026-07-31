@@ -211,6 +211,36 @@ async function sitemapSeeds(source, origin) {
   return { seeds, telemetry };
 }
 
+function robotsAllows(robotsText, pathname) {
+  const rules = [];
+  let applies = false;
+  for (const rawLine of robotsText.split(/\r?\n/)) {
+    const line = rawLine.replace(/#.*/, "").trim();
+    const match = line.match(/^(user-agent|disallow)\s*:\s*(.*)$/i);
+    if (!match) continue;
+    const [, field, value] = match;
+    if (field.toLowerCase() === "user-agent") {
+      applies = value.trim() === "*" || /subvencionesrag/i.test(value);
+      continue;
+    }
+    if (applies && value.trim()) rules.push(value.trim());
+  }
+  const blocked = rules.filter((rule) => pathname.startsWith(rule)).sort((a, b) => b.length - a.length)[0];
+  return { allowed: !blocked, matched_rule: blocked || null };
+}
+
+async function automaticSourceAdmission(source, origin) {
+  const start = normalizeUrl(source.url);
+  if (!start || !start.startsWith("https://") || !sameOrigin(start, origin)) {
+    return { state: "review_required", reason: "official_https_origin_missing" };
+  }
+  const robots = await fetchText(new URL("/robots.txt", origin).href);
+  if (!robots.ok) return { state: "review_required", reason: "robots_unavailable" };
+  const policy = robotsAllows(robots.text, new URL(start).pathname || "/");
+  if (!policy.allowed) return { state: "review_required", reason: "robots_disallow", matched_rule: policy.matched_rule };
+  return { state: "admitted", reason: "official_https_and_robots_permit", robots_url: robots.url };
+}
+
 async function extractPdf(bytes, url) {
   const temporaryPath = path.join(os.tmpdir(), `grant-${crypto.randomUUID()}.pdf`);
   try {
@@ -368,6 +398,19 @@ function reviewReason({ status, best, confidence, currentEdition, documentReady 
 async function scanSource(source) {
   const start = normalizeUrl(source.url);
   const origin = new URL(start).origin;
+  const sourceAdmission = await automaticSourceAdmission(source, origin);
+  if (sourceAdmission.state !== "admitted") {
+    return {
+      id: source.id, source_authority: source.source_authority, supplementary_source_id: source.supplementary_source_id || null,
+      name: source.name, start_url: source.url, pages_visited: 0, page_budget: 0,
+      depth_policy: "No crawl: automatic source admission was not reached.", status: "admission_review_required",
+      recommendation: "Do not crawl until automatic source admission is resolved.", verification_url: source.url,
+      navigation_path: [{ url: source.url, label: source.name }], best_evidence: null, basis_confidence: { level: "none" },
+      status_facts: {}, edition_current: sourceEditionIsCurrent(source), evidence_complete: false, discovery_state: "admission_pending",
+      review_reason: sourceAdmission.reason, source_admission: sourceAdmission, telemetry: { page_budget: 0, pages_visited: 0, failures: 0 },
+      evidence_documents: [], manual_fallback: manualFallbackFor(source, "needs_human_review", []), calls: [], failures: []
+    };
+  }
   const limits = scanLimits(source);
   const sitemap = await sitemapSeeds(source, origin);
   const curatedBasis = source.basis_url ? normalizeUrl(source.basis_url, start) : "";
@@ -511,6 +554,7 @@ async function scanSource(source) {
     evidence_complete: Boolean(usableEvidence && documentReady),
     discovery_state: best ? "evidence_found" : "no_evidence",
     review_reason: reviewReason({ status, best, confidence, currentEdition, documentReady }),
+    source_admission: sourceAdmission,
     telemetry,
     evidence_documents: pages.filter((page) => page.document).map((page) => page.document),
     manual_fallback: manualFallbackFor(source, status, failures),

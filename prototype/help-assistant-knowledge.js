@@ -2,8 +2,8 @@ window.INSERTIA_HELP_TOPICS = [
   {
     id: "overview", title: "Cómo funciona INSERTIA", screens: ["welcome", "dashboard"],
     keywords: ["funciona", "empezar", "inicio", "proceso", "ciclo", "insertia"],
-    summary: "INSERTIA busca convocatorias en fuentes públicas y financiadores privados autorizados, explica su encaje para cada entidad y ayuda a preparar el expediente con evidencia trazable.",
-    steps: ["El radar incorpora convocatorias.", "El encaje usa el perfil aprobado.", "Una persona preselecciona.", "Se revisan bases y documentos.", "El borrador termina en revisión humana."],
+    summary: "INSERTIA incorpora convocatorias públicas y privadas con evidencia verificable, propone su encaje a cada entidad y ayuda a preparar el expediente con trazabilidad.",
+    steps: ["El radar incorpora oportunidades verificadas.", "El encaje usa el perfil aprobado.", "El especialista de la entidad preselecciona o ignora.", "Se revisan bases y documentos.", "El borrador termina en revisión humana."],
     caution: "La aplicación no decide la elegibilidad legal, no firma y no presenta solicitudes."
   },
   {
@@ -23,9 +23,9 @@ window.INSERTIA_HELP_TOPICS = [
   {
     id: "radar", title: "Búsqueda de convocatorias", screens: ["opportunities", "dashboard"],
     keywords: ["buscar", "radar", "convocatoria", "subvencion", "nueva", "cron", "periodicidad"],
-    summary: "Los radares consultan fuentes públicas y fuentes privadas autorizadas mediante campañas periódicas, normalizan resultados y conservan la evidencia y procedencia disponible.",
-    steps: ["La campaña consulta las fuentes configuradas.", "Distingue la procedencia pública o privada y sus condiciones de acceso.", "Deduplica y versiona.", "Localiza bases y plazos.", "Publica solo resultados que superan su control de evidencia."],
-    caution: "La cobertura es amplia pero no universal; una fuente degradada o sin evidencia suficiente queda visible para revisión. El perfil y los documentos privados de cada entidad no se comparten ni se usan como fuente pública."
+    summary: "Los radares consultan fuentes públicas y privadas autorizadas mediante campañas periódicas. Una convocatoria privada se incorpora automáticamente al inventario global cuando tiene bases o canal oficial y vigencia comprobable.",
+    steps: ["La campaña consulta las fuentes configuradas.", "Distingue la procedencia pública o privada y sus condiciones de acceso.", "Deduplica y versiona.", "Localiza bases y plazos.", "Crea una oportunidad global solo si supera el control automático de evidencia.", "Cada especialista decide después preseleccionarla o ignorarla para su entidad."],
+    caution: "La admisión automática no es una recomendación ni una decisión de elegibilidad. Una fuente degradada, bloqueada o con evidencia ambigua queda en revisión técnica. El perfil y los documentos privados de cada entidad no se comparten ni se usan como fuente pública."
   },
   {
     id: "matching", title: "Qué significa el encaje", screens: ["opportunities", "agents"],

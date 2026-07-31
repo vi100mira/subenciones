@@ -26,10 +26,10 @@ Si no existe consentimiento de web pública, el tenant puede completar el perfil
 ## Radar y encaje
 
 1. Los radares públicos se ejecutan por cron y campañas idempotentes.
-2. Las convocatorias se normalizan, deduplican, versionan y vinculan a evidencia oficial.
-3. El agente de encaje cruza una versión pública con el perfil aprobado de un tenant.
+2. Las convocatorias públicas y privadas se normalizan, deduplican, versionan y vinculan a evidencia oficial. Una privada entra automáticamente al inventario global solo si tiene convocatoria concreta, vigencia y bases o canal oficial comprobables.
+3. El agente de encaje cruza la oportunidad global con el perfil aprobado de un tenant.
 4. El resultado explica razones, riesgos, datos ausentes, plazo y hechos usados.
-5. La persona revisa resultados y decide preseleccionar o descartar.
+5. La persona especialista de cada entidad revisa resultados y decide preseleccionar o descartar para su propio tenant. Esa decisión no modifica la oportunidad global ni las decisiones de otros tenants.
 
 ## Bases y candidatura
 

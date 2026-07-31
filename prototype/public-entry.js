@@ -10,13 +10,18 @@
       <section class="public-entry__intro">
         <div class="public-entry__brand"><div class="public-entry__insertia-lockup"><img src="./assets/insertia/insertia-mark.svg" alt="" /><span><strong>INSERTIA</strong><small>Una aplicación de <b>Novaterra Software</b></small></span></div><span class="public-entry__brand-divider" aria-hidden="true"></span><img class="public-entry__novaterra-logo" src="./assets/novaterra-foundation-logo-transparent.png" alt="Fundación Novaterra" /></div>
         <div class="public-entry__product-summary"><strong>De la convocatoria a la candidatura.</strong><span>Encuentra ayudas, entiende por qué encajan y prepara la documentación con fuentes verificables y revisión humana.</span></div>
-        <p class="eyebrow">Compromiso administrativo</p>
-        <h1>Garantia de integridad y privacidad institucional</h1>
-        <p>Plataforma para entidades sociales que separa fuentes publicas, datos internos, consentimiento y revision humana antes de usar IA.</p>
-        <div class="public-entry__assurance">
+        <p class="eyebrow">Una plataforma con control</p>
+        <h1>Ayudas fiables, decisiones humanas.</h1>
+        <p>Encuentra convocatorias y prepara candidaturas sin mezclar los datos de cada entidad.</p>
+        <details class="public-entry__disclosure">
+          <summary><i data-lucide="shield-check"></i><span><strong>Privacidad y control</strong><small>Cómo protegemos la información.</small></span><i class="public-entry__chevron" data-lucide="chevron-down"></i></summary>
+          <div class="public-entry__assurance">
           <span><i data-lucide="shield-check"></i><span><strong>Cumplimiento normativo</strong>Arquitectura alineada con RGPD y soberania del dato.</span></span>
           <span><i data-lucide="lock-keyhole"></i><span><strong>Cifrado y control</strong>Cada uso de datos privados requiere un permiso explícito y queda registrado.</span></span>
-        </div>
+          </div>
+        </details>
+        <details class="public-entry__disclosure">
+          <summary><i data-lucide="radar"></i><span><strong>Cómo funciona la búsqueda</strong><small>Tres radares, una búsqueda explicable.</small></span><i class="public-entry__chevron" data-lucide="chevron-down"></i></summary>
         <section class="public-entry__radars" aria-labelledby="public-radars-title">
           <p class="eyebrow">Como funciona la busqueda</p>
           <h2 id="public-radars-title">Tres radares, una busqueda explicable</h2>
@@ -27,6 +32,7 @@
           </div>
           <p class="public-entry__radar-note">El radar privado amplía sus fuentes de forma continua, deduplica entidades y separa una candidata descubierta de una convocatoria verificable. Las fuentes y sus bases se documentan primero; el encaje con cada entidad se analiza después, con revisión humana cuando corresponde.</p>
         </section>
+        </details>
       </section>
       <section class="public-entry__access">
         <figure class="public-entry__access-visual" aria-hidden="true"><img src="./assets/stitch-ngo-grant-hero.png" alt="" /></figure>

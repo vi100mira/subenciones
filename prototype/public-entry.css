@@ -32,7 +32,7 @@
 }
 
 .public-entry__brand,
-.public-entry__assurance {
+.public-entry__disclosure {
   position: relative;
   z-index: 1;
 }
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  margin-bottom: auto;
+  margin-bottom: clamp(34px, 7vh, 78px);
   color: #ffffff;
 }
 
@@ -215,7 +215,7 @@
   position: relative;
   z-index: 1;
   max-width: 560px;
-  margin: 10px 0 14px;
+  margin: 10px 0 8px;
   font-size: clamp(28px, 3.1vw, 40px);
   line-height: 1.12;
   letter-spacing: 0;
@@ -232,15 +232,43 @@
 }
 
 .public-entry__intro .eyebrow {
-  margin-top: 22px;
+  margin-top: 18px;
   color: #9cd7b2;
 }
+
+.public-entry__disclosure {
+  max-width: 620px;
+  margin-top: 12px;
+  border: 1px solid rgba(156, 215, 178, 0.38);
+  border-radius: 10px;
+  background: rgba(15, 24, 73, 0.22);
+}
+
+.public-entry__disclosure summary {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.public-entry__disclosure summary::-webkit-details-marker { display: none; }
+.public-entry__disclosure summary > svg { color: #9cd7b2; }
+.public-entry__disclosure summary span,
+.public-entry__disclosure summary strong,
+.public-entry__disclosure summary small { display: block; }
+.public-entry__disclosure summary strong { color: #ffffff; font-size: 15px; }
+.public-entry__disclosure summary small { margin-top: 2px; color: #d8e9e3; font-size: 12px; }
+.public-entry__disclosure .public-entry__chevron { justify-self: end; width: 18px; color: #ffffff; transition: transform 160ms ease; }
+.public-entry__disclosure[open] .public-entry__chevron { transform: rotate(180deg); }
+.public-entry__disclosure summary:focus-visible { outline: 3px solid rgba(156, 215, 178, 0.55); outline-offset: 3px; }
 
 .public-entry__assurance {
   display: grid;
   gap: 10px;
-  margin-top: 16px;
-  max-width: 620px;
+  padding: 0 14px 14px;
 }
 
 .public-entry__assurance > span {
@@ -260,8 +288,7 @@
 .public-entry__radars {
   position: relative;
   z-index: 1;
-  max-width: 620px;
-  margin-top: 20px;
+  padding: 0 14px 14px;
 }
 
 .public-entry__radars .eyebrow {
@@ -282,6 +309,7 @@
 }
 
 .public-entry__radar-list article {
+  position: relative;
   padding: 10px;
   border: 1px solid rgba(156, 215, 178, 0.38);
   border-radius: 8px;

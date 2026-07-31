@@ -19,7 +19,8 @@ function explicitClosing(result) {
 }
 
 function safeLiveCandidate(result) {
-  return result?.status === "evidence_candidate"
+  return result?.source_admission?.state === "admitted"
+    && result?.status === "evidence_candidate"
     && result.evidence_complete === true
     && ["high", "medium"].includes(result.basis_confidence?.level)
     && explicitOpenStatus(result)
@@ -57,6 +58,7 @@ function mergeSource(source, result) {
     live_evidence_gate: live ? "passed" : "monitor_or_review",
     scan_status: result?.status || "not_scanned",
     scan_observed_at: result?.scanned_at || null,
+    source_admission: result?.source_admission || { state: "review_required", reason: "not_scanned" },
     discovery_state: result?.discovery_state || "not_scanned",
     publication_state: publication.state,
     publication_reason: publication.reason,
@@ -82,6 +84,7 @@ function reviewCandidate(source, result) {
     evidence_sha256: document.sha256 || best.content_sha256 || null,
     scan_status: result.status || "not_scanned",
     scan_observed_at: result.scanned_at || null,
+    source_admission: result.source_admission || { state: "review_required", reason: "not_scanned" },
     scan_telemetry: result.telemetry || null,
     discovery_state: result.discovery_state || "evidence_found",
     edition_current: result.edition_current,
@@ -92,6 +95,7 @@ function reviewCandidate(source, result) {
 }
 
 function concreteCalls(source, result) {
+  if (result?.source_admission?.state !== "admitted") return [];
   return (result?.calls || []).map((call) => ({
     ...source,
     id: `${source.id}:call:${call.id}`,
