@@ -32,6 +32,23 @@
   }
   function preflight(current) { return current?.config_json?.preflight || null; }
   function preflightReady(current) { return ["ready", "ready_limited"].includes(preflight(current)?.status); }
+  function preparationFlow(current, analysis) {
+    const preflightDone = preflightReady(current);
+    const inventoryDone = analysis?.run?.status === "completed";
+    const active = inventoryDone ? 4 : preflightDone ? 3 : current ? 2 : 1;
+    const steps = [
+      ["Fuente autorizada", "Eliges una carpeta o conexión solo de lectura."],
+      ["Preanálisis", "Se comprueba compatibilidad sin leer ni enviar contenido."],
+      ["Iniciar inventario", "Confirma este método para analizar los proyectos autorizados."],
+      ["Revisar propuestas", "Decides qué hechos institucionales se pueden reutilizar."],
+      ["Conocimiento listo", "Solo los hechos aprobados se usan en candidaturas."]
+    ];
+    return `<ol class="preparation-flow" aria-label="Guía de preparación documental">${steps.map(([title, detail], index) => {
+      const step = index + 1;
+      const state = step < active ? "done" : step === active ? "current" : "next";
+      return `<li class="is-${state}"><span>${step}</span><div><strong>${title}</strong><small>${detail}</small></div></li>`;
+    }).join("")}</ol>`;
+  }
   function selectedFolder(input) {
     const summary = window.PrivateSourcePreflight?.summarizeFiles(input);
     return summary ? { tenantId: session()?.tenantId, sourceId: null, ...summary } : null;
@@ -224,6 +241,7 @@
           : "La fuente autorizada está lista para inventariar proyectos anteriores.";
     openModal(`<div class="panel-heading"><div><p class="eyebrow">Preparación documental</p><h2>¿Cómo quieres aportar conocimiento?</h2></div><button class="icon-button" data-private-close type="button" aria-label="Cerrar"><i data-lucide="x"></i></button></div>
       <p class="preparation-route-intro">Elige una sola vía para esta preparación. Ambas generan propuestas privadas que deben revisarse antes de convertirse en hechos reutilizables.</p>
+      ${preparationFlow(current, analysis)}
       <form data-private-preparation-form><fieldset class="preparation-route-options"><legend>Método de preparación</legend>
         <label><input type="radio" name="preparation-route" value="projects" ${contracted() ? "checked" : ""}><i data-lucide="folder-search-2"></i><span><strong>Analizar proyectos autorizados</strong><small>${escapeHtml(projectStatus)}</small></span></label>
         <label><input type="radio" name="preparation-route" value="guided" ${contracted() ? "" : "checked"}><i data-lucide="clipboard-list"></i><span><strong>Completar formulario guiado</strong><small>Responde solo los bloques necesarios; evita datos personales y casos individuales.</small></span></label>
