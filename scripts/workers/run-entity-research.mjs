@@ -29,6 +29,10 @@ function hash(value) {
   return crypto.createHash("sha256").update(String(value || "")).digest("hex");
 }
 
+function publicWebsiteSource(rows) {
+  return (rows || []).find((row) => typeof row.config_json?.base_url === "string" && row.config_json.base_url.startsWith("https://")) || null;
+}
+
 async function claim(supabase) {
   const { data: queued, error: queueError } = await supabase.from("tenant_agent_runs")
     .select("id, tenant_id, input_manifest_json, requested_by, status")
@@ -51,17 +55,18 @@ async function loadContext(supabase, run) {
       .eq("tenant_id", run.tenant_id).eq("consent_type", "public_web_analysis").eq("status", "granted")
       .order("granted_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("source_connections").select("id, config_json, approved_at")
-      .eq("tenant_id", run.tenant_id).eq("label", "Web pública de la entidad").eq("status", "active")
-      .limit(1).maybeSingle()
+      .eq("tenant_id", run.tenant_id).eq("kind", "official_portal").eq("scope", "tenant_public").eq("status", "active")
+      .order("priority", { ascending: false }).limit(10)
   ]);
   if (agentResult.error) throw agentResult.error;
   if (consentResult.error) throw consentResult.error;
   if (sourceResult.error) throw sourceResult.error;
   if (agentResult.data?.status !== "ready" || !agentResult.data?.enabled) throw new Error("El Investigador de entidad no está habilitado.");
   if (!consentResult.data) throw new Error("Falta consentimiento vigente para analizar la web pública.");
-  const baseUrl = sourceResult.data?.config_json?.base_url;
-  if (!sourceResult.data || typeof baseUrl !== "string") throw new Error("Falta una fuente web pública aprobada.");
-  return { agent: agentResult.data, consent: consentResult.data, source: sourceResult.data, baseUrl };
+  const source = publicWebsiteSource(sourceResult.data);
+  const baseUrl = source?.config_json?.base_url;
+  if (!source || typeof baseUrl !== "string") throw new Error("Falta una fuente web pública aprobada.");
+  return { agent: agentResult.data, consent: consentResult.data, source, baseUrl };
 }
 
 async function persistPages(supabase, run, context, research) {

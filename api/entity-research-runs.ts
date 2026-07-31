@@ -12,6 +12,10 @@ function digest(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function publicWebsiteSource(rows: Array<{ id: string; config_json: { base_url?: unknown } | null }>) {
+  return rows.find((row) => typeof row.config_json?.base_url === "string" && row.config_json.base_url.startsWith("https://")) || null;
+}
+
 async function dispatchWorker() {
   const token = process.env.HOSTED_WORKER_GITHUB_TOKEN || process.env.DRAFT_WORKER_GITHUB_TOKEN;
   const repository = process.env.HOSTED_WORKER_GITHUB_REPOSITORY || process.env.DRAFT_WORKER_GITHUB_REPOSITORY;
@@ -56,18 +60,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       supabase.from("tenant_data_consents").select("id").eq("tenant_id", actor.tenantId)
         .eq("consent_type", "public_web_analysis").eq("status", "granted").limit(1).maybeSingle(),
       supabase.from("source_connections").select("id, config_json").eq("tenant_id", actor.tenantId)
-        .eq("label", "Web pública de la entidad").eq("status", "active").limit(1).maybeSingle()
+        .eq("kind", "official_portal").eq("scope", "tenant_public").eq("status", "active").order("priority", { ascending: false }).limit(10)
     ]);
     if (agentResult.error) throw agentResult.error;
     if (consentResult.error) throw consentResult.error;
     if (sourceResult.error) throw sourceResult.error;
     if (agentResult.data?.status !== "ready" || !agentResult.data.enabled) return res.status(409).json(fail("Investigador no habilitado"));
     if (!consentResult.data) return res.status(409).json(fail("Falta consentimiento vigente para analizar la web pública"));
-    const baseUrl = sourceResult.data?.config_json?.base_url;
-    if (!sourceResult.data || typeof baseUrl !== "string") return res.status(409).json(fail("Falta una fuente web pública aprobada"));
+    const source = publicWebsiteSource(sourceResult.data || []);
+    const baseUrl = source?.config_json?.base_url;
+    if (!source || typeof baseUrl !== "string") return res.status(409).json(fail("Falta una fuente web pública aprobada"));
 
     const manifest = {
-      sourceConnectionId: sourceResult.data.id,
+      sourceConnectionId: source.id,
       baseUrlHash: digest(baseUrl),
       allowedDataClasses: ["public"],
       humanReviewRequired: true,
@@ -77,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tenant_id: actor.tenantId,
       agent_key: "entity_research",
       status: "queued",
-      dedupe_key: `entity-research:${sourceResult.data.id}:${manifest.baseUrlHash}`,
+      dedupe_key: `entity-research:${source.id}:${manifest.baseUrlHash}`,
       use_approved_internal_facts: false,
       input_manifest_json: manifest,
       requested_by: actor.userId
@@ -92,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       action: "entity_research.queued",
       target_type: "agent_run",
       target_id: run.id,
-      detail_json: { source_connection_id: sourceResult.data.id, worker_dispatch: dispatch.status, public_only: true }
+      detail_json: { source_connection_id: source.id, worker_dispatch: dispatch.status, public_only: true }
     });
     return res.status(202).json(ok({ run, dispatch, message: "Investigación pública encolada para revisión humana." }));
   } catch (error) {
