@@ -67,6 +67,11 @@
 
   function agentState(key) {
     const item = runtimeAgents.find((agent) => agent.agent_key === key);
+    if (key === "grant_search") return ["Actualización diaria", "safe"];
+    if (key === "alert_agent") return ["Avisos internos activos", "safe"];
+    if (key === "match_agent" && (!item || !item.enabled || item.status !== "ready")) return ["Revisar perfil antes del encaje", "warning"];
+    if (key === "document_review" && (!item || !item.enabled || item.status !== "ready")) return ["Se activa al abrir una convocatoria", "review"];
+    if (key === "draft_agent" && (!item || !item.enabled || item.status !== "ready")) return ["Requiere fuente privada aprobada", "review"];
     if (!item) return ["Contratado", "review"];
     if (key === "draft_agent" && item.status_reason?.includes("consentimiento")) return ["Operativo con fuentes públicas", "safe"];
     if (item.enabled && item.status === "ready") return ["Operativo", "safe"];

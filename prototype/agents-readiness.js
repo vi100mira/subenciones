@@ -70,7 +70,7 @@
       status: "Avisos internos operativos",
       tone: "safe",
       disabled: false,
-      note: "Tras cada radar se registran alertas internas por cambios en convocatorias seguidas. Los canales externos y recordatorios por correo siguen desactivados."
+      note: "Tras cada radar se registran alertas internas por cambios en convocatorias seguidas. Solo conectar correo o mensajería requerirá una acción adicional."
     }
   };
 
