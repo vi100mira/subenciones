@@ -110,10 +110,10 @@
       if (aiConsent?.status !== "granted") actions.insertAdjacentHTML("beforeend", button("Autorizar datos internos (opcional)", "grant-ai"));
       if (analysis) card.insertAdjacentHTML("beforeend", `<div class="plain-note tenant-document-analysis-status"><strong>${escapeHtml(analysis.title)}</strong><span>${escapeHtml(analysis.detail)}</span></div>`);
     }
-    if (agent.agent_key === "match_agent" && agent.enabled && ["queued", "preparing_context"].includes(matchRun?.status)) actions.innerHTML = button(matchRun.status === "queued" ? "Encaje en cola" : "Calculando encaje", "run-match", "disabled");
+    if (agent.agent_key === "match_agent" && suggestions.some((item) => item.status === "pending")) actions.innerHTML = button("Revisar perfil investigado", "review-profile");
+    else if (agent.agent_key === "match_agent" && agent.enabled && ["queued", "preparing_context"].includes(matchRun?.status)) actions.innerHTML = button(matchRun.status === "queued" ? "Encaje en cola" : "Calculando encaje", "run-match", "disabled");
     else if (agent.agent_key === "match_agent" && agent.enabled && matchRun?.status === "review_required") actions.innerHTML = button(matchReviewLabel(matchRun), "view-match-results");
     else if (agent.agent_key === "match_agent" && agent.enabled) actions.innerHTML = button(matchRun?.status === "failed" ? "Reintentar encaje" : "Calcular encaje", "run-match");
-    else if (agent.agent_key === "match_agent" && suggestions.some((item) => item.status === "pending")) actions.innerHTML = button("Revisar perfil investigado", "review-profile");
     const requiresAction = !operational && actions.childElementCount > 0;
     card.classList.toggle("has-required-action", requiresAction);
     if (requiresAction) card.removeAttribute("aria-disabled");
@@ -173,9 +173,9 @@
         : matchText;
     note.textContent = cleanText(`${researchText} ${lifecycleMatchText}`);
   }
-  function flowMarkup(profileReviewState, matchRun) {
+  function flowMarkup(profileReviewState, matchRun, hasPendingSuggestions = false) {
     const approved = ["approved", "validated", "aprobado"].includes(profileReviewState);
-    const state = !approved ? "profile" : ["queued", "preparing_context"].includes(matchRun?.status) ? "matching" : matchRun?.status === "review_required" ? "decision" : "matching";
+    const state = hasPendingSuggestions ? "review" : !approved ? "profile" : ["queued", "preparing_context"].includes(matchRun?.status) ? "matching" : matchRun?.status === "review_required" ? "decision" : "matching";
     const steps = [["source", "URL pública"], ["profile", "Perfil investigado"], ["review", "Revisión experta"], ["matching", "Encaje"], ["decision", "Decisión de entidad"]];
     return `<ol class="tenant-decision-flow" aria-label="Flujo de validación de oportunidades">${steps.map(([key, label], index) => `<li class="${key === state ? "is-current" : (steps.findIndex(([item]) => item === state) > index ? "is-complete" : "")}"><b>${index + 1}</b><span>${label}</span></li>`).join("")}</ol>`;
   }
@@ -186,7 +186,7 @@
     const profileApproved = ["approved", "validated", "aprobado"].includes(profileReviewState);
     if (pending) {
       target.hidden = false;
-      target.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Siguiente paso</p><h2>Completa el perfil antes de recibir oportunidades compatibles</h2></div><span class="badge warning">Acción necesaria</span></div>${flowMarkup(profileReviewState, matchRun)}<p>El investigador ha encontrado ${pending} sugerencias en la web pública de la entidad. Un especialista debe revisarlas antes de calcular el encaje.</p><button class="primary-action" type="button" data-tenant-agent-action="review-profile">Revisar las ${pending} sugerencias</button>`;
+      target.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Siguiente paso</p><h2>Completa el perfil antes de recibir oportunidades compatibles</h2></div><span class="badge warning">Acción necesaria</span></div>${flowMarkup(profileReviewState, matchRun, true)}<p>El investigador ha encontrado ${pending} sugerencias en la web pública de la entidad. Un especialista debe revisarlas antes de calcular el encaje.</p><button class="primary-action" type="button" data-tenant-agent-action="review-profile">Revisar las ${pending} sugerencias</button>`;
       return;
     }
     if (!profileApproved && suggestions.length) {
@@ -234,7 +234,7 @@
     if (!suggestions.length) return;
     const pending = suggestions.filter((item) => item.status === "pending");
     const panel = document.createElement("article"); panel.id = "tenant-profile-review"; panel.className = "panel";
-    if (["approved", "validated", "aprobado"].includes(profileReviewState)) {
+    if (["approved", "validated", "aprobado"].includes(profileReviewState) && !pending.length) {
       const approved = suggestions.filter((item) => item.status === "approved").length;
       const rejected = suggestions.filter((item) => item.status === "rejected").length;
       const views = {
@@ -261,7 +261,7 @@
     const reviewContent = pending.length
       ? `<div class="stack-list">${pending.map((item) => { const field = suggestionMeta(item.field_key); const confidence = confidenceMeta(item.confidence); return `<div class="stack-item"><div class="opportunity-topline"><div><strong>${escapeHtml(field[0])}</strong><small>${escapeHtml(field[1])}</small></div><span class="badge ${confidence[1]}">${confidence[0]}</span></div>${logoPreview(item)}<span>${escapeHtml(item.suggested_value)}</span><small>${escapeHtml(item.evidence_excerpt || "Sin fragmento de evidencia")}</small><div class="button-row"><a class="ghost-action" href="${escapeHtml(item.source_ref)}" target="_blank" rel="noopener noreferrer">Ver evidencia</a>${button("Aceptar sugerencia", "approve-suggestion", `data-suggestion-id="${item.id}"`)}${button("Descartar sugerencia", "reject-suggestion", `data-suggestion-id="${item.id}"`)}</div></div>`; }).join("")}</div>`
       : '<div class="plain-note"><strong>Revisión terminada</strong><span>Todas las sugerencias tienen una decisión. Ya puede aprobarse el perfil que utilizará el encaje.</span></div>';
-    panel.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Revisión humana</p><h2>Sugerencias del Investigador</h2></div><span class="badge ${pending.length ? "warning" : "safe"}">${pending.length ? `${pending.length} pendientes` : "Revisadas"}</span></div>${flowMarkup(profileReviewState, matchRun)}
+    panel.innerHTML = `<div class="panel-heading"><div><p class="eyebrow">Revisión humana</p><h2>Sugerencias del Investigador</h2></div><span class="badge ${pending.length ? "warning" : "safe"}">${pending.length ? `${pending.length} pendientes` : "Revisadas"}</span></div>${flowMarkup(profileReviewState, matchRun, pending.length > 0)}
       ${reviewContent}<div class="button-row">${button(pending.length ? `Revisa las ${pending.length} pendientes` : "Aprobar perfil revisado", "approve-profile", pending.length ? "disabled" : "")}</div>`;
     document.querySelector("#agent-grid")?.insertAdjacentElement("afterend", panel);
   }

@@ -121,13 +121,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
     await requireTenantAgentEntitlement(supabase, actor.tenantId, "match_agent");
-    const [agentResult, profileResult] = await Promise.all([
+    const [agentResult, profileResult, pendingSuggestions] = await Promise.all([
       supabase.from("tenant_agent_configs").select("status, enabled").eq("tenant_id", actor.tenantId).eq("agent_key", "match_agent").maybeSingle(),
-      supabase.from("tenant_configs").select("profile_json").eq("tenant_id", actor.tenantId).single()
+      supabase.from("tenant_configs").select("profile_json").eq("tenant_id", actor.tenantId).single(),
+      supabase.from("tenant_profile_suggestions").select("id", { count: "exact", head: true })
+        .eq("tenant_id", actor.tenantId).eq("source_type", "public_web").eq("status", "pending")
     ]);
     if (agentResult.error) throw agentResult.error;
     if (profileResult.error) throw profileResult.error;
+    if (pendingSuggestions.error) throw pendingSuggestions.error;
     if (agentResult.data?.status !== "ready" || !agentResult.data.enabled) return res.status(409).json(fail("Asistente de encaje no habilitado"));
+    if ((pendingSuggestions.count || 0) > 0) return res.status(409).json(fail(`Quedan ${pendingSuggestions.count} sugerencias de perfil por revisar antes de calcular el encaje`));
     if (!["approved", "validated", "aprobado"].includes(profileResult.data.profile_json?.review_state)) {
       return res.status(409).json(fail("Falta aprobar el perfil de entidad"));
     }
