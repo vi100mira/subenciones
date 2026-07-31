@@ -130,7 +130,7 @@ function renderDashboard() {
         const privateEntities = indexed.filter((item) => String(item.sourceScope || "").startsWith("Privada"));
         const loading = !window.PLATFORM_GLOBAL_OPPORTUNITIES;
         return [
-          { label: "Oportunidades indexadas", value: loading ? "—" : indexed.length, detail: loading ? "Cargando inventario persistido" : "Inventario global actual", rows: indexed, note: "Incluye oportunidades públicas y entidades privadas detectadas, sin encaje tenant." },
+          { label: "Inventario indexado", value: loading ? "—" : indexed.length, detail: loading ? "Cargando inventario persistido" : "Oportunidades y entidades detectadas", rows: indexed, note: "Incluye oportunidades públicas y entidades privadas detectadas, sin encaje tenant." },
           { label: "Públicas abiertas verificadas", value: loading ? "—" : publicOpen.length, detail: loading ? "Cargando vigencia y evidencia" : "Plazo vigente con evidencia", rows: publicOpen, note: "Solo se cuentan oportunidades públicas con estado abierto y evidencia persistida." },
           { label: "Entidades privadas detectadas", value: loading ? "—" : privateEntities.length, detail: loading ? "Cargando descubrimiento privado" : "Aún no son convocatorias", rows: privateEntities, note: "Son posibles financiadores localizados; una convocatoria privada exige bases y vigencia verificadas." },
           { label: "Catálogo canónico", value: nationalCatalog ? "BDNS + 17" : "—", detail: nationalCatalog ? `${nationalCatalog.summary.sourceCount} fuentes de procedencia, no de cobertura` : "Catálogo técnico no disponible", rows: [], note: "El catálogo técnico aporta procedencia y evidencia. No mide oportunidades descubiertas ni fuentes privadas." }
@@ -154,7 +154,7 @@ function renderDashboard() {
     metric.querySelector(".metric-preview").innerHTML = metricPreview(values[index]);
   });
   document.querySelector("#alerts-list").innerHTML = '<div class="plain-note"><strong>Sin datos verificados</strong><span>Consultando alertas y estados persistidos autorizados.</span></div>';
-  document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura global de fuentes" : "Cobertura del radar";
+  document.querySelector("#dashboard .source-map-panel h2").textContent = isPlatform ? "Cobertura pública por territorio" : "Cobertura del radar";
   const sourceAction = document.querySelector("#dashboard .source-map-panel [data-jump]");
   sourceAction.textContent = isPlatform ? "Ver estado de fuentes" : "Gestionar"; sourceAction.dataset.jump = isPlatform ? "operations" : "governance";
   if (isPlatform) sourceAction.dataset.focusTarget = "operations-source-health"; else delete sourceAction.dataset.focusTarget;
