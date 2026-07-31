@@ -20,10 +20,11 @@ function opportunityRow(opportunity: Record<string, any>, version: Record<string
         : version.deadline_status === "rolling" || opportunity.status === "rolling" ? "rolling"
           : version.deadline_status === "open" || opportunity.status === "open" ? "open" : "pending_review";
   const sourceUrl = version?.official_url || version?.source_url || source?.url || "";
+  const privateVerified = isPrivate && globalStatus === "open" && Boolean(version?.bases_url) && sourceUrl.startsWith("https://");
   return {
     id: opportunity.id, recordKind: "opportunity", title: opportunity.title, organism: opportunity.funder_name,
     source: source?.label || "Fuente de plataforma sin etiqueta", sourceKind: source?.kind || "sin clasificar",
-    sourceScope: isPrivate ? "Privada verificada / publicación pendiente" : "Pública indexada",
+    sourceScope: isPrivate ? (privateVerified ? "Privada verificada / inventario global" : "Privada en monitorización") : "Pública indexada",
     territory: opportunity.territory || "Ámbito sin declarar", theme: Array.isArray(opportunity.themes) && opportunity.themes.length ? opportunity.themes.join(" · ") : "Ámbito pendiente",
     score: Number(opportunity.priority || 0), amount: version?.amount_text || "Importe no indexado", deadline: version?.deadline_text || "Plazo sin evidencia actual",
     deadlineStart: version?.deadline_start || "", deadlineEnd: version?.deadline_end || "", deadlineStatus: version?.deadline_status || "uncertain", deadlineConfidence: version?.deadline_confidence || "uncertain",

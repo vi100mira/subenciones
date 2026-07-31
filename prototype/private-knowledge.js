@@ -36,10 +36,11 @@
     const preflightDone = preflightReady(current);
     const inventoryDone = analysis?.run?.status === "completed";
     const active = inventoryDone ? 4 : preflightDone ? 3 : current ? 2 : 1;
+    const localBridgePending = current?.kind === "local_simulation" && preflightDone && !inventoryDone;
     const steps = [
       ["Fuente autorizada", "Eliges una carpeta o conexión solo de lectura."],
       ["Preanálisis", "Se comprueba compatibilidad sin leer ni enviar contenido."],
-      ["Iniciar inventario", "Confirma este método para analizar los proyectos autorizados."],
+      [localBridgePending ? "Conectar el puente local" : "Iniciar inventario", localBridgePending ? "La carpeta está autorizada; falta el conector instalado en este equipo para leerla." : "Confirma este método para analizar los proyectos autorizados."],
       ["Revisar propuestas", "Decides qué hechos institucionales se pueden reutilizar."],
       ["Conocimiento listo", "Solo los hechos aprobados se usan en candidaturas."]
     ];
@@ -388,6 +389,10 @@
     if (!current) { closeModal(); sourceModal(); return; }
     if (!hasCompatibleConsent(current)) { closeModal(); consentRenewalModal(current); return; }
     if (current.kind === "local_simulation" && !localSelectionMatches(current)) { closeModal(); localFolderModal(current); return; }
+    if (current.kind === "local_simulation") {
+      status.textContent = "La carpeta ya está autorizada. Falta conectar el puente local de este equipo; no se creará una cola ni se leerán archivos hasta entonces.";
+      return;
+    }
     if (!preflightReady(current)) return void (status.textContent = preflight(current)?.reason || "La fuente debe superar primero el preanálisis sin IA.");
     status.textContent = current.status === "pending_approval" ? "Aprobando la fuente en Asistentes…" : "Iniciando inventario privado…";
     try {

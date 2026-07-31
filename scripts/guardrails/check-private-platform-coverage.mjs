@@ -8,7 +8,8 @@ const api = fs.readFileSync("api/admin-platform-opportunities.ts", "utf8");
 
 assert(markup.includes('id="private-coverage"') && markup.includes("Solo superadmin"), "La cobertura privada no tiene un contenedor exclusivo de superadmin");
 assert(dashboard.includes("privateCoveragePanel.hidden = !isPlatform"), "La cobertura privada puede filtrarse a tenants");
-assert(runtime.includes("Entidades privadas detectadas") && runtime.includes("Fuentes privadas verificadas") && runtime.includes("Convocatorias privadas verificadas") && runtime.includes("Excepciones técnicas pendientes"), "La cobertura privada no separa entidades, convocatorias y excepciones técnicas");
+assert(runtime.includes("Convocatorias y programas privados en monitorización") && runtime.includes("Fuentes privadas verificadas") && runtime.includes("Oportunidades privadas verificadas") && runtime.includes("Excepciones técnicas pendientes"), "La cobertura privada no separa monitorización, oportunidades y excepciones técnicas");
+assert(api.includes("Privada en monitorización") && api.includes("Privada verificada / inventario global"), "La API no diferencia un programa monitorizado de una oportunidad privada verificada");
 assert(runtime.includes("Sin datos privados disponibles") && runtime.includes("privateCandidatesState !== \"available\""), "La cobertura privada no declara la ausencia de migración o datos");
 assert(runtime.includes("superadministrador supervisa") && api.includes("platform_superadmin_only"), "La cobertura privada pierde el límite de visibilidad o recomendación");
 console.log(JSON.stringify({ ok: true, visibility: "platform_superadmin_only", states: 4 }));

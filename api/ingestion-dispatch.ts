@@ -29,6 +29,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (sourceError) throw sourceError;
     if (!source) return res.status(404).json(fail("Fuente no encontrada"));
     if (source.status !== "active") return res.status(409).json(fail("La fuente no esta activa"));
+    if (source.scope === "tenant_private" && source.kind === "local_simulation") {
+      return res.status(409).json(fail("La carpeta local está autorizada, pero el puente local aún no está conectado. No se ha creado ninguna cola ni se ha leído ningún archivo."));
+    }
     if (["tenant_private", "tenant_internal"].includes(source.scope)) {
       await requireTenantAgentEntitlement(supabase, actor.tenantId, "draft_agent");
     }

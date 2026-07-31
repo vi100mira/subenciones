@@ -72,17 +72,19 @@
     if (!state.opportunitiesMeta) { target.innerHTML = '<div class="empty-state"><strong>Sin datos privados disponibles</strong><span>La lectura global todavía no ha respondido.</span></div>'; return; }
     if (state.opportunitiesMeta.privateCandidatesState !== "available") { target.innerHTML = '<div class="empty-state"><strong>Sin datos privados disponibles</strong><span>La tabla de candidatas privadas no está activa en este entorno.</span></div>'; return; }
     const candidates = state.opportunities.filter((item) => item.recordKind === "private_source_candidate");
-    const privateOpportunities = state.opportunities.filter((item) => item.recordKind === "opportunity" && String(item.sourceScope || "").startsWith("Privada"));
+    const privateRecords = state.opportunities.filter((item) => item.recordKind === "opportunity" && String(item.sourceScope || "").startsWith("Privada"));
+    const privateOpportunities = privateRecords.filter((item) => item.sourceScope === "Privada verificada / inventario global");
+    const privateMonitoring = privateRecords.filter((item) => item.sourceScope === "Privada en monitorización");
     const groups = [
-      ["Entidades privadas detectadas", privateOpportunities, "Posibles financiadores localizados. No son todavía convocatorias ni recomendaciones."],
+      ["Convocatorias y programas privados en monitorización", privateMonitoring, "El radar ha localizado una línea o programa, pero aún no reúne bases y vigencia suficientes para crear una oportunidad."],
       ["Fuentes privadas verificadas", candidates.filter((item) => item.sourceScope === "Privada verificada / no publicable"), "Fuente comprobada técnicamente; todavía no implica una convocatoria."],
-      ["Convocatorias privadas verificadas", candidates.filter((item) => String(item.sourceScope).includes("publicable")), "Bases y vigencia suficientes para entrar en inventario; el encaje lo decide el especialista del tenant."],
+      ["Oportunidades privadas verificadas", privateOpportunities, "Bases y vigencia suficientes para entrar en inventario; el encaje lo decide el especialista del tenant."],
       ["Excepciones técnicas pendientes", candidates.filter((item) => String(item.sourceScope).includes("tracked")), "Falta evidencia objetiva de bases, vigencia o procedencia. No requieren aprobación de contenido por superadmin."]
     ];
     const preview = (items) => items.map((item) => `<li>${escapeHtml(item.title)}<small>${escapeHtml(item.evidenceQuality || "Evidencia pendiente")} · ${escapeHtml(item.provenance?.updatedAt ? date(item.provenance.updatedAt) : "Sin fecha")}</small></li>`).join("") || "<li>Sin registros persistidos.</li>";
-    const detected = privateOpportunities.length;
-    const verified = groups[2][1].length;
-    target.innerHTML = `<details class="source-map-info"><summary><i data-lucide="info"></i><span>Cómo leer la financiación privada</span></summary><div><p>${detected} entidades detectadas · ${verified} convocatorias privadas verificadas.</p><p>El radar comprueba fuentes, bases y vigencia. El superadministrador supervisa excepciones técnicas; los especialistas de cada entidad deciden el encaje.</p></div></details><div class="source-map private-coverage-map">${groups.map(([title, items, note]) => `<details class="source-node ${items.length ? "active" : "pending"}"><summary><span class="source-node-copy"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(note)}</span></span><b aria-label="Registros">${items.length}</b><i data-lucide="chevron-down"></i></summary><div class="source-node-preview"><ul>${preview(items)}</ul></div></details>`).join("")}</div>`;
+    const monitored = privateMonitoring.length;
+    const verified = privateOpportunities.length;
+    target.innerHTML = `<details class="source-map-info"><summary><i data-lucide="info"></i><span>Cómo leer la financiación privada</span></summary><div><p>${monitored} líneas privadas en monitorización · ${verified} oportunidades privadas verificadas.</p><p>El radar crea una oportunidad solo al encontrar bases y vigencia verificables. El superadministrador supervisa el resultado técnico; los especialistas de cada entidad deciden el encaje.</p></div></details><div class="source-map private-coverage-map">${groups.map(([title, items, note]) => `<details class="source-node ${items.length ? "active" : "pending"}"><summary><span class="source-node-copy"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(note)}</span></span><b aria-label="Registros">${items.length}</b><i data-lucide="chevron-down"></i></summary><div class="source-node-preview"><ul>${preview(items)}</ul></div></details>`).join("")}</div>`;
     window.lucide?.createIcons();
   }
   function renderAgents(data) {
