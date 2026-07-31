@@ -74,13 +74,15 @@
     const candidates = state.opportunities.filter((item) => item.recordKind === "private_source_candidate");
     const privateOpportunities = state.opportunities.filter((item) => item.recordKind === "opportunity" && String(item.sourceScope || "").startsWith("Privada"));
     const groups = [
-      ["Fuentes privadas verificadas", candidates.filter((item) => item.sourceScope === "Privada verificada / no publicable"), "Verificadas técnicamente; sin recomendación ni publicación a clientes."],
-      ["Candidatas privadas tracked / pendientes", candidates.filter((item) => String(item.sourceScope).includes("tracked")), "Pendientes de bases, vigencia o revisión objetiva."],
-      ["Fuentes/candidatas privadas publicables", candidates.filter((item) => String(item.sourceScope).includes("publicable")), "Publicables en inventario técnico; aún requieren vigencia y matching tenant."],
-      ["Oportunidades privadas indexadas", privateOpportunities, "Inventario de plataforma, nunca una recomendación automática a clientes."]
+      ["Entidades privadas detectadas", privateOpportunities, "Posibles financiadores localizados. No son todavía convocatorias ni recomendaciones."],
+      ["Fuentes privadas verificadas", candidates.filter((item) => item.sourceScope === "Privada verificada / no publicable"), "Fuente comprobada técnicamente; todavía no implica una convocatoria."],
+      ["Convocatorias privadas verificadas", candidates.filter((item) => String(item.sourceScope).includes("publicable")), "Bases y vigencia suficientes para entrar en inventario; el encaje lo decide el especialista del tenant."],
+      ["Excepciones técnicas pendientes", candidates.filter((item) => String(item.sourceScope).includes("tracked")), "Falta evidencia objetiva de bases, vigencia o procedencia. No requieren aprobación de contenido por superadmin."]
     ];
     const preview = (items) => items.slice(0, 3).map((item) => `<li>${escapeHtml(item.title)}<small>${escapeHtml(item.evidenceQuality || "Evidencia pendiente")} · ${escapeHtml(item.provenance?.updatedAt ? date(item.provenance.updatedAt) : "Sin fecha")}</small></li>`).join("") || "<li>Sin registros persistidos.</li>";
-    target.innerHTML = `<div class="plain-note"><strong>Inventario privado de plataforma</strong><span>Procedencia y estado técnico globales; no se devuelven datos de tenants ni se publica una oportunidad como recomendación.</span></div><div class="source-preview-list">${groups.map(([title, items, note]) => `<article class="source-preview-item"><strong>${escapeHtml(title)}</strong><b>${items.length}</b><span>${escapeHtml(note)}</span><ul>${preview(items)}</ul></article>`).join("")}</div>`;
+    const detected = privateOpportunities.length;
+    const verified = groups[2][1].length;
+    target.innerHTML = `<div class="private-coverage-summary"><div><strong>Situación actual</strong><span>${detected} entidades detectadas · ${verified} convocatorias privadas verificadas</span></div><div><strong>Qué ocurre ahora</strong><span>El radar sigue comprobando fuentes, bases y vigencia. El superadministrador supervisa excepciones técnicas; los especialistas de cada entidad deciden el encaje. Nunca es una recomendación automática a clientes.</span></div></div><div class="source-preview-list private-coverage-grid">${groups.map(([title, items, note]) => `<article class="source-preview-item"><strong>${escapeHtml(title)}</strong><b>${items.length}</b><span>${escapeHtml(note)}</span><ul>${preview(items)}</ul></article>`).join("")}</div>`;
   }
   function renderAgents(data) {
     const orgs = organizationMap(data);

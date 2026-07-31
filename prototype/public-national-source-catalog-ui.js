@@ -39,7 +39,7 @@
     if (!target) return;
     if (readModel?.territories?.length) {
       const national = readModel.nationalScope || {};
-      target.innerHTML = `<div class="plain-note"><strong>Análisis nacional de oportunidades públicas</strong><span>Actualizado: ${escapeHtml(date(readModel.generatedAt))}. Las cifras proceden del índice canónico BDNS; son independientes de que un conector territorial esté o no activado.</span><span>Ámbito estatal no repartido: ${escapeHtml(national.indexed || 0)} indexadas · ${escapeHtml(national.openVerified || 0)} abiertas verificadas · ${escapeHtml(national.pendingReview || 0)} pendientes de revisión humana.</span></div>${readModel.territories.map((territory) => {
+      target.innerHTML = `<details class="source-map-info"><summary><i data-lucide="info"></i><span>Cómo leer este mapa</span></summary><div><p>Actualizado: ${escapeHtml(date(readModel.generatedAt))}. Las cifras proceden del índice canónico BDNS; no dependen de que un conector territorial esté activado.</p><p>Ámbito estatal no repartido: ${escapeHtml(national.indexed || 0)} indexadas · ${escapeHtml(national.openVerified || 0)} abiertas verificadas · ${escapeHtml(national.pendingReview || 0)} pendientes de revisión humana.</p></div></details>${readModel.territories.map((territory) => {
         const evidenceSource = sourceById.get(territory.evidenceSourceId);
         const source = territory.canonicalSources?.length ? territory.canonicalSources.join(", ") : "Sin datos";
         const status = territory.dataStatus === "available" ? "active" : "pending";
