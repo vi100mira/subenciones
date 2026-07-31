@@ -63,7 +63,7 @@
     return allRows().find((item) => item.id === id) || allRows()[0];
   }
 
-  function list(items) {
+  function list(items = []) {
     return `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
   }
 

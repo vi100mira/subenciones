@@ -5,3 +5,4 @@
 - Al abrir una candidatura antes de que termine de recuperarse el encaje del tenant, la interfaz espera el estado persistido y abre el expediente cuando está disponible.
 - «Ver candidatura» abre siempre el resumen del expediente y reconstruye su contenedor antes de presentarlo; ya no deja un panel sin contenido al cambiar de pantalla.
 - El icono de ojo abre siempre el análisis de encaje. La apertura de candidatura queda exclusivamente en su acción de carpeta, sin redirecciones implícitas.
+- Las recomendaciones persistidas normalizan encaje, riesgos y evidencia antes de renderizar, y las versiones de navegador cambian para evitar ejecutar una copia en caché del módulo de candidatura.

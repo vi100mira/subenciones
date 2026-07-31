@@ -106,20 +106,20 @@ function renderOpportunities() {
     </div>
     <div class="detail-section">
       <h2>${document.body.dataset.role === "superadmin" ? "Estado de plataforma" : "Por que puede encajar"}</h2>
-      <ul>${item.fit.map((reason) => `<li>${reason}</li>`).join("")}</ul>
+      <ul>${(item.fit || []).map((reason) => `<li>${reason}</li>`).join("")}</ul>
     </div>
     <div class="detail-section">
       <h2>Riesgos a revisar</h2>
-      <ul>${item.risks.map((risk) => `<li>${risk}</li>`).join("")}</ul>
+      <ul>${(item.risks || []).map((risk) => `<li>${risk}</li>`).join("")}</ul>
     </div>
     <div class="detail-section">
       <h2>Evidencia de fuente</h2>
-      <ul>${item.evidence.map((evidence) => `<li>${evidence}</li>`).join("")}</ul>
+      <ul>${(item.evidence || []).map((evidence) => `<li>${evidence}</li>`).join("")}</ul>
     </div>
     ${documentSection}
     <div class="detail-section">
       <h2>Hechos internos usados</h2>
-      <div class="evidence-row">${item.internalFacts.map((fact) => badge(fact, "review")).join("")}</div>
+      <div class="evidence-row">${(item.internalFacts || []).map((fact) => badge(fact, "review")).join("")}</div>
     </div>
     <div class="button-row">
       ${document.body.dataset.role === "superadmin" ? '<span class="badge review">Sin recomendación ni candidatura de cliente</span>' : `<button class="primary-action" data-jump="workspace" data-watch-opportunity="${item.id}" data-watch-reason="candidate_workspace">Crear candidatura</button>`}
