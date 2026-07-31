@@ -41,6 +41,16 @@
           </form>
           <div id="public-login-status" class="plain-note" hidden aria-live="polite"></div>
           </section>
+          <section id="public-invite-panel" role="tabpanel" hidden>
+            <div class="panel-heading"><div><p class="eyebrow">Acceso inicial</p><h2>Crea tu contrasena</h2></div><span class="badge safe">Invitacion segura</span></div>
+            <p class="plain-note"><strong>Cuenta activada</strong><span>Elige una contrasena para completar el acceso. Este enlace solo puede usarse una vez.</span></p>
+            <form class="inline-form public-entry__actions" id="public-invite-form">
+              <label><span>Nueva contrasena</span><input name="password" type="password" minlength="12" autocomplete="new-password" required /></label>
+              <label><span>Repite la contrasena</span><input name="passwordConfirm" type="password" minlength="12" autocomplete="new-password" required /></label>
+              <button class="primary-action" type="submit">Activar acceso</button>
+            </form>
+            <div id="public-invite-status" class="plain-note" hidden aria-live="polite"></div>
+          </section>
           <section id="public-register-panel" role="tabpanel" hidden>
           <div class="panel-heading"><div><p class="eyebrow">Alta segura</p><h2>Solicitar alta de entidad <button class="info-tip" type="button" aria-label="Qué ocurre al enviar la solicitud"><i data-lucide="info"></i><span class="info-tip__content">La solicitud queda pendiente de revisión. No crea usuarios, no conecta Drive y no usa información privada hasta que una persona responsable la apruebe.</span></button></h2></div><span class="badge review">Sin publicar</span></div>
           <p class="plain-note"><strong>Decision de consentimiento</strong><span>Si no autorizas el analisis de web publica, la entidad se registra igualmente. No se consulta la web ni se generan sugerencias; podras autorizarlo mas adelante desde Asistentes.</span></p>
@@ -117,6 +127,26 @@
     status.innerHTML = "<strong>Sesión caducada</strong><span></span>";
     status.querySelector("span").textContent = message;
   }
+
+  function invitationTokens() {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (params.get("type") !== "invite") return null;
+    const accessToken = params.get("access_token") || "";
+    const refreshToken = params.get("refresh_token") || "";
+    return accessToken && refreshToken ? { accessToken, refreshToken } : null;
+  }
+
+  function showInvitation(tokens) {
+    if (!tokens) return false;
+    entry.querySelector(".public-entry__tabs").hidden = true;
+    entry.querySelector("#public-login-panel").hidden = true;
+    entry.querySelector("#public-register-panel").hidden = true;
+    entry.querySelector("#public-plans-panel").hidden = true;
+    entry.querySelector("#public-invite-panel").hidden = false;
+    entry.querySelector("#public-invite-form").dataset.accessToken = tokens.accessToken;
+    entry.querySelector("#public-invite-form").dataset.refreshToken = tokens.refreshToken;
+    return true;
+  }
   window.addEventListener("auth-session-expired", () => {
     document.querySelectorAll(".modal-backdrop").forEach((modal) => modal.remove());
     showPublic();
@@ -145,6 +175,34 @@
     }
 
     showApp(session, initialScreen(session, ""));
+  });
+
+  entry.querySelector("#public-invite-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const password = form.elements.password.value;
+    const confirmation = form.elements.passwordConfirm.value;
+    const status = entry.querySelector("#public-invite-status");
+    if (password !== confirmation) {
+      status.hidden = false;
+      status.innerHTML = "<strong>Revisa la contrasena</strong><span>Los dos campos deben coincidir.</span>";
+      return;
+    }
+    status.hidden = false;
+    status.innerHTML = "<strong>Activando acceso</strong><span>Guardando la contrasena de forma segura.</span>";
+    const response = await fetch("/api/auth-invite-password", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken: form.dataset.accessToken, refreshToken: form.dataset.refreshToken, password })
+    }).catch(() => null);
+    const payload = response ? await response.json().catch(() => null) : null;
+    if (!response?.ok || !payload?.ok) {
+      status.innerHTML = `<strong>No se pudo activar</strong><span>${payload?.error || "El enlace puede haber caducado. Solicita una invitacion nueva."}</span>`;
+      return;
+    }
+    history.replaceState(null, "", "#view-welcome");
+    const session = await window.CredentialsAuth.login(payload.data.email, password);
+    if (session) return showApp(session, initialScreen(session, ""));
+    status.innerHTML = "<strong>Contrasena creada</strong><span>Vuelve a acceder con tu correo y la nueva contrasena.</span>";
   });
 
   entry.querySelector("[data-toggle-password]").addEventListener("click", (event) => {
@@ -185,7 +243,7 @@
   const session = window.CredentialsAuth.getSession();
   const requested = hash.startsWith("#view-") ? hash.replace("#view-", "") : "";
   const target = session ? initialScreen(session, requested) : "";
-  if (mode === "public-entry" || hash === "#view-welcome" || !session || !window.CredentialsAuth.canAccess(target || "dashboard", session)) {
+  if (showInvitation(invitationTokens()) || mode === "public-entry" || hash === "#view-welcome" || !session || !window.CredentialsAuth.canAccess(target || "dashboard", session)) {
     showPublic();
     showSessionNotice();
   } else {
