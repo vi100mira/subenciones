@@ -123,6 +123,25 @@
     return payload.data;
   }
 
+  const localBridgeUrl = "http://127.0.0.1:43173";
+  async function bridgeRequest(path, body = null) {
+    const response = await fetch(`${localBridgeUrl}${path}`, { method: body ? "POST" : "GET", headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) throw new Error(payload?.error || "El conector local no respondió");
+    return payload.data;
+  }
+  async function connectLocalBridge(current, status) {
+    try {
+      status.textContent = "Abriendo el selector de carpeta de Windows…";
+      await bridgeRequest("/health"); const folder = await bridgeRequest("/choose-folder", {});
+      status.textContent = "Creando una sesión temporal de lectura…";
+      const bridge = await request("/api/local-bridge-session", { method: "POST", body: JSON.stringify({ sourceConnectionId: current.id }) });
+      status.textContent = "Inventariando localmente; el contenido no sale de este equipo…";
+      const result = await bridgeRequest("/inventory", { folderId: folder.folderId, tenantId: bridge.scope.tenantId, sessionToken: bridge.token, endpoint: new URL("/api/local-bridge-inventory", window.location.origin).href, entityName: session()?.organization?.name || "Entidad" });
+      await refresh(); closeModal(); toast(`Inventario local terminado: ${result.documents || 0} documentos y ${result.proposals || 0} propuestas para revisar.`);
+    } catch (error) { status.innerHTML = `${escapeHtml(error.message)} <a href="/local-bridge/20260731/install-insertia-local-bridge.ps1" download>Instalar conector de Windows</a>`; }
+  }
+
   function render() {
     document.querySelector("#private-knowledge-panel")?.remove();
     const panel = document.querySelector("#common-knowledge-library");
@@ -389,10 +408,7 @@
     if (!current) { closeModal(); sourceModal(); return; }
     if (!hasCompatibleConsent(current)) { closeModal(); consentRenewalModal(current); return; }
     if (current.kind === "local_simulation" && !localSelectionMatches(current)) { closeModal(); localFolderModal(current); return; }
-    if (current.kind === "local_simulation") {
-      status.textContent = "La carpeta ya está autorizada. Falta conectar el puente local de este equipo; no se creará una cola ni se leerán archivos hasta entonces.";
-      return;
-    }
+    if (current.kind === "local_simulation") return connectLocalBridge(current, status);
     if (!preflightReady(current)) return void (status.textContent = preflight(current)?.reason || "La fuente debe superar primero el preanálisis sin IA.");
     status.textContent = current.status === "pending_approval" ? "Aprobando la fuente en Asistentes…" : "Iniciando inventario privado…";
     try {
