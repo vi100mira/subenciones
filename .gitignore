@@ -27,3 +27,6 @@ __pycache__/
 # OS and editor noise
 .DS_Store
 Thumbs.db
+# Vercel link metadata and pulled local environment values
+.vercel
+.env*.local
