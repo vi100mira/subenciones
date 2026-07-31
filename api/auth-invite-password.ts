@@ -19,12 +19,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== "POST") return res.status(405).json(fail("Method Not Allowed"));
     const accessToken = String(req.body?.accessToken || "");
     const refreshToken = String(req.body?.refreshToken || "");
+    const code = String(req.body?.code || "");
+    const tokenHash = String(req.body?.tokenHash || "");
+    const type = req.body?.type === "invite" ? "invite" : "recovery";
     const password = String(req.body?.password || "");
-    if (accessToken.length < 20 || refreshToken.length < 20) return res.status(400).json(fail("La invitacion no es valida o ha caducado."));
+    if (!code && !tokenHash && (accessToken.length < 20 || refreshToken.length < 20)) return res.status(400).json(fail("La invitacion no es valida o ha caducado."));
     if (password.length < 12) return res.status(400).json(fail("La contrasena debe tener al menos 12 caracteres."));
 
     const auth = authClient();
-    const { data: session, error: sessionError } = await auth.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    const { data: session, error: sessionError } = code
+      ? await auth.auth.exchangeCodeForSession(code)
+      : tokenHash
+        ? await auth.auth.verifyOtp({ token_hash: tokenHash, type })
+        : await auth.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
     if (sessionError || !session.user?.email) return res.status(400).json(fail("La invitacion no es valida o ha caducado."));
     const { data: user, error: updateError } = await auth.auth.updateUser({ password });
     if (updateError || !user.user?.email) return res.status(400).json(fail("No se pudo establecer la contrasena."));

@@ -129,11 +129,15 @@
   }
 
   function invitationTokens() {
-    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    if (!["invite", "recovery"].includes(params.get("type") || "")) return null;
-    const accessToken = params.get("access_token") || "";
-    const refreshToken = params.get("refresh_token") || "";
-    return accessToken && refreshToken ? { accessToken, refreshToken } : null;
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const query = new URLSearchParams(window.location.search);
+    const type = hash.get("type") || query.get("type") || "recovery";
+    if (!["invite", "recovery"].includes(type)) return null;
+    const accessToken = hash.get("access_token") || "";
+    const refreshToken = hash.get("refresh_token") || "";
+    const code = query.get("code") || "";
+    const tokenHash = query.get("token_hash") || "";
+    return (accessToken && refreshToken) || code || tokenHash ? { accessToken, refreshToken, code, tokenHash, type } : null;
   }
 
   function showInvitation(tokens) {
@@ -145,6 +149,9 @@
     entry.querySelector("#public-invite-panel").hidden = false;
     entry.querySelector("#public-invite-form").dataset.accessToken = tokens.accessToken;
     entry.querySelector("#public-invite-form").dataset.refreshToken = tokens.refreshToken;
+    entry.querySelector("#public-invite-form").dataset.code = tokens.code;
+    entry.querySelector("#public-invite-form").dataset.tokenHash = tokens.tokenHash;
+    entry.querySelector("#public-invite-form").dataset.type = tokens.type;
     return true;
   }
   window.addEventListener("auth-session-expired", () => {
@@ -192,7 +199,7 @@
     status.innerHTML = "<strong>Activando acceso</strong><span>Guardando la contrasena de forma segura.</span>";
     const response = await fetch("/api/auth-invite-password", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: form.dataset.accessToken, refreshToken: form.dataset.refreshToken, password })
+      body: JSON.stringify({ accessToken: form.dataset.accessToken, refreshToken: form.dataset.refreshToken, code: form.dataset.code, tokenHash: form.dataset.tokenHash, type: form.dataset.type, password })
     }).catch(() => null);
     const payload = response ? await response.json().catch(() => null) : null;
     if (!response?.ok || !payload?.ok) {
