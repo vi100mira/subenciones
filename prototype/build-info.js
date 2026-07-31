@@ -1,1 +1,1 @@
-window.INSERTIA_BUILD_INFO = {"version":"0.2.9","builtAt":"2026.07.31","revision":"1a9325b","releaseTag":"v0.2.9-stable.20260726"};
+window.INSERTIA_BUILD_INFO = {"version":"0.2.9","builtAt":"2026.07.31","revision":"dc156ee","releaseTag":"v0.2.9-stable.20260726"};
