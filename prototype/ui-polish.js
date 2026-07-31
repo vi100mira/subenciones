@@ -731,9 +731,7 @@
       }
       if (rowAction?.dataset.gridOpportunity) {
         selectGridOpportunity(rowAction.dataset.gridOpportunity);
-        const selection = candidateSelection();
-        if (selection.activeId === rowAction.dataset.gridOpportunity) window.openActiveCandidateModal?.(rowAction.dataset.gridOpportunity);
-        else window.openOpportunityModal?.(rowAction.dataset.gridOpportunity, "analysis");
+        window.openOpportunityModal?.(rowAction.dataset.gridOpportunity, "analysis");
       }
       if (rowAction?.dataset.gridText) {
         selectGridOpportunity(rowAction.dataset.gridText);
