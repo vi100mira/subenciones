@@ -438,15 +438,15 @@ button {
 .source-preview-item { display: grid; gap: 3px; padding: 9px 10px; border: 1px solid rgba(39, 67, 59, 0.2); border-radius: 6px; background: rgba(255, 255, 255, 0.82); color: #27433b; text-align: left; }
 .source-preview-item:hover { border-color: currentColor; background: #ffffff; }
 .source-preview-item span { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
-.private-coverage-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
-.private-coverage-summary > div { display: grid; gap: 3px; padding: 11px 12px; border: 1px solid rgba(39, 67, 59, 0.2); border-radius: 8px; background: #f8fbf9; }
-.private-coverage-summary strong { color: var(--ink); }
-.private-coverage-summary span { color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
-.private-coverage-grid .source-preview-item b { color: var(--green); font-size: 1.35rem; }
+.private-coverage-map { min-height: auto; margin-top: 10px; padding: 0; background: transparent; }
+.private-coverage-map .source-node { min-height: 82px; }
+.private-coverage-map .source-node > summary { min-height: 82px; }
+.private-coverage-map .source-node-copy > span { line-height: 1.35; }
+.private-coverage-map .source-node-preview ul { margin: 10px 0 0; padding-left: 18px; }
+.private-coverage-map .source-node-preview small { display: block; margin-top: 3px; color: var(--muted); }
 @media (max-width: 760px) {
   .source-map { grid-template-columns: 1fr; }
   .source-preview-list { grid-template-columns: 1fr; }
-  .private-coverage-summary { grid-template-columns: 1fr; }
   .metric-preview-list { grid-template-columns: 1fr; }
 }
 
