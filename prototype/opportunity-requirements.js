@@ -841,13 +841,14 @@
     const targetTab = [...informationIds, "documents", "project-folder"].includes(legacyTarget) ? legacyTarget : "analysis";
     workspacePackageVisible = true;
     workspacePanelTarget = overview ? null : { id: targetTab, kind: informationIds.includes(targetTab) ? "information" : "action" };
-    workspaceTargetTab = "";
+    workspaceTargetTab = overview ? "summary" : "";
     document.querySelector("#workspace")?.classList.add("has-documentary-package");
     if (!saveWorkspacePackage(item)) {
       showWorkspaceCandidateList();
       return false;
     }
     window.showScreen?.("workspace");
+    window.renderWorkspaceFlow?.();
     renderWorkspacePackageSoon();
     return true;
   }

@@ -210,5 +210,6 @@
   window.addEventListener("role-session-applied", renderWorkspaceFlow);
   window.addEventListener("tenant-match-load-state", renderWorkspaceFlow);
   window.addEventListener("tenant-recommendations-applied", renderWorkspaceFlow);
+  window.renderWorkspaceFlow = renderWorkspaceFlow;
   window.openActiveCandidateModal = openActiveCandidateModal;
 })();
