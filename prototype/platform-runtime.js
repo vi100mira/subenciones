@@ -179,6 +179,13 @@
       title: organization.name, slug: organization.slug, createdAt: organization.created_at,
       status: configs.get(organization.id)?.status || "unconfigured"
     })));
+    const admissions = new Map((data.tenantAdmissions || []).map((item) => [item.tenant_id, item]));
+    const target = document.querySelector("#tenant-admission-summary");
+    if (!target) return;
+    target.innerHTML = data.organizations.map((organization) => {
+      const summary = admissions.get(organization.id) || { reviewed: 0, admitted: 0, dismissed: 0, pending: 0, active: 0 };
+      return `<div class="stack-item"><div class="opportunity-topline"><strong>${escapeHtml(organization.name)}</strong>${badge(`${summary.reviewed} revisadas`, summary.pending ? "review" : "safe")}</div><span>${summary.admitted} admitidas · ${summary.dismissed} descartadas · ${summary.pending} pendientes · ${summary.active} en candidatura</span><small>Agregado operativo: no incluye oportunidades, motivos ni contenido del tenant.</small></div>`;
+    }).join("") || '<div class="empty-state">No hay entidades persistidas.</div>';
   }
   function render() {
     if (!state.data) return; renderDashboard(state.data); renderAgents(state.data); renderAudit(state.data); renderReviews(state.data); renderOperations(state.data); renderTenants(state.data);

@@ -5,6 +5,26 @@ import { getSupabaseAdmin, requirePlatformAdmin } from "../src/supabaseAdmin.js"
 
 type QueryResult = { data: unknown; error: { message?: string } | null; count?: number | null };
 
+type TenantAdmissionRow = {
+  tenant_id: string;
+  decision_status: "pending" | "preselected" | "dismissed";
+  candidacy_stage: string;
+};
+
+function summarizeTenantAdmissions(rows: TenantAdmissionRow[]) {
+  const summaries = new Map<string, { tenant_id: string; reviewed: number; admitted: number; dismissed: number; pending: number; active: number }>();
+  for (const row of rows) {
+    const summary = summaries.get(row.tenant_id) || { tenant_id: row.tenant_id, reviewed: 0, admitted: 0, dismissed: 0, pending: 0, active: 0 };
+    summary.reviewed += 1;
+    if (row.decision_status === "preselected") summary.admitted += 1;
+    else if (row.decision_status === "dismissed") summary.dismissed += 1;
+    else summary.pending += 1;
+    if (["documents_pending", "documents_ready", "active"].includes(row.candidacy_stage)) summary.active += 1;
+    summaries.set(row.tenant_id, summary);
+  }
+  return [...summaries.values()];
+}
+
 function assertQueries(results: QueryResult[]) {
   const failed = results.find((result) => result.error);
   if (failed?.error) throw new Error(failed.error.message || "No se pudo leer el estado de plataforma");
@@ -29,11 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       supabase.from("platform_opportunity_change_events").select("id, opportunity_id", { count: "exact" }).eq("human_review_status", "pending"),
       supabase.from("tenant_change_alerts").select("id", { count: "exact", head: true }).in("status", ["new", "reviewing"]),
       supabase.from("platform_opportunities").select("id, platform_source_id, source_scope, territory, status, last_seen_at, updated_at").eq("source_scope", "platform_public"),
-      supabase.from("platform_opportunity_versions").select("opportunity_id, deadline_status, deadline_confidence, source_url, official_url, detected_at").eq("version_status", "current")
+      supabase.from("platform_opportunity_versions").select("opportunity_id, deadline_status, deadline_confidence, source_url, official_url, detected_at").eq("version_status", "current"),
+      supabase.from("tenant_opportunity_recommendations").select("tenant_id, decision_status, candidacy_stage").limit(5000)
     ]) as QueryResult[];
 
     assertQueries(results);
-    const [organizations, configs, definitions, agentConfigs, runs, audit, sources, campaigns, opportunities, reviews, alerts, publicOpportunities, currentVersions] = results;
+    const [organizations, configs, definitions, agentConfigs, runs, audit, sources, campaigns, opportunities, reviews, alerts, publicOpportunities, currentVersions, tenantAdmissions] = results;
     const generatedAt = new Date().toISOString();
     const nationalOpportunityMap = buildNationalOpportunityMap({
       generatedAt,
@@ -53,6 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auditEvents: audit.data || [],
       platformSources: sources.data || [],
       ingestionCampaigns: campaigns.data || [],
+      tenantAdmissions: summarizeTenantAdmissions((tenantAdmissions.data || []) as TenantAdmissionRow[]),
       nationalOpportunityMap,
       counts: {
         opportunities: opportunities.count || 0,
@@ -62,6 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       privacy: {
         tenantContentReturned: false,
         auditDetailsReturned: false,
+        tenantAdmissionDetailsReturned: false,
         scope: "operational_metadata_only"
       }
     }));
