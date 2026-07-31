@@ -139,7 +139,7 @@
       status.textContent = "Inventariando localmente; el contenido no sale de este equipo…";
       const result = await bridgeRequest("/inventory", { folderId: folder.folderId, tenantId: bridge.scope.tenantId, sessionToken: bridge.token, endpoint: new URL("/api/local-bridge-inventory", window.location.origin).href, entityName: session()?.organization?.name || "Entidad" });
       await refresh(); closeModal(); toast(`Inventario local terminado: ${result.documents || 0} documentos y ${result.proposals || 0} propuestas para revisar.`);
-    } catch (error) { status.innerHTML = `${escapeHtml(error.message)} <a href="/local-bridge/20260731/install-insertia-local-bridge.ps1" download>Instalar conector de Windows</a>`; }
+    } catch (error) { status.innerHTML = `${escapeHtml(error.message)} <a href="/local-bridge/20260731r1/install-insertia-local-bridge.ps1" download>Actualizar conector de Windows</a>`; }
   }
 
   function render() {

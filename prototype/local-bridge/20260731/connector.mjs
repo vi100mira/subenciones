@@ -20,7 +20,7 @@ function endpointAllowed(value) { try { const url = new URL(value); return url.p
 async function inventory(input) {
   const picked = folders.get(String(input.folderId || "")); if (!picked || picked.expires < Date.now()) throw new Error("La selección de carpeta ha caducado; vuelve a elegirla");
   if (!input.tenantId || !input.sessionToken || !endpointAllowed(input.endpoint)) throw new Error("La sesión del puente no es válida");
-  const runner = path.join(root, "scripts", "local-bridge", "run-folder-inventory.mjs");
+  const runner = path.join(root, "run-folder-inventory.mjs");
   const args = [runner, `--folder=${picked.folder}`, `--tenant-id=${input.tenantId}`, `--endpoint=${input.endpoint}`, `--session-token=${input.sessionToken}`, `--entity-name=${String(input.entityName || "Entidad")}`];
   const { stdout } = await exec(process.execPath, args, { cwd: root, timeout: 31 * 60_000, maxBuffer: 2_000_000, windowsHide: true }); folders.delete(String(input.folderId)); return JSON.parse(stdout.trim() || "{}");
 }

@@ -54,7 +54,7 @@ const checks = [
   [files.preflightUi.includes("supportedBytes") && files.preflightUi.includes('"ready_limited" : "review"') && files.ui.includes("accept-limited"), "la UI no bloquea o advierte una fuente insustancial"],
   [files.index.includes("private-source-preflight.js") && files.index.indexOf("private-source-preflight.js") < files.index.indexOf("private-knowledge.js"), "la política de preanálisis no se carga antes del flujo privado"],
   [files.ui.includes("La ruta completa no se guarda ni se envía a la API") && files.ui.includes("Esta selección se pierde al recargar"), "el selector local no explica sus límites de privacidad"],
-  [files.ui.includes("Conectar el puente local") && files.ui.includes("Instalar conector de Windows"), "la interfaz sugiere que una carpeta local se analiza sin puente"],
+  [files.ui.includes("Conectar el puente local") && files.ui.includes("Actualizar conector de Windows"), "la interfaz sugiere que una carpeta local se analiza sin puente"],
   [files.ui.includes("Fuente aprobada. Iniciando inventario privado") && files.ui.includes("La fuente está aprobada, pero no se pudo iniciar"), "aprobación e inventario no comunican sus estados por separado"],
   [files.ui.includes('document.querySelector("#private-knowledge-panel")?.remove()'), "Entidad conserva el panel operativo privado"],
   [files.index.includes('data-screen="knowledge"') && files.index.includes('id="common-knowledge-library"'), "la base común no tiene una pantalla propia"],
