@@ -67,10 +67,10 @@
       note: "Incluye un curador que propone conocimiento reutilizable y un redactor que prepara borradores. Solo usa hechos aprobados; nunca aprueba, firma ni presenta."
     },
     "Avisos y recordatorios": {
-      status: "En desarrollo",
-      tone: "warning",
-      disabled: true,
-      note: "Canales y recordatorios no estan conectados."
+      status: "Avisos internos operativos",
+      tone: "safe",
+      disabled: false,
+      note: "Tras cada radar se registran alertas internas por cambios en convocatorias seguidas. Los canales externos y recordatorios por correo siguen desactivados."
     }
   };
 

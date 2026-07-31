@@ -167,6 +167,9 @@ async function main() {
   try {
     const result = await executePipeline(workDir);
     const quality = result.enriched.quality || {};
+    const alerts = apply
+      ? JSON.parse(await runNode("scripts/platform/generate-tenant-change-alerts.mjs", ["--apply"]))
+      : { mode: "dry-run", plannedAlerts: 0 };
     const summary = {
       mode: apply ? "applied" : "dry-run",
       radar: campaignName,
@@ -178,6 +181,7 @@ async function main() {
       basesExtracted: quality.basesExtracted || 0,
       basesInterpretations: result.interpretationOutput,
       supplementaryBasisDiscovery: result.discoveryOutput,
+      alerts,
       runtime,
       workDir
     };
